@@ -7,6 +7,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000006">
+<meta name="screen-orientation" content="landscape">
+<meta name="x5-orientation" content="landscape">
+<meta name="full-screen" content="yes">
+<link rel="manifest" href='data:application/manifest+json,{"name":"Solar Royale","short_name":"SolarRoyale","display":"fullscreen","orientation":"landscape","background_color":"#000006","theme_color":"#000006","start_url":"."}'>
 <title>Solar Royale</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -40,6 +44,12 @@ canvas{
 #vignette{position:fixed;inset:0;pointer-events:none;z-index:5;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,0.42) 100%)}
 #zoneWarning{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(circle at center,transparent 28%,rgba(140,60,255,0.42) 78%,rgba(120,40,240,0.72) 100%)}
 #solarWarning{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(circle at center,transparent 40%,rgba(255,180,60,0.30) 80%,rgba(255,120,20,0.55) 100%);transition:opacity .35s}
+#rotateOverlay{position:fixed;inset:0;z-index:9999;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px;pointer-events:auto;color:#eaf4ff;text-align:center;padding:24px}
+#rotateOverlay.show{display:flex}
+.rotateIcon{font-size:72px;color:#6ec0ff;animation:rotateAnim 2.2s ease-in-out infinite;text-shadow:0 0 30px rgba(110,190,255,0.6)}
+@keyframes rotateAnim{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
+.rotateText{font:900 16px/1 ui-monospace,monospace;letter-spacing:.28em;color:#bfe9ff;text-shadow:0 0 14px rgba(120,220,255,0.7)}
+.rotateSub{font:600 11px/1.5 ui-monospace,monospace;color:#7aa8d0;letter-spacing:.16em;max-width:280px}
 .overlay{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at center,rgba(8,15,30,0.68),rgba(2,4,10,0.94));display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .45s ease}
 .overlay.active{opacity:1;pointer-events:auto}
 .lobby-content{width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px;align-items:stretch;animation:slideUp .6s cubic-bezier(.2,.9,.3,1.2);max-height:100dvh;overflow-y:auto}
@@ -180,6 +190,108 @@ canvas{
 #stick{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(60,120,200,0.10),rgba(30,70,140,0.05) 70%,rgba(20,50,110,0.02));border:1px solid rgba(120,190,255,0.18);pointer-events:none;-webkit-user-select:none;user-select:none;opacity:0;transition:opacity .12s;z-index:15}
 #stick .knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin-left:-28px;margin-top:-28px;border-radius:50%;background:radial-gradient(circle at 35% 32%,rgba(200,235,255,0.35),rgba(110,180,255,0.18) 55%,rgba(60,120,210,0.10));border:1px solid rgba(160,215,255,0.35);pointer-events:none;transition:transform .04s linear}
 #stick .knob::after{content:'';position:absolute;left:50%;top:50%;width:10px;height:10px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.35),rgba(160,215,255,0.05))}
+
+/* ============================================================
+   LAYOUT LANDSCAPE
+   ============================================================ */
+@media (orientation: landscape){
+
+  #stick{width:140px;height:140px}
+  #stick .knob{width:52px;height:52px;margin-left:-26px;margin-top:-26px}
+
+  #turboBtn{
+    bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
+    left:calc(env(safe-area-inset-left,0px) + 180px);
+    width:76px;height:76px
+  }
+  .turboTxt{font-size:10px}
+
+  #fireBtn{
+    bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
+    right:calc(env(safe-area-inset-right,0px) + 22px);
+    width:108px;height:108px
+  }
+  .fireTxt{font-size:12px}
+
+  #missileBtn{
+    bottom:calc(env(safe-area-inset-bottom,0px) + 136px);
+    right:calc(env(safe-area-inset-right,0px) + 46px);
+    width:78px;height:78px
+  }
+  .missileTxt{font-size:10px}
+
+  #hud{top:calc(env(safe-area-inset-top,0px) + 4px)}
+  #hud .gt{font-size:11px;margin-bottom:1px}
+  #hud .big{font-size:13px;gap:6px}
+  #hud .sub{font-size:9px}
+  #hud .kills{font-size:10px;margin-top:2px}
+  #hudZone{font-size:9px;margin-top:2px}
+
+  #minimap{
+    width:96px;height:96px;
+    top:calc(env(safe-area-inset-top,0px) + 6px);
+    right:calc(env(safe-area-inset-right,0px) + 6px)
+  }
+
+  #roster{font-size:8px;gap:1px;
+    top:calc(env(safe-area-inset-top,0px) + 6px);
+    left:calc(env(safe-area-inset-left,0px) + 6px)}
+  .slot{min-width:66px;padding:1px 5px;gap:4px}
+  .slot .dot{width:6px;height:6px}
+  .slot .hp{font-size:7px}
+
+  #statsWrap{
+    bottom:calc(env(safe-area-inset-bottom,0px) + 6px);
+    padding:6px 12px;row-gap:3px;min-width:220px
+  }
+
+  #powerups{bottom:calc(env(safe-area-inset-bottom,0px) + 54px)}
+  .pu{width:30px;height:30px;font-size:12px;border-radius:8px}
+
+  #killFeed{top:calc(env(safe-area-inset-top,0px) + 112px);right:calc(env(safe-area-inset-right,0px) + 6px)}
+  .kf{font-size:9px;padding:3px 6px}
+
+  .lobby-content{max-width:520px;gap:10px}
+  .brand{font-size:26px}
+  .tagline{font-size:9px;margin-top:-4px}
+  .profile-card{padding:8px 12px}
+  .rank-badge{width:40px;height:40px;font-size:16px}
+  .prof-name{font-size:13px}
+  .prof-level{font-size:10px}
+  .stat-val{font-size:14px}
+  .chassis{padding:8px 4px}
+  .chassis-name{font-size:10px}
+  .chassis-stat{font-size:7px}
+  .btn-primary{padding:11px 18px;font-size:13px}
+  .btn-primary small{font-size:8px}
+
+  .queue-content{gap:14px}
+  .queue-pulse{width:56px;height:56px}
+  .queue-title{font-size:12px}
+  .queue-sub{font-size:10px}
+  .queue-slots{gap:3px;max-height:44dvh}
+  .qslot{height:28px;padding:0 8px}
+  .qbadge{width:18px;height:18px;font-size:8px}
+  .qname{font-size:10px}
+  .qrank{font-size:7px}
+
+  .results-place{font-size:56px}
+  .results-title{font-size:12px}
+  .results-grid>div{padding:8px 10px}
+  .results-grid .rv{font-size:13px}
+}
+
+@media (orientation: portrait){
+  #rotateOverlay.show ~ #hud,
+  #rotateOverlay.show ~ #roster,
+  #rotateOverlay.show ~ #stick,
+  #rotateOverlay.show ~ #turboBtn,
+  #rotateOverlay.show ~ #fireBtn,
+  #rotateOverlay.show ~ #missileBtn,
+  #rotateOverlay.show ~ #statsWrap,
+  #rotateOverlay.show ~ #powerups,
+  #rotateOverlay.show ~ #minimap{opacity:0;pointer-events:none}
+}
 </style>
 </head>
 <body>
@@ -188,6 +300,11 @@ canvas{
 <div id="vignette"></div>
 <div id="zoneWarning"></div>
 <div id="solarWarning"></div>
+<div id="rotateOverlay">
+  <div class="rotateIcon">&#8635;</div>
+  <div class="rotateText">RUOTA IL DISPOSITIVO</div>
+  <div class="rotateSub">Questa esperienza è progettata per l'orizzontale</div>
+</div>
 <div id="hud">
   <div class="gt" id="hudTime">00:00</div>
   <div class="big"><span class="arrowWrap"><span class="arrow" id="hudArrow">&#9650;</span></span><span id="hudName">&mdash;</span></div>
@@ -1337,7 +1454,19 @@ var ammoBulletsEl=document.getElementById('ammoBullets');
 var reloadStateEl=document.getElementById('reloadState');
 var W=0,H=0,pixScale=3,imgData=null,buf32=null,dynScale=1.0, depthBuf=null;
 
+function updateOrientationOverlay(){
+  var isPortrait = window.innerHeight > window.innerWidth;
+  var overlay = document.getElementById('rotateOverlay');
+  if(!overlay) return;
+  var isMobileish = Math.min(window.innerWidth, window.innerHeight) < 700;
+  if(isPortrait && isMobileish){
+    overlay.classList.add('show');
+  } else {
+    overlay.classList.remove('show');
+  }
+}
 function resize(){
+  updateOrientationOverlay();
   var cw=window.innerWidth, ch=window.innerHeight;
   if(window.visualViewport){
     cw=window.visualViewport.width;
@@ -1356,7 +1485,10 @@ function resize(){
   if(minimapFullscreen){
     var fsSize=Math.min(window.innerWidth, window.innerHeight)*0.9;
     setMinimapSize(fsSize, 1.5);
-  } else setMinimapSize(120);
+  } else {
+    var mmSize = (window.innerWidth > window.innerHeight) ? 96 : 120;
+    setMinimapSize(mmSize);
+  }
 }
 function computeCamera(){
   var cp=Math.cos(human.pitch),sp=Math.sin(human.pitch);
@@ -3030,10 +3162,6 @@ window.addEventListener('pointerup',function(e){
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){resetStickState(); closeMinimapFullscreen();}
 });
-if(window.visualViewport){
-  window.visualViewport.addEventListener('resize',function(){resize();});
-  window.visualViewport.addEventListener('scroll',function(){resize();});
-}
 function findTappedTarget(px,py){
   var nx=(px/window.innerWidth)*2-1;
   var ny=-((py/window.innerHeight)*2-1);
@@ -3251,7 +3379,27 @@ document.getElementById('findMatch').addEventListener('click',function(e){e.prev
 document.getElementById('cancelQueue').addEventListener('click',function(e){e.preventDefault(); cancelMatchmaking();});
 document.getElementById('returnLobby').addEventListener('click',function(){showScreen('lobby'); renderLobby(); setLobbyCamera();});
 window.addEventListener('resize',resize);
-window.addEventListener('orientationchange',function(){setTimeout(resize,300);});
+window.addEventListener('orientationchange',function(){setTimeout(resize,150);setTimeout(resize,400);});
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',function(){resize();});
+  window.visualViewport.addEventListener('scroll',function(){resize();});
+}
+if(window.screen && window.screen.orientation && window.screen.orientation.addEventListener){
+  window.screen.orientation.addEventListener('change', function(){setTimeout(resize,150);});
+}
+
+// Tenta il lock dell'orientamento (funziona in PWA fullscreen / Android)
+function tryLockOrientation(){
+  try{
+    if(window.screen && window.screen.orientation && window.screen.orientation.lock){
+      window.screen.orientation.lock('landscape').catch(function(){});
+    }
+  }catch(_){}
+}
+tryLockOrientation();
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden) tryLockOrientation();
+});
 
 var lastT=0, frameAcc=0, frameCount=0;
 function loop(now){
