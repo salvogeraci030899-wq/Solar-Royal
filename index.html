@@ -10,20 +10,39 @@
 <title>Solar Royale</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;width:100%;overflow:hidden;background:#000;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none;overscroll-behavior:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#eaf4ff}
-canvas{position:fixed;left:0;top:0;width:100%;height:100%;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;image-rendering:pixelated}
+html,body{
+  height:100%;
+  height:100dvh;
+  min-height:100vh;
+  min-height:100dvh;
+  width:100%;
+  width:100vw;
+  overflow:hidden;background:#000;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  touch-action:none;overscroll-behavior:none;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#eaf4ff}
+canvas{
+  position:fixed;
+  left:0; top:0;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  display:block;
+  image-rendering:-webkit-optimize-contrast;
+  image-rendering:crisp-edges;
+  image-rendering:pixelated}
 #c{z-index:1}
 #minimap{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 8px);width:120px;height:120px;z-index:12;pointer-events:none;opacity:0;transition:opacity .3s;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;filter:drop-shadow(0 0 12px rgba(0,0,0,0.75))}
 #minimap.show{opacity:1;pointer-events:auto}
 #minimapCanvas{display:block;width:100%;height:100%;border-radius:50%;image-rendering:pixelated}
-#minimap.fullscreen{top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:200;background:#000;filter:none;transition:none;border-radius:0}
+#minimap.fullscreen{top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;z-index:200;background:#000;filter:none;transition:none;border-radius:0}
 #minimap.fullscreen #minimapCanvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90vmin;height:90vmin;border-radius:50%}
 #vignette{position:fixed;inset:0;pointer-events:none;z-index:5;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,0.42) 100%)}
 #zoneWarning{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(circle at center,transparent 28%,rgba(140,60,255,0.42) 78%,rgba(120,40,240,0.72) 100%)}
 #solarWarning{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(circle at center,transparent 40%,rgba(255,180,60,0.30) 80%,rgba(255,120,20,0.55) 100%);transition:opacity .35s}
 .overlay{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at center,rgba(8,15,30,0.68),rgba(2,4,10,0.94));display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .45s ease}
 .overlay.active{opacity:1;pointer-events:auto}
-.lobby-content{width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px;align-items:stretch;animation:slideUp .6s cubic-bezier(.2,.9,.3,1.2)}
+.lobby-content{width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px;align-items:stretch;animation:slideUp .6s cubic-bezier(.2,.9,.3,1.2);max-height:100dvh;overflow-y:auto}
 @keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 .brand{font:900 30px/1 ui-monospace,monospace;text-align:center;letter-spacing:.16em;color:#eaf4ff;text-shadow:0 0 18px rgba(110,180,255,0.55),0 0 40px rgba(60,120,255,0.3)}
 .tagline{font:600 10px/1 ui-monospace,monospace;text-align:center;letter-spacing:.42em;color:#7aa8d0;margin-top:-8px}
@@ -59,7 +78,7 @@ canvas{position:fixed;left:0;top:0;width:100%;height:100%;display:block;image-re
 @keyframes ring{0%{transform:scale(.85);opacity:1}100%{transform:scale(1.85);opacity:0}}
 .queue-title{font:800 14px/1 monospace;letter-spacing:.34em;color:#eaf4ff}
 .queue-sub{font:600 11px/1.5 ui-monospace,monospace;color:#7aa8d0;letter-spacing:.16em;text-align:center;min-height:16px}
-.queue-slots{width:100%;display:flex;flex-direction:column;gap:4px;max-height:46vh;overflow:hidden}
+.queue-slots{width:100%;display:flex;flex-direction:column;gap:4px;max-height:46vh;max-height:46dvh;overflow:hidden}
 .qslot{height:32px;border-radius:7px;padding:0 10px;display:flex;align-items:center;gap:8px;border:1px dashed rgba(90,150,215,0.22);transition:all .4s}
 .qslot.filled{border-style:solid;border-color:var(--rc);background:rgba(18,34,60,0.55);box-shadow:0 0 14px var(--rc)}
 .qbadge{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font:900 9px/1 monospace;color:#0a1424;background:linear-gradient(135deg,#c0c0c0,#8a9bb0);flex-shrink:0;opacity:0;transform:scale(0.6);transition:all .35s}
@@ -598,7 +617,6 @@ var asteroids=[];
   }
 })();
 
-// Sciame dinamico (asteroidi temporanei)
 var swarmAsteroids=[];
 var swarmActive=false;
 var swarmTimer=0;
@@ -828,7 +846,6 @@ function renderLobby(){
   document.getElementById('statWins').textContent=profile.wins;
   document.getElementById('statKills').textContent=profile.kills;
   document.getElementById('statAvg').textContent=profile.matches>0?(profile.totalPlacement/profile.matches).toFixed(1):'\u2014';
-  // Chassis selector
   var chassisEls=document.querySelectorAll('#chassisGrid .chassis');
   for(var i=0;i<chassisEls.length;i++){
     chassisEls[i].classList.toggle('active', chassisEls[i].dataset.chassis===profile.chassis);
@@ -914,7 +931,6 @@ function beginMatch(){
   solarFlareTimer=SOLAR_FLARE_INTERVAL; solarFlareActive=false; solarFlareT=0;
   swarmTimer=SWARM_INTERVAL; swarmActive=false; swarmTimer=0;
 
-  // Chassis
   var ch=CHASSIS[profile.chassis]||CHASSIS.balanced;
   human.maxHp=ch.hp; human.hp=ch.hp;
   human.speedMul=ch.speedMul; human.turnMul=ch.turnMul; human.fireRateMul=ch.fireRateMul;
@@ -936,7 +952,7 @@ function beginMatch(){
     var spawnName=SPAWN_REFS[i%SPAWN_REFS.length];
     spawnAtBody(s,spawnName,4+Math.random()*4);
     var botCh=[CHASSIS.snappy,CHASSIS.balanced,CHASSIS.tank][Math.floor(Math.random()*3)];
-    s.maxHp=botCh.hp; s.hp=botCh.hp; s.speedMul=botCh.speedMul; s.turnMul=botCh.turnMul;
+    s.maxHp=botCh.hp; s.hp=botCh.hp; s.speedMul=botCh.speedMul; s.turnMul=botCh.turnMul; s.fireRateMul=botCh.fireRateMul;
     s.alive=true; s.flash=0; s.bank=0; s.recoil=0; s.speed=0;
     s.ammo=MAX_AMMO; s.reloadT=0; s.missileCd=0; s.missileTarget=null;
     s.name=b.name; s.palette=b.palette; s.dotColor=b.palette.dot;
@@ -1025,7 +1041,6 @@ function updatePowerupsDOM(){
 // EVENTI DINAMICI
 // ============================================================
 function updateDynamicEvents(dt){
-  // Solar flare
   if(!solarFlareActive){
     solarFlareTimer-=dt;
     if(solarFlareTimer<=0){
@@ -1039,7 +1054,6 @@ function updateDynamicEvents(dt){
     }
   }
 
-  // Danno da solar flare (chi è entro il raggio dal Sole)
   if(solarFlareActive){
     var dmgPerSec=SOLAR_FLARE_DPS;
     for(var i=0;i<SHIPS.length;i++){
@@ -1052,7 +1066,6 @@ function updateDynamicEvents(dt){
         }
       }
     }
-    // Vignetta warning se il player è in raggio
     var hd=Math.sqrt(human.x*human.x+human.y*human.y+human.z*human.z);
     if(hd < SOLAR_FLARE_RADIUS_AU*AU && human.alive){
       solarWarningEl.style.opacity='0.85';
@@ -1063,17 +1076,14 @@ function updateDynamicEvents(dt){
     solarWarningEl.style.opacity='0';
   }
 
-  // Swarm
   if(!swarmActive){
     swarmTimer-=dt;
     if(swarmTimer<=0){
       swarmActive=true; swarmTimer=SWARM_DURATION;
-      // Direzione random normalizzata
       var u1=Math.random()*TAU, u2=Math.acos(2*Math.random()-1);
       swarmDirX=Math.sin(u2)*Math.cos(u1);
       swarmDirY=Math.sin(u2)*Math.sin(u1);
       swarmDirZ=Math.cos(u2);
-      // Spawn asteroidi dall'estremo opposto della direzione
       for(var k=0;k<SWARM_COUNT;k++){
         var ang1=Math.random()*TAU;
         var ang2=Math.acos(2*Math.random()-1);
@@ -1098,12 +1108,10 @@ function updateDynamicEvents(dt){
     if(swarmTimer<=0){ swarmActive=false; swarmAsteroids.length=0; swarmTimer=SWARM_INTERVAL; }
   }
 
-  // Aggiorna asteroidi dello sciame
   for(var i=swarmAsteroids.length-1;i>=0;i--){
     var a=swarmAsteroids[i];
     a.x+=a.vx*dt; a.y+=a.vy*dt; a.z+=a.vz*dt; a.life-=dt;
     if(a.life<=0){ swarmAsteroids.splice(i,1); continue; }
-    // Collisione con ship
     for(var si=0;si<SHIPS.length;si++){
       var s=SHIPS[si]; if(!s.alive)continue;
       var dx=s.x-a.x, dy=s.y-a.y, dz=s.z-a.z;
@@ -1198,7 +1206,6 @@ function computeAimAssist(ship, fx, fy, fz){
     if(dot>bestDot && dot>bestDotVal){ bestDotVal=dot; best={x:ndx,y:ndy,z:ndz}; }
   }
   if(!best) return [fx,fy,fz];
-  // Blend verso il bersaglio
   var w=AIM_ASSIST_STRENGTH;
   var nx=fx*(1-w)+best.x*w;
   var ny=fy*(1-w)+best.y*w;
@@ -1219,7 +1226,6 @@ function fireFrom(ship){
   var cp=Math.cos(ship.pitch),sp=Math.sin(ship.pitch);
   var cy=Math.cos(ship.yaw),sy=Math.sin(ship.yaw);
   var fx=cp*cy, fy=cp*sy, fz=sp;
-  // Aim assist per il player
   var assist = computeAimAssist(ship, fx, fy, fz);
   fx=assist[0]; fy=assist[1]; fz=assist[2];
   var off=6e5; var bs=ship.speed+1.5e8;
@@ -1239,11 +1245,10 @@ function fireFrom(ship){
 }
 function fireMissile(ship){
   if(ship.missileCd>0) return false;
-  // Trova bersaglio: nemico più vicino al centro del puntamento
   var cp=Math.cos(ship.pitch),sp=Math.sin(ship.pitch);
   var cy=Math.cos(ship.yaw),sy=Math.sin(ship.yaw);
   var fx=cp*cy, fy=cp*sy, fz=sp;
-  var bestDot=Math.cos(35*PI/180); // cono di lock ~35°
+  var bestDot=Math.cos(35*PI/180);
   var best=null;
   for(var i=0;i<SHIPS.length;i++){
     var o=SHIPS[i];
@@ -1334,6 +1339,10 @@ var W=0,H=0,pixScale=3,imgData=null,buf32=null,dynScale=1.0, depthBuf=null;
 
 function resize(){
   var cw=window.innerWidth, ch=window.innerHeight;
+  if(window.visualViewport){
+    cw=window.visualViewport.width;
+    ch=window.visualViewport.height;
+  }
   var base=Math.max(2,Math.round(cw/280));
   pixScale=Math.max(2,Math.round(base*dynScale));
   W=Math.max(80,Math.round(cw/pixScale));
@@ -1410,7 +1419,6 @@ function shadeSun(hx,hy,hz,dtc,pa){
   var spot=noise3(lx/1.2e7+100,ly/1.2e7+50,lz/1.2e7+25);
   var temp=1+gran*0.55; temp*=0.52+0.58*Math.pow(cosLimb,0.42);
   if(spot>0.22) temp*=1-Math.min(1,(spot-0.22)*3.5)*0.55;
-  // Solar flare boost
   if(solarFlareActive) temp*=1.35;
   var R,G,B;
   if(temp<0.5){var u=temp/0.5;R=140+90*u;G=45+80*u;B=12+30*u;}
@@ -1687,10 +1695,8 @@ var missileSprite=(function(){
     if(y>10)c=[255,120,80];
     setPx(x,y,c);
   }
-  // punta
   setPx(7,2,[255,255,255]); setPx(8,2,[255,255,255]);
   setPx(7,1,[255,200,200]); setPx(8,1,[255,200,200]);
-  // motore
   setPx(7,13,[255,180,80]); setPx(8,13,[255,180,80]);
   setPx(7,14,[255,120,60]); setPx(8,14,[255,120,60]);
   setPx(7,15,[255,80,40]); setPx(8,15,[255,80,40]);
@@ -2324,7 +2330,6 @@ function drawMissiles(){
         buf32[dstRow+px]=v;
       }
     }
-    // Trail fumo
     var mdx=m.x-m.prevX, mdy=m.y-m.prevY, mdz=m.z-m.prevZ;
     var mdist=Math.sqrt(mdx*mdx+mdy*mdy+mdz*mdz);
     if(mdist>1e3){
@@ -2403,7 +2408,6 @@ function drawShootingStars(){
 // AI TATTICA
 // ============================================================
 function findHideSpot(ship, threat){
-  // Cerca un asteroide/pianeta che può fare da scudo tra ship e threat
   var bestScore=-1e24, best=null;
   var shipToThreatX=threat.x-ship.x, shipToThreatY=threat.y-ship.y, shipToThreatZ=threat.z-ship.z;
   var stLen=Math.sqrt(shipToThreatX*shipToThreatX+shipToThreatY*shipToThreatY+shipToThreatZ*shipToThreatZ)||1;
@@ -2416,12 +2420,10 @@ function findHideSpot(ship, threat){
     if(d>5e8 || d<1e6) continue;
     var nx=dx/d, ny=dy/d, nz=dz/d;
     var dot=nx*shipToThreatX+ny*shipToThreatY+nz*shipToThreatZ;
-    if(dot<0.3) continue; // deve essere in direzione del threat
-    // Preferisce vicino, dritto e grande
+    if(dot<0.3) continue;
     var score=a.r/d + dot*2 - d/5e8;
     if(score>bestScore){bestScore=score; best=a;}
   }
-  // Anche i pianeti come scudo (grandi ma lontani)
   for(var i=0;i<BODIES.length;i++){
     var b=BODIES[i];
     if(b===SUN)continue;
@@ -2468,7 +2470,6 @@ function updateAI(ship,dt){
   var hpFrac=ship.hp/ship.maxHp;
   var wantEvade=hpFrac<ai.evadeThreshold;
 
-  // Hide behaviour quando in evade
   if(wantEvade){
     if(ship.hideTargetTimer<=0 || !ship.hideTarget){
       ship.hideTarget=findHideSpot(ship,best);
@@ -2498,7 +2499,6 @@ function updateAI(ship,dt){
     var offset=dist<ai.prefDist*0.6?ship.strafeDir*0.30:dist>ai.prefDist*1.4?0:ship.strafeDir*0.15;
     desYaw=Math.atan2(dy,dx)+offset;
     desPitch=Math.asin(Math.max(-1,Math.min(1,dz/dist)));
-    // Bias powerup
     var nearestPU=null, nearestPUD=1e24;
     for(var pi=0;pi<powerups.length;pi++){
       var pu=powerups[pi]; if(!pu.alive)continue;
@@ -2534,13 +2534,11 @@ function updateAI(ship,dt){
   var fx=cp*cy, fy=cp*sy, fz=sp;
   ship.x+=fx*ship.speed*dt; ship.y+=fy*ship.speed*dt; ship.z+=fz*ship.speed*dt;
 
-  // Fire decisione
   if(!wantEvade && dist<ENGAGE_RANGE && dist>MIN_ENGAGE_RANGE){
     var tdx=dx/dist, tdy=dy/dist, tdz=dz/dist;
     var align=fx*tdx+fy*tdy+fz*tdz;
     var canFire=true;
     if(best===human && human.alive){
-      // Simmetria: spara solo se il player lo vede
       var hdx=ship.x-human.x, hdy=ship.y-human.y, hdz=ship.z-human.z;
       var hcp=Math.cos(human.pitch), hsp=Math.sin(human.pitch);
       var hcy=Math.cos(human.yaw), hsy=Math.sin(human.yaw);
@@ -2562,7 +2560,6 @@ function updateAI(ship,dt){
     if(canFire && align>ai.accuracy && (hasRapid || ship.fireCd<=0)){
       if(fireFrom(ship)) ship.fireCd=hasRapid?FIRE_CD*0.4:FIRE_CD*ai.fireRateMul*(0.9+Math.random()*0.3);
     }
-    // Missile
     if(canFire && ship.missileCd<=0 && dist<2e8 && align>0.85){
       fireMissile(ship);
     }
@@ -2705,7 +2702,6 @@ function updateBullets(dt){
       if(tHit>=0){damageShip(s,BULLET_DMG,b.owner); hit=true; break;}
     }
     if(hit){bullets.splice(i,1);continue;}
-    // Collisione con asteroidi e swarm
     for(var ai2=0;ai2<asteroids.length;ai2++){
       var a=asteroids[ai2];
       if(pointSegmentHit(ox,oy,oz,b.x,b.y,b.z,a.x,a.y,a.z,a.r)){spawnHitSpark(b.x,b.y,b.z); hit=true; break;}
@@ -2744,7 +2740,6 @@ function updateMissiles(dt){
   for(var i=missiles.length-1;i>=0;i--){
     var m=missiles[i];
     m.prevX=m.x; m.prevY=m.y; m.prevZ=m.z;
-    // Tracking
     if(m.trackT>0 && m.target && m.target.alive){
       var tdx=m.target.x-m.x, tdy=m.target.y-m.y, tdz=m.target.z-m.z;
       var tdist=Math.sqrt(tdx*tdx+tdy*tdy+tdz*tdz);
@@ -2752,7 +2747,6 @@ function updateMissiles(dt){
         var ndx=tdx/tdist, ndy=tdy/tdist, ndz=tdz/tdist;
         var vlen=Math.sqrt(m.vx*m.vx+m.vy*m.vy+m.vz*m.vz);
         var curdx=m.vx/vlen, curdy=m.vy/vlen, curdz=m.vz/vlen;
-        // Turn rate limitato
         var maxTurn=MISSILE_TURN_RATE*dt;
         var dot=curdx*ndx+curdy*ndy+curdz*ndz;
         var cross = [
@@ -2764,7 +2758,6 @@ function updateMissiles(dt){
         if(crossLen>1e-6 && dot<0.9999){
           var rotAng=Math.min(maxTurn, Math.acos(Math.max(-1,Math.min(1,dot))));
           var axisX=cross[0]/crossLen, axisY=cross[1]/crossLen, axisZ=cross[2]/crossLen;
-          // Rotazione di Rodrigues
           var cosA=Math.cos(rotAng), sinA=Math.sin(rotAng);
           var kx=curdx*cosA + (axisY*curdz-axisZ*curdy)*sinA + axisX*(axisX*curdx+axisY*curdy+axisZ*curdz)*(1-cosA);
           var ky=curdy*cosA + (axisZ*curdx-axisX*curdz)*sinA + axisY*(axisX*curdx+axisY*curdy+axisZ*curdz)*(1-cosA);
@@ -2823,7 +2816,6 @@ function render(){
   renderScene();
   drawBodyMarkers();
 
-  // Asteroidi
   for(var i=0;i<asteroids.length;i++){
     var a=asteroids[i];
     var pr=projectToScreen(a.x,a.y,a.z);
@@ -2834,7 +2826,6 @@ function render(){
     if(sc>1.4)sc=1.4; if(sc<0.08)sc=0.08;
     blitAsteroidSprite(pr.scrX-AST_SPR*sc*0.5,pr.scrY-AST_SPR*sc*0.5,sc,a.variant,pr.dist);
   }
-  // Swarm asteroidi
   for(var i=0;i<swarmAsteroids.length;i++){
     var a=swarmAsteroids[i];
     var pr=projectToScreen(a.x,a.y,a.z);
@@ -2845,7 +2836,6 @@ function render(){
     if(sc>1.4)sc=1.4; if(sc<0.10)sc=0.10;
     blitAsteroidSprite(pr.scrX-AST_SPR*sc*0.5,pr.scrY-AST_SPR*sc*0.5,sc,a.variant,pr.dist);
   }
-  // Satelliti
   for(var i=0;i<satellites.length;i++){
     var sat=satellites[i];
     var pr=projectToScreen(sat.x,sat.y,sat.z);
@@ -2856,7 +2846,6 @@ function render(){
     if(sc>1.6)sc=1.6; if(sc<0.10)sc=0.10;
     blitSatSprite(pr.scrX-SAT_SPR*sc*0.5,pr.scrY-SAT_SPR*sc*0.5,sc,sat.variant,pr.dist);
   }
-  // Powerup
   for(var i=0;i<powerups.length;i++){
     var pu=powerups[i];
     if(!pu.alive)continue;
@@ -2900,7 +2889,6 @@ function render(){
     }
   }
 
-  // Navi nemiche
   for(var i=1;i<SHIPS.length;i++){
     var s=SHIPS[i]; if(!s.alive)continue;
     var pr=projectToScreen(s.x,s.y,s.z);
@@ -2944,7 +2932,6 @@ function render(){
     }
   }
 
-  // Player
   if(currentScreen==='match'&&human.alive){
     var playerScale=SHIP_MAX_SCALE;
     var cx=W*0.5;
@@ -3043,6 +3030,10 @@ window.addEventListener('pointerup',function(e){
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){resetStickState(); closeMinimapFullscreen();}
 });
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',function(){resize();});
+  window.visualViewport.addEventListener('scroll',function(){resize();});
+}
 function findTappedTarget(px,py){
   var nx=(px/window.innerWidth)*2-1;
   var ny=-((py/window.innerHeight)*2-1);
@@ -3134,7 +3125,6 @@ function updateAmmoDisplay(){
   }
 }
 
-// Chassis selector
 document.getElementById('chassisGrid').addEventListener('click',function(e){
   var el=e.target.closest('.chassis'); if(!el)return;
   profile.chassis=el.dataset.chassis; saveProfile();
