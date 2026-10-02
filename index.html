@@ -32,6 +32,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 #vignette{position:fixed;inset:0;pointer-events:none;z-index:5;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,0.42) 100%)}
 #zoneWarning{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(circle at center,transparent 28%,rgba(140,60,255,0.42) 78%,rgba(120,40,240,0.72) 100%)}
 #solarWarning{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(circle at center,transparent 40%,rgba(255,180,60,0.30) 80%,rgba(255,120,20,0.55) 100%);transition:opacity .35s}
+#brakeVignette{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(circle at center,transparent 40%,rgba(80,140,255,0.20) 80%,rgba(40,90,200,0.35) 100%);transition:opacity .15s}
 #rotateOverlay{position:fixed;inset:0;z-index:9999;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px;pointer-events:auto;color:#eaf4ff;text-align:center;padding:24px}
 #rotateOverlay.show{display:flex}
 .rotateIcon{font-size:72px;color:#6ec0ff;animation:rotateAnim 2.2s ease-in-out infinite;text-shadow:0 0 30px rgba(110,190,255,0.6)}
@@ -105,9 +106,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .xp-bar{height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#4a90e2,#6ee0ff);transition:width 1.2s cubic-bezier(.2,.7,.3,1)}
 .xp-label{font:800 11px/1 ui-monospace,monospace;color:#7aa8d0;letter-spacing:.16em;margin-top:-6px}
 
-/* ============================================================
-   HUD ROW ORIZZONTALE
-   ============================================================ */
 #hud{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 6px);
   z-index:10;pointer-events:none;transition:opacity .3s;
   display:flex;justify-content:center;align-items:flex-start}
@@ -146,9 +144,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .hudNav .hudDist{color:#7aa8d0;font-size:10px;letter-spacing:.06em}
 .hudExpand{font-size:9px;color:#7aa8d0;opacity:0.7;letter-spacing:0;margin-left:-2px}
 
-/* ============================================================
-   STATS CIRCOLARI (HULL + AMMO) — in alto a sinistra
-   ============================================================ */
 #statsWrap{position:fixed;
   top:calc(env(safe-area-inset-top,0px) + 8px);
   left:calc(env(safe-area-inset-left,0px) + 8px);
@@ -197,9 +192,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .kf{font:700 10px/1.3 monospace;color:#e0eeff;padding:4px 8px;border-radius:6px;background:rgba(6,12,22,0.78);border:1px solid rgba(90,150,215,0.3);animation:kfIn .3s ease-out}
 @keyframes kfIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
 
-/* ============================================================
-   PAGINA STATISTICHE FULLSCREEN (hold su HUD top bar)
-   ============================================================ */
 #statsPage{
   position:fixed;inset:0;z-index:150;
   background:rgba(4,8,16,0.94);
@@ -275,6 +267,18 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 #turboBtn.cooldown .turboTxt{color:rgba(170,170,170,0.75)}
 @keyframes turboPulse{from{transform:scale(1)}to{transform:scale(1.05)}}
 
+/* ============================================================
+   FRENA — sopra lo stick a sinistra
+   ============================================================ */
+#brakeBtn{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 220px);left:calc(env(safe-area-inset-left,0px) + 22px);width:64px;height:64px;border-radius:50%;border:none;background:transparent;padding:0;margin:0;pointer-events:auto;cursor:pointer;touch-action:none;z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity .3s}
+#brakeBtn::before{content:'';position:absolute;inset:8px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(120,180,255,0.40),rgba(60,110,200,0.25) 55%,rgba(20,50,120,0.15));pointer-events:none;z-index:0}
+#brakeBtn:active{transform:scale(0.92)}
+#brakeBtn.active{box-shadow:0 0 32px rgba(140,200,255,0.9),inset 0 0 22px rgba(160,220,255,0.4)}
+#brakeBtn.active::before{background:radial-gradient(circle at 40% 35%,rgba(220,235,255,0.95),rgba(120,180,255,0.9) 55%,rgba(50,100,220,0.8))}
+.brakeSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.brakeTxt{position:relative;font:900 9px/1 ui-monospace,monospace;color:#c8dcff;letter-spacing:.10em;text-shadow:0 0 8px rgba(100,160,255,0.8);pointer-events:none;z-index:1}
+#brakeBtn.active .brakeTxt{color:#fff;text-shadow:0 0 12px rgba(200,230,255,1)}
+
 #fireBtn{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 130px);right:calc(env(safe-area-inset-right,0px) + 22px);width:88px;height:88px;border-radius:50%;border:none;background:transparent;padding:0;margin:0;pointer-events:auto;cursor:pointer;touch-action:none;z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity .3s}
 #fireBtn::before{content:'';position:absolute;inset:10px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(255,90,90,0.35),rgba(200,30,40,0.22) 55%,rgba(90,10,20,0.14));pointer-events:none;z-index:0}
 #fireBtn:active{transform:scale(0.92)}
@@ -316,11 +320,8 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .game-hidden #dmgVignette,.game-hidden #hitMark,.game-hidden #killFeed,
 .game-hidden #stick,.game-hidden #turboBtn,.game-hidden #fireBtn,
 .game-hidden #zoneWarning,.game-hidden #powerups,.game-hidden #missileBtn,
-.game-hidden #solarWarning{opacity:0;pointer-events:none}
+.game-hidden #solarWarning,.game-hidden #brakeBtn,.game-hidden #brakeVignette{opacity:0;pointer-events:none}
 
-/* ============================================================
-   LAYOUT LANDSCAPE
-   ============================================================ */
 @media (orientation: landscape){
 
   .hudRow{gap:10px;padding:4px 14px}
@@ -350,6 +351,13 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
     width:72px;height:72px
   }
   .turboTxt{font-size:10px}
+
+  #brakeBtn{
+    bottom:calc(env(safe-area-inset-bottom,0px) + 175px);
+    left:calc(env(safe-area-inset-left,0px) + 22px);
+    width:68px;height:68px
+  }
+  .brakeTxt{font-size:9px}
 
   #fireBtn{
     bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
@@ -398,7 +406,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   #killFeed{top:calc(env(safe-area-inset-top,0px) + 112px);right:calc(env(safe-area-inset-right,0px) + 6px)}
   .kf{font-size:9px;padding:3px 6px}
 
-  /* Stats page compact in landscape */
   #statsPage{padding:10px 18px}
   .spHeader{padding-bottom:6px;margin-bottom:8px}
   .spTitle{font-size:12px;letter-spacing:.24em}
@@ -445,6 +452,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   #rotateOverlay.show ~ #roster,
   #rotateOverlay.show ~ #stick,
   #rotateOverlay.show ~ #turboBtn,
+  #rotateOverlay.show ~ #brakeBtn,
   #rotateOverlay.show ~ #fireBtn,
   #rotateOverlay.show ~ #missileBtn,
   #rotateOverlay.show ~ #statsWrap,
@@ -459,6 +467,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 <div id="vignette"></div>
 <div id="zoneWarning"></div>
 <div id="solarWarning"></div>
+<div id="brakeVignette"></div>
 <div id="rotateOverlay">
   <div class="rotateIcon">&#8635;</div>
   <div class="rotateText">RUOTA IL DISPOSITIVO</div>
@@ -516,6 +525,13 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 <div id="killFeed"></div>
 <div id="powerups"></div>
 <div id="stick"><div class="knob" id="knob"></div></div>
+<button id="brakeBtn" aria-label="Frena">
+  <svg class="brakeSvg" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(140,200,255,0.25)" stroke-width="6"/>
+    <circle cx="50" cy="50" r="34" fill="none" stroke="rgba(140,200,255,0.45)" stroke-width="3"/>
+  </svg>
+  <span class="brakeTxt">FRENA</span>
+</button>
 <button id="turboBtn" aria-label="Turbo">
   <svg class="turboSvg" viewBox="0 0 100 100">
     <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,200,120,0.15)" stroke-width="6"/>
@@ -607,10 +623,11 @@ var SHIP_MAX_SCALE=1.4;
 var SHIP_MIN_SCALE=0.05;
 var SCALE_REF_CLOSE=2.0e6;
 var SCALE_REF_FAR=5.0e8;
-var MAX_SPEED=7e11;
+var MAX_SPEED=4e11;
 var TURBO_DURATION=5;
 var TURBO_COOLDOWN=20;
 var TURBO_MULT=2.5;
+var BRAKE_MULT=0.30;         // moltiplicatore di velocità quando si frena
 
 var HP_REGEN_DELAY = 5.0;
 var HP_REGEN_RATE  = 1.0;
@@ -667,7 +684,7 @@ var POWERUP_KEYS = ['shield','rapid','speed','damage','heal'];
 var MAX_POWERUPS_PER_SHIP = 3;
 var POWERUP_MAX_ON_MAP = 14;
 var POWERUP_SPAWN_INTERVAL = 6.0;
-var POWERUP_PICKUP_RANGE = 2.5e6;
+var POWERUP_PICKUP_RANGE = 5.5e6; // era 2.5e6
 
 var BAYER=new Float32Array(64);
 (function(){var m=[[0,32,8,40,2,34,10,42],[48,16,56,24,50,18,58,26],[12,44,4,36,14,46,6,38],[60,28,52,20,62,30,54,22],[3,35,11,43,1,33,9,41],[51,19,59,27,49,17,57,25],[15,47,7,39,13,45,5,37],[63,31,55,23,61,29,53,21]];
@@ -826,8 +843,8 @@ function drawMinimap(){
     var puM=worldToMap(pu.x,pu.y);
     var def=POWERUP_DEFS[pu.type];
     mmCtx.fillStyle='rgb('+def.color[0]+','+def.color[1]+','+def.color[2]+')';
-    mmCtx.globalAlpha=0.85;
-    mmCtx.beginPath(); mmCtx.arc(puM.x,puM.y,2.2+pulsePU*0.6,0,TAU); mmCtx.fill();
+    mmCtx.globalAlpha=0.9;
+    mmCtx.beginPath(); mmCtx.arc(puM.x,puM.y,3.0+pulsePU*0.8,0,TAU); mmCtx.fill();
     mmCtx.globalAlpha=1;
   }
 
@@ -860,7 +877,17 @@ function drawMinimap(){
     var col='#aaa';
     switch(p.name){case 'Mercurio':col='#a09888';break;case 'Venere':col='#e8c878';break;case 'Terra':col='#4a9eff';break;case 'Marte':col='#cc6644';break;case 'Giove':col='#ddaa77';break;case 'Saturno':col='#ddbb88';break;case 'Urano':col='#aadddd';break;case 'Nettuno':col='#5577cc';break;}
     mmCtx.fillStyle=col;
-    mmCtx.beginPath(); mmCtx.arc(px,py,1.8,0,TAU); mmCtx.fill();
+    mmCtx.beginPath(); mmCtx.arc(px,py,2.2,0,TAU); mmCtx.fill();
+  }
+
+  // Luna sulla minimappa
+  for(var i=0;i<satellites.length;i++){
+    var sat=satellites[i];
+    if(!sat.isMoon) continue;
+    var moonM=worldToMap(sat.x,sat.y);
+    mmCtx.fillStyle='#e8e8f0';
+    mmCtx.beginPath(); mmCtx.arc(moonM.x,moonM.y,1.8,0,TAU); mmCtx.fill();
+    mmCtx.strokeStyle='rgba(200,200,220,0.7)'; mmCtx.lineWidth=0.8; mmCtx.stroke();
   }
 
   var pulse=0.5+0.5*Math.sin(gameTime*4);
@@ -937,7 +964,7 @@ var swarmTimer=0;
 var swarmDirX=1, swarmDirY=0, swarmDirZ=0;
 
 // ============================================================
-// SATELLITES
+// SATELLITES + LUNA
 // ============================================================
 var satellites=[];
 (function initSatellites(){
@@ -955,6 +982,25 @@ var satellites=[];
     var au=8+Math.random()*20, a=orbitDist(au), ang=Math.random()*TAU, el=(Math.random()-0.5)*0.4;
     satellites.push({parent:null,orbitR:0,ang:ang,el:el,angVel:0,x:a*Math.cos(ang)*Math.cos(el),y:a*Math.sin(ang)*Math.cos(el),z:a*Math.sin(el)*0.5,variant:Math.floor(Math.random()*3)});
   }
+  // === LUNA === orbita la Terra a ~60 raggi terrestri (distanza reale)
+  (function(){
+    var earth = PLANETS[2];
+    var moonOrbit = earth.r * 60;
+    var moonAng = 2.4;   // angolo iniziale
+    var moonEl = 0.10;
+    satellites.push({
+      parent: earth,
+      orbitR: moonOrbit,
+      ang: moonAng,
+      el: moonEl,
+      angVel: 0.06,
+      x: earth.x + moonOrbit*Math.cos(moonAng)*Math.cos(moonEl),
+      y: earth.y + moonOrbit*Math.sin(moonAng)*Math.cos(moonEl),
+      z: earth.z + moonOrbit*Math.sin(moonEl),
+      variant: 0,
+      isMoon: true
+    });
+  })();
 })();
 function updateSatellites(dt){
   for(var i=0;i<satellites.length;i++){
@@ -1041,9 +1087,6 @@ function getActivePowerup(ship,type){
   return null;
 }
 
-// ============================================================
-// RIGENERAZIONE HP
-// ============================================================
 function updateShipRegen(ship, dt){
   if(!ship.alive) return;
   if(ship.regenDelay > 0){
@@ -1107,7 +1150,7 @@ var earth=PLANETS[2], mars=PLANETS[3];
 var SHIPS=[];
 var human={isHuman:true,alive:true,hp:MAX_HP,maxHp:MAX_HP,x:0,y:0,z:0,yaw:0,pitch:0,bank:0,speed:0,recoil:0,fireCd:0,flash:0,
   ammo:MAX_AMMO,reloadT:0, missileCd:0, missileTarget:null,
-  turboActive:false, turboTimer:0, turboCooldown:0,
+  turboActive:false, turboTimer:0, turboCooldown:0, braking:false,
   powerups:[], shieldPulse:0, regenDelay:0, kills:0,
   chassis:'balanced', speedMul:1, turnMul:1, fireRateMul:1,
   palette:PAL_PLAYER,name:'TU',dotColor:PAL_PLAYER.dot,ai:null,trailTimer:0,index:0};
@@ -1115,7 +1158,7 @@ SHIPS.push(human);
 for(var si=0;si<TOTAL_PLAYERS-1;si++){
   SHIPS.push({
     isHuman:false,alive:true,hp:MAX_HP,maxHp:MAX_HP,x:0,y:0,z:0,yaw:0,pitch:0,bank:0,speed:0,recoil:0,fireCd:0,flash:0,
-    ammo:MAX_AMMO,reloadT:0, missileCd:0, missileTarget:null,
+    ammo:MAX_AMMO,reloadT:0, missileCd:0, missileTarget:null, braking:false,
     powerups:[], shieldPulse:0, regenDelay:0, kills:0,
     chassis:'balanced', speedMul:1, turnMul:1, fireRateMul:1,
     palette:PAL_RED,name:'AI',dotColor:PAL_RED.dot,
@@ -1145,6 +1188,9 @@ var lobbyEl=document.getElementById('lobby'), queueEl=document.getElementById('q
 var statsWrap=document.getElementById('statsWrap');
 var turboBtn=document.getElementById('turboBtn'), turboTxt=document.getElementById('turboTxt'), turboRing=document.getElementById('turboRing');
 var missileBtn=document.getElementById('missileBtn'), missileTxt=document.getElementById('missileTxt'), missileRing=document.getElementById('missileRing');
+var brakeBtn=document.getElementById('brakeBtn');
+var brakeBtnHeld=false;
+var brakeVignetteEl=document.getElementById('brakeVignette');
 var fireBtn=document.getElementById('fireBtn');
 var fireBtnHeld=false;
 var missileBtnHeld=false;
@@ -1154,7 +1200,6 @@ var hudZoneEl=document.getElementById('hudZone');
 var powerupsEl=document.getElementById('powerups');
 var powerupsDomEls={};
 
-// Stats page refs
 var statsPageEl=document.getElementById('statsPage');
 var spListEl=document.getElementById('spList');
 var spAliveEl=document.getElementById('spAlive');
@@ -1223,9 +1268,6 @@ hudRowEl.addEventListener('pointerup', function(e){
 hudRowEl.addEventListener('pointercancel', function(e){
   if(statsHoldTimer){ clearTimeout(statsHoldTimer); statsHoldTimer = null; }
   hideStatsPage();
-});
-hudRowEl.addEventListener('pointerleave', function(e){
-  // Non chiude: aspetta il pointerup globale
 });
 document.addEventListener('pointerup', function(e){
   if(statsHoldTimer){ clearTimeout(statsHoldTimer); statsHoldTimer = null; }
@@ -1355,6 +1397,7 @@ function beginMatch(){
   human.powerups=[];
   human.regenDelay=0;
   human.kills=0;
+  human.braking=false;
   {
     var dx=mars.x-human.x,dy=mars.y-human.y,dz=mars.z-human.z;
     var dl=Math.sqrt(dx*dx+dy*dy+dz*dz);
@@ -1375,6 +1418,7 @@ function beginMatch(){
     s.powerups=[]; s.hideTarget=null; s.hideTargetTimer=0;
     s.regenDelay=0;
     s.kills=0;
+    s.braking=false;
     var dx=-s.x,dy=-s.y,dz=-s.z;
     var dl=Math.sqrt(dx*dx+dy*dy+dz*dz);
     s.yaw=Math.atan2(dy,dx); s.pitch=Math.asin(dz/dl);
@@ -1425,6 +1469,7 @@ function endMatch(won){
   showScreen('results');
   zoneWarningEl.style.opacity='0';
   solarWarningEl.style.opacity='0';
+  brakeVignetteEl.style.opacity='0';
   setTimeout(function(){xb.style.width=(profile.xp/xpToNextLevel(profile.level)*100).toFixed(1)+'%';},80);
 }
 
@@ -1726,7 +1771,6 @@ function damageShip(target,dmg,source){
   if(target.hp<=0){
     target.hp=0; target.alive=false;
     spawnExplosion(target.x, target.y, target.z, 8e5);
-    // Track kill for the source ship
     if(source && source !== target){
       source.kills = (source.kills || 0) + 1;
       if(source === human) matchStats.kills = human.kills;
@@ -2092,6 +2136,67 @@ var satSprites=[];
   }
 })();
 
+// ============================================================
+// LUNA sprite 32x32
+// ============================================================
+var MOON_SPR=32;
+var moonSprite=(function(){
+  var spr=new Uint32Array(MOON_SPR*MOON_SPR);
+  var setPx=function(x,y,c){if(x<0||y<0||x>=MOON_SPR||y>=MOON_SPR)return;spr[y*MOON_SPR+x]=0xFF000000|((c[2]|0)<<16)|((c[1]|0)<<8)|(c[0]|0);};
+  var cx=MOON_SPR/2, cy=MOON_SPR/2;
+  var r=MOON_SPR/2-2;
+  var base=[205,205,212], light=[240,240,245], dark=[135,135,145];
+  var crater=[100,100,110], edge=[70,70,80];
+  for(var y=0;y<MOON_SPR;y++)for(var x=0;x<MOON_SPR;x++){
+    var dx=x-cx+0.5, dy=y-cy+0.5;
+    var d2=dx*dx+dy*dy;
+    if(d2>r*r) continue;
+    var dd=Math.sqrt(d2)/r;
+    var lightDot=(-dx-dy)/(r*1.5);
+    var c;
+    if(dd>0.94) c=edge;
+    else if(lightDot>0.35) c=light;
+    else if(lightDot>-0.3) c=base;
+    else c=dark;
+    // Cratere principale (a sinistra-alto)
+    var c1x=x-10, c1y=y-11;
+    var cd1=c1x*c1x+c1y*c1y;
+    if(cd1<9){ c=crater; }
+    else if(cd1<16 && dd<0.85){ c=[125,125,135]; }
+    // Cratere secondario (a destra-basso)
+    var c2x=x-22, c2y=y-21;
+    var cd2=c2x*c2x+c2y*c2y;
+    if(cd2<6){ c=crater; }
+    // Cratere terzo (in basso)
+    var c3x=x-15, c3y=y-23;
+    var cd3=c3x*c3x+c3y*c3y;
+    if(cd3<4){ c=crater; }
+    // Puntini casuali
+    var n=hash3(x*13+100,y*17+50,7);
+    if(n>0.93 && dd<0.75){ c=[150,150,158]; }
+    setPx(x,y,c);
+  }
+  return spr;
+})();
+function blitMoonSprite(cx,cy,scale,worldDist){
+  var tw=Math.max(2,Math.round(MOON_SPR*scale));
+  var th=Math.max(2,Math.round(MOON_SPR*scale));
+  var oxI=Math.round(cx), oyI=Math.round(cy);
+  for(var ty=0;ty<th;ty++){
+    var py=oyI+ty; if(py<0||py>=H)continue;
+    var sy=Math.floor(ty*MOON_SPR/th);
+    var srcRow=sy*MOON_SPR, dstRow=py*W;
+    for(var tx=0;tx<tw;tx++){
+      var px=oxI+tx; if(px<0||px>=W)continue;
+      if(depthBuf[dstRow+px]<worldDist)continue;
+      var sx=Math.floor(tx*MOON_SPR/tw);
+      var v=moonSprite[srcRow+sx];
+      if((v&0xFF000000)===0)continue;
+      buf32[dstRow+px]=v;
+    }
+  }
+}
+
 var PU_SPR=24;
 function buildPowerupSprite(color){
   var spr=new Uint32Array(PU_SPR*PU_SPR);
@@ -2123,35 +2228,22 @@ for(var kk=0;kk<POWERUP_KEYS.length;kk++){
   puSprites[key]=buildPowerupSprite(POWERUP_DEFS[key].color);
 }
 
-// Missile sprite: meno voluminoso (corpo 2px + pinne piccole)
 var MISSILE_SPR=16;
 var missileSprite=(function(){
   var spr=new Uint32Array(MISSILE_SPR*MISSILE_SPR);
   var setPx=function(x,y,c){if(x<0||y<0||x>=MISSILE_SPR||y>=MISSILE_SPR)return;spr[y*MISSILE_SPR+x]=0xFF000000|((c[2]|0)<<16)|((c[1]|0)<<8)|(c[0]|0);};
-  var BODY_L=[240,240,255];
-  var BODY_R=[150,150,170];
-  var FIN=[170,170,195];
-  // Corpo sottile (2 px), da y=3 a y=12
-  for(var y=3;y<=12;y++){
-    setPx(7,y,BODY_L);
-    setPx(8,y,BODY_R);
-  }
-  // Pinne piccole alla base (y=11)
+  var BODY_L=[240,240,255], BODY_R=[150,150,170], FIN=[170,170,195];
+  for(var y=3;y<=12;y++){ setPx(7,y,BODY_L); setPx(8,y,BODY_R); }
   setPx(5,11,FIN); setPx(6,11,BODY_L);
   setPx(9,11,BODY_R); setPx(10,11,FIN);
-  // Punta
   setPx(7,2,[255,255,255]); setPx(8,2,[255,255,255]);
   setPx(7,1,[255,220,220]); setPx(8,1,[255,220,220]);
-  // Fiamma motore
   setPx(7,13,[255,180,80]); setPx(8,13,[255,180,80]);
   setPx(7,14,[255,120,60]); setPx(8,14,[255,120,60]);
   setPx(7,15,[255,80,40]); setPx(8,15,[255,80,40]);
   return spr;
 })();
 
-// ============================================================
-// BLIT
-// ============================================================
 function blitAsteroidSprite(cx,cy,scale,variant,worldDist){
   var sprite=astSprites[variant];
   var tw=Math.max(1,Math.round(AST_SPR*scale));
@@ -2307,9 +2399,18 @@ function drawBodyMarkers(){
     var onScreen=Math.abs(pr.sxn)<0.92 && Math.abs(pr.syn)<0.92;
     var occlThreshold=pr.dist-b.r*0.9;
     if(onScreen){
-      if(pixSize<4){
+      // soglia alzata da 4 a 9 pixel per rendere visibili i pianeti lontani
+      if(pixSize<9){
         var cx=pr.scrX|0, cy=pr.scrY|0;
-        var diamondPts=[[cx,cy-2],[cx,cy+2],[cx-2,cy],[cx+2,cy],[cx-1,cy-1],[cx+1,cy-1],[cx-1,cy+1],[cx+1,cy+1]];
+        // diamond più grande (raggio 4 invece di 2)
+        var diamondPts=[
+          [cx,cy-4],[cx,cy-3],[cx,cy+3],[cx,cy+4],
+          [cx-4,cy],[cx-3,cy],[cx+3,cy],[cx+4,cy],
+          [cx-3,cy-3],[cx+3,cy-3],[cx-3,cy+3],[cx+3,cy+3],
+          [cx-2,cy-2],[cx+2,cy-2],[cx-2,cy+2],[cx+2,cy+2],
+          [cx-1,cy-2],[cx+1,cy-2],[cx-2,cy-1],[cx+2,cy-1],
+          [cx-1,cy+2],[cx+1,cy+2],[cx-2,cy+1],[cx+2,cy+1]
+        ];
         for(var p=0;p<diamondPts.length;p++){
           var px=diamondPts[p][0], py=diamondPts[p][1];
           if(px<0||py<0||px>=W||py>=H)continue;
@@ -2327,14 +2428,15 @@ function drawBodyMarkers(){
       sn/=scale; tn/=scale;
       var scrX=((sn+1)*0.5*W)|0;
       var scrY=((1-(tn+1)*0.5)*H)|0;
-      for(var dy2=-2;dy2<=2;dy2++){
-        for(var dx2=-2;dx2<=2;dx2++){
+      // Marker off-screen più grande (raggio 3 invece di 2)
+      for(var dy2=-3;dy2<=3;dy2++){
+        for(var dx2=-3;dx2<=3;dx2++){
           var d=Math.abs(dx2)+Math.abs(dy2);
-          if(d>2) continue;
+          if(d>3) continue;
           var px=scrX+dx2, py=scrY+dy2;
           if(px<0||py<0||px>=W||py>=H)continue;
           if(depthBuf[py*W+px]<occlThreshold)continue;
-          buf32[py*W+px]=(d<=1)?markerPix:0xFF000000;
+          buf32[py*W+px]=(d<=2)?markerPix:0xFF000000;
         }
       }
       if(scrX>=0&&scrY>=0&&scrX<W&&scrY<H){
@@ -2415,9 +2517,7 @@ function buildUfoSprite(pal){
   }
   for(var x=3;x<29;x++){if(x%3===0)setPx(x,15,ACC);}
 
-  // Post-processing: aggiungi bordo bianco ESTERNO al contorno scuro
-  // Il contorno scuro (OUT) è il bordo attuale, ora diventa bordo interno
-  // Il nuovo bordo esterno sarà bianco, per staccarsi dal nero dello sfondo
+  // Bordo bianco ESTERNO
   var WHITE_OUTER = [200, 235, 255];
   var darkR = OUT[0], darkG = OUT[1], darkB = OUT[2];
   var dirs = [[-1,0],[1,0],[0,-1],[0,1]];
@@ -2425,19 +2525,18 @@ function buildUfoSprite(pal){
   for(var yy=0; yy<UFO_H; yy++){
     for(var xx=0; xx<UFO_W; xx++){
       var v = copy[yy*UFO_W + xx];
-      if((v & 0xFF000000) === 0) continue; // trasparente
+      if((v & 0xFF000000) === 0) continue;
       var rr = v & 0xFF, gg = (v>>8)&0xFF, bb = (v>>16)&0xFF;
-      if(rr !== darkR || gg !== darkG || bb !== darkB) continue; // non è OUT
+      if(rr !== darkR || gg !== darkG || bb !== darkB) continue;
       for(var d=0; d<4; d++){
         var nx2 = xx + dirs[d][0], ny2 = yy + dirs[d][1];
         if(nx2<0 || ny2<0 || nx2>=UFO_W || ny2>=UFO_H) continue;
         var nv = copy[ny2*UFO_W + nx2];
-        if((nv & 0xFF000000) !== 0) continue; // non è trasparente
+        if((nv & 0xFF000000) !== 0) continue;
         setPx(nx2, ny2, WHITE_OUTER);
       }
     }
   }
-
   return spr;
 }
 function getUfoSprite(pal){
@@ -2782,7 +2881,7 @@ function drawMissiles(){
     var pr=projectToScreen(m.x,m.y,m.z);
     if(!pr)continue;
     if(Math.abs(pr.sxn)>1.3||Math.abs(pr.syn)>1.3)continue;
-    var sc=1.3; // scala ridotta da 1.8 a 1.3
+    var sc=1.3;
     var tw=Math.max(2,Math.round(MISSILE_SPR*sc));
     var th=Math.max(2,Math.round(MISSILE_SPR*sc));
     var oxI=Math.round(pr.scrX-MISSILE_SPR*sc*0.5);
@@ -3048,8 +3147,8 @@ function computeSpeed(ship){
     var d=Math.sqrt((ship.x-o.x)*(ship.x-o.x)+(ship.y-o.y)*(ship.y-o.y)+(ship.z-o.z)*(ship.z-o.z))*1.5;
     if(d<nearest)nearest=d;
   }
-  if(nearest<2e4)nearest=2e4;
-return Math.min(MAX_SPEED, Math.max(9000, nearest*1.1));
+  if(nearest<1e4)nearest=1e4;
+  return Math.min(MAX_SPEED, Math.max(3000, nearest*0.5));
 }
 function applyCollisions(ship){
   for(var i=0;i<BODIES.length;i++){
@@ -3122,8 +3221,13 @@ function updatePlayer(dt){
     var targetBank=input.ax*0.6;
     human.bank+=(targetBank-human.bank)*Math.min(1,dt*8);
   }
-  var speedMul=human.turboActive?TURBO_MULT:1.0;
-  speedMul*=human.speedMul;
+
+  // === FRENO ===
+  var speedMul = 1.0;
+  if(human.turboActive) speedMul = TURBO_MULT;
+  if(brakeBtnHeld) speedMul = BRAKE_MULT; // vince su turbo
+
+  speedMul *= human.speedMul;
   if(getActivePowerup(human,'speed')) speedMul*=1.6;
   human.speed=computeSpeed(human)*speedMul;
   var cp=Math.cos(human.pitch), sp=Math.sin(human.pitch);
@@ -3131,6 +3235,13 @@ function updatePlayer(dt){
   var fx=cp*cy, fy=cp*sy, fz=sp;
   human.x+=fx*human.speed*dt; human.y+=fy*human.speed*dt; human.z+=fz*human.speed*dt;
   applyCollisions(human);
+
+  // Vignetta blu quando freni
+  if(brakeBtnHeld && human.alive){
+    brakeVignetteEl.style.opacity='0.85';
+  } else {
+    brakeVignetteEl.style.opacity='0';
+  }
 
   var hasRapid=!!getActivePowerup(human,'rapid');
   if(fireBtnHeld && (hasRapid || (human.fireCd<=0 && human.reloadT<=0 && human.ammo>0))){
@@ -3306,29 +3417,39 @@ function render(){
     if(sc>1.4)sc=1.4; if(sc<0.10)sc=0.10;
     blitAsteroidSprite(pr.scrX-AST_SPR*sc*0.5,pr.scrY-AST_SPR*sc*0.5,sc,a.variant,pr.dist);
   }
+  // Satelliti + Luna
   for(var i=0;i<satellites.length;i++){
     var sat=satellites[i];
     var pr=projectToScreen(sat.x,sat.y,sat.z);
     if(!pr)continue;
     if(Math.abs(pr.sxn)>1.3||Math.abs(pr.syn)>1.3)continue;
-    var pixSize=2e6/(pr.zd*camTanV)*H;
-    var sc=pixSize/SAT_SPR*1.6;
-    if(sc>1.6)sc=1.6; if(sc<0.10)sc=0.10;
-    blitSatSprite(pr.scrX-SAT_SPR*sc*0.5,pr.scrY-SAT_SPR*sc*0.5,sc,sat.variant,pr.dist);
+    if(sat.isMoon){
+      // Luna: proiezione con base grande per renderla visibile
+      var pixSize=2.5e7/(pr.zd*camTanV)*H;
+      var sc=pixSize/MOON_SPR*1.5;
+      if(sc>6)sc=6; if(sc<0.20)sc=0.20;
+      blitMoonSprite(pr.scrX-MOON_SPR*sc*0.5,pr.scrY-MOON_SPR*sc*0.5,sc,pr.dist);
+    } else {
+      var pixSize=2e6/(pr.zd*camTanV)*H;
+      var sc=pixSize/SAT_SPR*1.6;
+      if(sc>1.6)sc=1.6; if(sc<0.10)sc=0.10;
+      blitSatSprite(pr.scrX-SAT_SPR*sc*0.5,pr.scrY-SAT_SPR*sc*0.5,sc,sat.variant,pr.dist);
+    }
   }
+  // Powerup — più grandi
   for(var i=0;i<powerups.length;i++){
     var pu=powerups[i];
     if(!pu.alive)continue;
     var pr=projectToScreen(pu.x,pu.y,pu.z);
     if(!pr)continue;
     if(Math.abs(pr.sxn)>1.3||Math.abs(pr.syn)>1.3)continue;
-    var pixSize=1.8e6/(pr.zd*camTanV)*H;
-    var sc=pixSize/PU_SPR*1.8;
-    if(sc>1.8)sc=1.8; if(sc<0.15)sc=0.15;
+    var pixSize=3.2e6/(pr.zd*camTanV)*H;
+    var sc=pixSize/PU_SPR*2.8;
+    if(sc>3.2)sc=3.2; if(sc<0.30)sc=0.30;
     var sprite=puSprites[pu.type];
-    var bob=Math.sin(pu.pulse)*1.5*sc;
-    var tw=Math.max(1,Math.round(PU_SPR*sc));
-    var th=Math.max(1,Math.round(PU_SPR*sc));
+    var bob=Math.sin(pu.pulse)*2.5*sc;
+    var tw=Math.max(2,Math.round(PU_SPR*sc));
+    var th=Math.max(2,Math.round(PU_SPR*sc));
     var oxI=Math.round(pr.scrX-PU_SPR*sc*0.5);
     var oyI=Math.round(pr.scrY-PU_SPR*sc*0.5+bob);
     for(var ty=0;ty<th;ty++){
@@ -3344,9 +3465,10 @@ function render(){
         buf32[dstRow+px]=v;
       }
     }
-    if(sc>0.4){
+    // Alone più grande e intenso
+    if(sc>0.3){
       var def=POWERUP_DEFS[pu.type];
-      var haloR=2+Math.sin(pu.pulse*1.3)*1.2;
+      var haloR=3+Math.sin(pu.pulse*1.3)*2.0;
       var hpx=pr.scrX|0, hpy=pr.scrY|0;
       var hr=Math.round(haloR);
       for(var yy=-hr;yy<=hr;yy++)for(var xx=-hr;xx<=hr;xx++){
@@ -3354,7 +3476,7 @@ function render(){
         var px2=hpx+xx, py2=hpy+yy;
         if(px2<0||py2<0||px2>=W||py2>=H)continue;
         if(depthBuf[py2*W+px2]<pr.dist)continue;
-        blendPx(px2,py2,def.color[0],def.color[1],def.color[2],(0.25+0.15*Math.sin(pu.pulse*2))*(1-Math.sqrt(d2)/hr));
+        blendPx(px2,py2,def.color[0],def.color[1],def.color[2],(0.35+0.25*Math.sin(pu.pulse*2))*(1-Math.sqrt(d2)/hr));
       }
     }
   }
@@ -3600,6 +3722,23 @@ document.getElementById('chassisGrid').addEventListener('click',function(e){
   for(var i=0;i<els.length;i++) els[i].classList.toggle('active', els[i].dataset.chassis===profile.chassis);
 });
 
+// === FRENA handler ===
+brakeBtn.addEventListener('pointerdown', function(e){
+  e.preventDefault(); e.stopPropagation();
+  try{ brakeBtn.setPointerCapture(e.pointerId); } catch(_){}
+  if(!human.alive) return;
+  brakeBtnHeld = true;
+  brakeBtn.classList.add('active');
+});
+function brakeRelease(e){
+  e.preventDefault(); e.stopPropagation();
+  brakeBtnHeld = false;
+  brakeBtn.classList.remove('active');
+}
+brakeBtn.addEventListener('pointerup', brakeRelease);
+brakeBtn.addEventListener('pointercancel', brakeRelease);
+brakeBtn.addEventListener('lostpointercapture', function(){ brakeBtnHeld=false; brakeBtn.classList.remove('active'); });
+
 turboBtn.addEventListener('pointerdown', function(e){
   e.preventDefault(); e.stopPropagation();
   try{turboBtn.setPointerCapture(e.pointerId);}catch(_){}
@@ -3719,7 +3858,6 @@ function updateHUD(){
       el.querySelector('.hp').textContent=s.alive?Math.ceil(s.hp):'KIA';
     }
   }
-  // Se la stats page è aperta, aggiorna in tempo reale
   if(statsPageVisible){
     buildStatsPage();
   }
