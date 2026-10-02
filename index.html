@@ -627,7 +627,7 @@ var MAX_SPEED=4e11;
 var TURBO_DURATION=5;
 var TURBO_COOLDOWN=20;
 var TURBO_MULT=2.5;
-var BRAKE_MULT=0.30;         // moltiplicatore di velocità quando si frena
+var BRAKE_MULT=0.30;
 
 var HP_REGEN_DELAY = 5.0;
 var HP_REGEN_RATE  = 1.0;
@@ -684,7 +684,7 @@ var POWERUP_KEYS = ['shield','rapid','speed','damage','heal'];
 var MAX_POWERUPS_PER_SHIP = 3;
 var POWERUP_MAX_ON_MAP = 14;
 var POWERUP_SPAWN_INTERVAL = 6.0;
-var POWERUP_PICKUP_RANGE = 5.5e6; // era 2.5e6
+var POWERUP_PICKUP_RANGE = 5.5e6;
 
 var BAYER=new Float32Array(64);
 (function(){var m=[[0,32,8,40,2,34,10,42],[48,16,56,24,50,18,58,26],[12,44,4,36,14,46,6,38],[60,28,52,20,62,30,54,22],[3,35,11,43,1,33,9,41],[51,19,59,27,49,17,57,25],[15,47,7,39,13,45,5,37],[63,31,55,23,61,29,53,21]];
@@ -880,7 +880,6 @@ function drawMinimap(){
     mmCtx.beginPath(); mmCtx.arc(px,py,2.2,0,TAU); mmCtx.fill();
   }
 
-  // Luna sulla minimappa
   for(var i=0;i<satellites.length;i++){
     var sat=satellites[i];
     if(!sat.isMoon) continue;
@@ -982,11 +981,10 @@ var satellites=[];
     var au=8+Math.random()*20, a=orbitDist(au), ang=Math.random()*TAU, el=(Math.random()-0.5)*0.4;
     satellites.push({parent:null,orbitR:0,ang:ang,el:el,angVel:0,x:a*Math.cos(ang)*Math.cos(el),y:a*Math.sin(ang)*Math.cos(el),z:a*Math.sin(el)*0.5,variant:Math.floor(Math.random()*3)});
   }
-  // === LUNA === orbita la Terra a ~60 raggi terrestri (distanza reale)
   (function(){
     var earth = PLANETS[2];
     var moonOrbit = earth.r * 60;
-    var moonAng = 2.4;   // angolo iniziale
+    var moonAng = 2.4;
     var moonEl = 0.10;
     satellites.push({
       parent: earth,
@@ -1383,7 +1381,6 @@ function beginMatch(){
   zoneRadius=ZONE_RADIUS_START_AU*AU;
   zoneOutsideTime=0; zoneWarning=0;
   solarFlareTimer=SOLAR_FLARE_INTERVAL; solarFlareActive=false; solarFlareT=0;
-  // FIX #1: niente swarmTimer=0 (lo sciame partiva subito)
   swarmTimer=SWARM_INTERVAL; swarmActive=false;
 
   var ch=CHASSIS[profile.chassis]||CHASSIS.balanced;
@@ -1442,7 +1439,6 @@ function buildRoster(){
   }
 }
 
-// FIX #3: guard contro doppia chiusura partita
 function endMatch(won){
   if(!matchActive) return;
   matchActive=false;
@@ -1529,7 +1525,6 @@ function updateDynamicEvents(dt){
         s.regenDelay = HP_REGEN_DELAY;
         if(s.hp<=0){ s.hp=0; s.alive=false; spawnExplosion(s.x,s.y,s.z,8e5);
           if(s.isHuman){playerEliminated=true;setTimeout(function(){endMatch(false);},900);}
-          // FIX #2: se un bot muore per brillamento e resta solo l'umano → vittoria
           else {
             var al=SHIPS.filter(function(x){return x.alive;});
             if(al.length===1&&al[0]===human) setTimeout(function(){endMatch(true);},900);
@@ -1688,6 +1683,43 @@ function computeAimAssist(ship, fx, fy, fz){
 }
 
 // ============================================================
+// CROSSHAIR DATA (LOCK + RADAR)
+// ============================================================
+function getCrosshairData(ship){
+  var cp=Math.cos(ship.pitch), sp=Math.sin(ship.pitch);
+  var cy=Math.cos(ship.yaw), sy=Math.sin(ship.yaw);
+  var fx=cp*cy, fy=cp*sy, fz=sp;
+  var rx=-sy, ry=cy, rz=0;
+  var ux=ry*fz-rz*fy, uy=rz*fx-rx*fz, uz=rx*fy-ry*fx;
+  var tanH = TAN_V * (W/Math.max(1,H));
+  var lockCos = Math.cos(AIM_ASSIST_CONE_DEG*PI/180);
+  var locked = null;
+  var bestLockDot = lockCos;
+  var nearestInFront = null;
+  var nearestDist = Infinity;
+  var rnx = 0, rny = 0;
+  for(var i=0;i<SHIPS.length;i++){
+    var o = SHIPS[i];
+    if(o === ship || !o.alive) continue;
+    var dx=o.x-ship.x, dy=o.y-ship.y, dz=o.z-ship.z;
+    var dist = Math.sqrt(dx*dx+dy*dy+dz*dz);
+    if(dist < 1) continue;
+    var dot = (dx*fx+dy*fy+dz*fz)/dist;
+    if(dot > bestLockDot){ bestLockDot = dot; locked = o; }
+    if(dot > 0 && dist < nearestDist){
+      nearestDist = dist;
+      nearestInFront = o;
+      var zd = dist*dot;
+      var xd = dx*rx+dy*ry+dz*rz;
+      var yd = dx*ux+dy*uy+dz*uz;
+      rnx = xd/(zd*tanH);
+      rny = yd/(zd*TAN_V);
+    }
+  }
+  return {locked: locked, hasRadar: nearestInFront !== null, nx: rnx, ny: rny};
+}
+
+// ============================================================
 // FIRE
 // ============================================================
 function fireFrom(ship){
@@ -1699,11 +1731,13 @@ function fireFrom(ship){
   var cp=Math.cos(ship.pitch),sp=Math.sin(ship.pitch);
   var cy=Math.cos(ship.yaw),sy=Math.sin(ship.yaw);
   var fx=cp*cy, fy=cp*sy, fz=sp;
+  var cross = getCrosshairData(ship);
   var assist = computeAimAssist(ship, fx, fy, fz);
   fx=assist[0]; fy=assist[1]; fz=assist[2];
   var off=6e5; var bs=ship.speed+1.5e8;
   bullets.push({x:ship.x+fx*off, y:ship.y+fy*off, z:ship.z+fz*off,
-    vx:fx*bs, vy:fy*bs, vz:fz*bs, life:BULLET_LIFE, maxLife:BULLET_LIFE, owner:ship});
+    vx:fx*bs, vy:fy*bs, vz:fz*bs, life:BULLET_LIFE, maxLife:BULLET_LIFE, owner:ship,
+    lockedTarget: cross.locked});
   ship.recoil=1.0;
   if(!hasRapid){
     ship.ammo--;
@@ -2166,20 +2200,16 @@ var moonSprite=(function(){
     else if(lightDot>0.35) c=light;
     else if(lightDot>-0.3) c=base;
     else c=dark;
-    // Cratere principale (a sinistra-alto)
     var c1x=x-10, c1y=y-11;
     var cd1=c1x*c1x+c1y*c1y;
     if(cd1<9){ c=crater; }
     else if(cd1<16 && dd<0.85){ c=[125,125,135]; }
-    // Cratere secondario (a destra-basso)
     var c2x=x-22, c2y=y-21;
     var cd2=c2x*c2x+c2y*c2y;
     if(cd2<6){ c=crater; }
-    // Cratere terzo (in basso)
     var c3x=x-15, c3y=y-23;
     var cd3=c3x*c3x+c3y*c3y;
     if(cd3<4){ c=crater; }
-    // Puntini casuali
     var n=hash3(x*13+100,y*17+50,7);
     if(n>0.93 && dd<0.75){ c=[150,150,158]; }
     setPx(x,y,c);
@@ -2515,7 +2545,6 @@ function buildUfoSprite(pal){
   }
   for(var x=3;x<29;x++){if(x%3===0)setPx(x,15,ACC);}
 
-  // Bordo bianco ESTERNO
   var WHITE_OUTER = [200, 235, 255];
   var darkR = OUT[0], darkG = OUT[1], darkB = OUT[2];
   var dirs = [[-1,0],[1,0],[0,-1],[0,1]];
@@ -2915,25 +2944,45 @@ function plotPx(x,y,c){
 }
 function drawCrosshair(){
   var cx=W>>1, cy=H>>1;
-  var col=[140,255,190];
-  var dim=[80,180,120];
-  var dim2=[45,115,85];
-  plotPx(cx,cy,col);
-  plotPx(cx-1,cy,dim);
-  plotPx(cx,cy-1,dim);
+  var info = getCrosshairData(human);
+  var locked = info.locked !== null;
+
+  var mainCol   = locked ? [255,70,70]   : [140,255,190];
+  var subCol    = locked ? [255,140,140] : [80,180,120];
+  var cornerCol = locked ? [255,110,110] : [45,115,85];
+  var radarCol  = [255,90,50];
+
+  plotPx(cx,cy,mainCol);
+  plotPx(cx-1,cy,subCol);
+  plotPx(cx,cy-1,subCol);
+
+  var radarThresh = 0.12;
+  var armTop   = !locked && info.hasRadar && info.ny >  radarThresh;
+  var armBot   = !locked && info.hasRadar && info.ny < -radarThresh;
+  var armLeft  = !locked && info.hasRadar && info.nx < -radarThresh;
+  var armRight = !locked && info.hasRadar && info.nx >  radarThresh;
+
   var tS=5, tE=9;
   for(var i=tS;i<=tE;i++){
-    plotPx(cx,cy-i,col); plotPx(cx,cy+i,col);
-    plotPx(cx-i,cy,col); plotPx(cx+i,cy,col);
+    plotPx(cx, cy-i, armTop   ? radarCol : mainCol);
+    plotPx(cx, cy+i, armBot   ? radarCol : mainCol);
+    plotPx(cx-i, cy, armLeft  ? radarCol : mainCol);
+    plotPx(cx+i, cy, armRight ? radarCol : mainCol);
   }
-  plotPx(cx,cy-tE-1,dim); plotPx(cx,cy+tE+1,dim);
-  plotPx(cx-tE-1,cy,dim); plotPx(cx+tE+1,cy,dim);
+  plotPx(cx,cy-tE-1,subCol); plotPx(cx,cy+tE+1,subCol);
+  plotPx(cx-tE-1,cy,subCol); plotPx(cx+tE+1,cy,subCol);
+
   var bd=13, bl=4;
+  var tlCol = (!locked && armTop && armLeft ) ? radarCol : cornerCol;
+  var trCol = (!locked && armTop && armRight) ? radarCol : cornerCol;
+  var blCol = (!locked && armBot && armLeft ) ? radarCol : cornerCol;
+  var brCol = (!locked && armBot && armRight) ? radarCol : cornerCol;
+
   for(var i=0;i<bl;i++){
-    plotPx(cx-bd,cy-bd+i,dim2); plotPx(cx-bd+i,cy-bd,dim2);
-    plotPx(cx+bd,cy-bd+i,dim2); plotPx(cx+bd-i,cy-bd,dim2);
-    plotPx(cx-bd,cy+bd-i,dim2); plotPx(cx-bd+i,cy+bd,dim2);
-    plotPx(cx+bd,cy+bd-i,dim2); plotPx(cx+bd-i,cy+bd,dim2);
+    plotPx(cx-bd, cy-bd+i, tlCol);  plotPx(cx-bd+i, cy-bd, tlCol);
+    plotPx(cx+bd, cy-bd+i, trCol);  plotPx(cx+bd-i, cy-bd, trCol);
+    plotPx(cx-bd, cy+bd-i, blCol);  plotPx(cx-bd+i, cy+bd, blCol);
+    plotPx(cx+bd, cy+bd-i, brCol);  plotPx(cx+bd-i, cy+bd, brCol);
   }
 }
 function updateShootingStars(dt){
@@ -3102,32 +3151,12 @@ function updateAI(ship,dt){
   ship.x+=fx*ship.speed*dt; ship.y+=fy*ship.speed*dt; ship.z+=fz*ship.speed*dt;
 
   if(!wantEvade && dist<ENGAGE_RANGE && dist>MIN_ENGAGE_RANGE){
-    var tdx=dx/dist, tdy=dy/dist, tdz=dz/dist;
-    var align=fx*tdx+fy*tdy+fz*tdz;
-    var canFire=true;
-    if(best===human && human.alive){
-      var hdx=ship.x-human.x, hdy=ship.y-human.y, hdz=ship.z-human.z;
-      var hcp=Math.cos(human.pitch), hsp=Math.sin(human.pitch);
-      var hcy=Math.cos(human.yaw), hsy=Math.sin(human.yaw);
-      var hfx=hcp*hcy, hfy=hcp*hsy, hfz=hsp;
-      var hrx=-hsy, hry=hcy, hrz=0;
-      var hux=hry*hfz-hrz*hfy, huy=hrz*hfx-hrx*hfz, huz=hrx*hfy-hry*hfx;
-      var zC=hdx*hfx+hdy*hfy+hdz*hfz;
-      if(zC<=0){canFire=false;}
-      else {
-        var xC=hdx*hrx+hdy*hry+hdz*hrz;
-        var yC=hdx*hux+hdy*huy+hdz*huz;
-        var aspect=W/H;
-        var tanH=TAN_V*aspect;
-        var sxn=xC/(zC*tanH), syn=yC/(zC*TAN_V);
-        if(Math.abs(sxn)>AI_FIRE_FRUSTUM_MARGIN || Math.abs(syn)>AI_FIRE_FRUSTUM_MARGIN) canFire=false;
-      }
-    }
     var hasRapid=!!getActivePowerup(ship,'rapid');
-    if(canFire && align>ai.accuracy && (hasRapid || ship.fireCd<=0)){
+    var cross = getCrosshairData(ship);
+    if(cross.locked && (hasRapid || ship.fireCd<=0)){
       if(fireFrom(ship)) ship.fireCd=hasRapid?FIRE_CD*0.4:FIRE_CD*ai.fireRateMul*(0.9+Math.random()*0.3);
     }
-    if(canFire && ship.missileCd<=0 && dist<2e8 && align>0.85){
+    if(cross.locked && ship.missileCd<=0 && dist<2e8){
       fireMissile(ship);
     }
   }
@@ -3183,6 +3212,20 @@ function applyCollisions(ship){
       }
     }
   }
+  // === NUOVO: collisione nave-nave per evitare sovrapposizione ===
+  for(var i=0;i<SHIPS.length;i++){
+    var o=SHIPS[i];
+    if(o===ship||!o.alive)continue;
+    var ddx=ship.x-o.x, ddy=ship.y-o.y, ddz=ship.z-o.z;
+    var d2=ddx*ddx+ddy*ddy+ddz*ddz;
+    var minD=1.1e6;
+    if(d2<minD*minD&&d2>1){
+      var d=Math.sqrt(d2);
+      var push=minD-d;
+      var nx=ddx/d, ny=ddy/d, nz=ddz/d;
+      ship.x+=nx*push; ship.y+=ny*push; ship.z+=nz*push;
+    }
+  }
 }
 var aim={active:false,t:0,dur:0.5,sy:0,sp:0,ey:0,ep:0};
 function updatePlayer(dt){
@@ -3220,10 +3263,9 @@ function updatePlayer(dt){
     human.bank+=(targetBank-human.bank)*Math.min(1,dt*8);
   }
 
-  // === FRENO ===
   var speedMul = 1.0;
   if(human.turboActive) speedMul = TURBO_MULT;
-  if(brakeBtnHeld) speedMul = BRAKE_MULT; // vince su turbo
+  if(brakeBtnHeld) speedMul = BRAKE_MULT;
 
   speedMul *= human.speedMul;
   if(getActivePowerup(human,'speed')) speedMul*=1.6;
@@ -3234,7 +3276,6 @@ function updatePlayer(dt){
   human.x+=fx*human.speed*dt; human.y+=fy*human.speed*dt; human.z+=fz*human.speed*dt;
   applyCollisions(human);
 
-  // Vignetta blu quando freni
   if(brakeBtnHeld && human.alive){
     brakeVignetteEl.style.opacity='0.85';
   } else {
@@ -3278,7 +3319,10 @@ function updateBullets(dt){
           else if(t1<0&&t2>1)tHit=0;
         }
       }
-      if(tHit>=0){damageShip(s,BULLET_DMG,b.owner); hit=true; break;}
+      if(tHit>=0 && b.lockedTarget === s){
+        damageShip(s,BULLET_DMG,b.owner);
+        hit=true; break;
+      }
     }
     if(hit){bullets.splice(i,1);continue;}
     for(var ai2=0;ai2<asteroids.length;ai2++){
@@ -3415,14 +3459,12 @@ function render(){
     if(sc>1.4)sc=1.4; if(sc<0.10)sc=0.10;
     blitAsteroidSprite(pr.scrX-AST_SPR*sc*0.5,pr.scrY-AST_SPR*sc*0.5,sc,a.variant,pr.dist);
   }
-  // Satelliti + Luna
   for(var i=0;i<satellites.length;i++){
     var sat=satellites[i];
     var pr=projectToScreen(sat.x,sat.y,sat.z);
     if(!pr)continue;
     if(Math.abs(pr.sxn)>1.3||Math.abs(pr.syn)>1.3)continue;
     if(sat.isMoon){
-      // Luna: proiezione con base grande per renderla visibile
       var pixSize=2.5e7/(pr.zd*camTanV)*H;
       var sc=pixSize/MOON_SPR*1.5;
       if(sc>6)sc=6; if(sc<0.20)sc=0.20;
@@ -3434,7 +3476,6 @@ function render(){
       blitSatSprite(pr.scrX-SAT_SPR*sc*0.5,pr.scrY-SAT_SPR*sc*0.5,sc,sat.variant,pr.dist);
     }
   }
-  // Powerup — più grandi
   for(var i=0;i<powerups.length;i++){
     var pu=powerups[i];
     if(!pu.alive)continue;
@@ -3463,7 +3504,6 @@ function render(){
         buf32[dstRow+px]=v;
       }
     }
-    // Alone più grande e intenso
     if(sc>0.3){
       var def=POWERUP_DEFS[pu.type];
       var haloR=3+Math.sin(pu.pulse*1.3)*2.0;
@@ -3720,7 +3760,6 @@ document.getElementById('chassisGrid').addEventListener('click',function(e){
   for(var i=0;i<els.length;i++) els[i].classList.toggle('active', els[i].dataset.chassis===profile.chassis);
 });
 
-// === FRENA handler ===
 brakeBtn.addEventListener('pointerdown', function(e){
   e.preventDefault(); e.stopPropagation();
   try{ brakeBtn.setPointerCapture(e.pointerId); } catch(_){}
