@@ -15,28 +15,16 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{
-  height:100%;
-  height:100dvh;
-  min-height:100vh;
-  min-height:100dvh;
-  width:100%;
-  width:100vw;
+  height:100%;height:100dvh;min-height:100vh;min-height:100dvh;
+  width:100%;width:100vw;
   overflow:hidden;background:#000;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
   touch-action:none;overscroll-behavior:none;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#eaf4ff}
-canvas{
-  position:fixed;
-  left:0; top:0;
-  width:100vw;
-  height:100vh;
-  height:100dvh;
-  display:block;
-  image-rendering:-webkit-optimize-contrast;
-  image-rendering:crisp-edges;
-  image-rendering:pixelated}
+canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;display:block;
+  image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;image-rendering:pixelated}
 #c{z-index:1}
-#minimap{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 8px);width:120px;height:120px;z-index:12;pointer-events:none;opacity:0;transition:opacity .3s;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;filter:drop-shadow(0 0 12px rgba(0,0,0,0.75))}
+#minimap{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 8px);width:120px;height:120px;z-index:12;pointer-events:none;opacity:0;transition:opacity .3s;touch-action:none;-webkit-user-select:none;user-select:none;filter:drop-shadow(0 0 12px rgba(0,0,0,0.75))}
 #minimap.show{opacity:1;pointer-events:auto}
 #minimapCanvas{display:block;width:100%;height:100%;border-radius:50%;image-rendering:pixelated}
 #minimap.fullscreen{top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;z-index:200;background:#000;filter:none;transition:none;border-radius:0}
@@ -116,29 +104,56 @@ canvas{
 .xp-bar-wrap{width:100%;height:8px;border-radius:4px;overflow:hidden;background:rgba(14,26,48,0.8);border:1px solid rgba(90,150,215,0.3)}
 .xp-bar{height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#4a90e2,#6ee0ff);transition:width 1.2s cubic-bezier(.2,.7,.3,1)}
 .xp-label{font:800 11px/1 ui-monospace,monospace;color:#7aa8d0;letter-spacing:.16em;margin-top:-6px}
-#hud,#roster,#statsWrap,#dmgVignette,#hitMark,#killFeed,#stick,#turboBtn,#fireBtn,#powerups,#missileBtn{position:fixed;pointer-events:none;z-index:10;transition:opacity .3s}
-.game-hidden #hud,.game-hidden #roster,.game-hidden #statsWrap,.game-hidden #dmgVignette,.game-hidden #hitMark,.game-hidden #killFeed,.game-hidden #stick,.game-hidden #turboBtn,.game-hidden #fireBtn,.game-hidden #zoneWarning,.game-hidden #powerups,.game-hidden #missileBtn,.game-hidden #solarWarning{opacity:0;pointer-events:none}
-#hud{left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 8px);text-align:center;font:600 11px/1.5 ui-monospace,monospace;color:#a8d4ff;letter-spacing:.14em;text-shadow:0 0 8px #000,0 2px 4px #000}
-#hud .gt{font:800 13px/1 ui-monospace,monospace;color:#cfe6ff;letter-spacing:.18em;margin-bottom:2px}
-#hud .big{font-size:15px;color:#eaf4ff;letter-spacing:.06em;display:flex;align-items:center;justify-content:center;gap:8px}
-#hud .arrowWrap{position:relative;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(20,50,90,0.55);border:1px solid rgba(120,200,255,0.55);box-shadow:0 0 10px rgba(80,180,255,0.35);flex-shrink:0}
-#hud .arrow{display:inline-block;font-size:13px;line-height:1;color:#bfe9ff;text-shadow:0 0 8px rgba(120,220,255,0.95);transform-origin:50% 50%;font-weight:900}
-#hud .sub{font-size:10px;color:#7aa8d0;margin-top:1px}
-#hud .kills{font:800 11px/1 ui-monospace,monospace;color:#ff8899;letter-spacing:.16em;margin-top:3px;text-shadow:0 0 10px rgba(255,60,60,0.55)}
-#hudZone{font:800 10px/1.4 ui-monospace,monospace;color:#c8a8ff;letter-spacing:.16em;margin-top:3px}
-#hudZone.outside{color:#ff9ab0;animation:hudZonePulse .55s ease-in-out infinite alternate}
+
+/* ============================================================
+   HUD ROW ORIZZONTALE
+   ============================================================ */
+#hud{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 6px);
+  z-index:10;pointer-events:none;transition:opacity .3s;
+  display:flex;justify-content:center;align-items:flex-start}
+.hudRow{display:flex;align-items:center;gap:12px;padding:5px 16px;
+  background:rgba(6,12,22,0.58);
+  border:1px solid rgba(90,150,215,0.35);
+  border-radius:22px;
+  box-shadow:0 2px 14px rgba(0,0,0,0.55);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.hudSep{width:1px;height:14px;background:rgba(90,150,215,0.35);flex-shrink:0}
+.hudItem{display:flex;align-items:center;gap:6px;
+  font:800 11px/1 ui-monospace,monospace;letter-spacing:.14em;
+  color:#a8d4ff;text-shadow:0 0 8px #000;white-space:nowrap}
+#hudTime{color:#cfe6ff;font-size:12px}
+#hudKills{color:#ff8899;text-shadow:0 0 10px rgba(255,60,60,0.55)}
+#hudZone{color:#c8a8ff;text-shadow:0 0 8px rgba(140,60,255,0.55)}
+#hudZone.outside{color:#ff9ab0;text-shadow:0 0 10px rgba(255,60,100,0.9);
+  animation:hudZonePulse .55s ease-in-out infinite alternate}
 @keyframes hudZonePulse{from{opacity:0.55}to{opacity:1}}
-#roster{top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 8px);display:flex;flex-direction:column;gap:2px;font:700 9px/1.1 ui-monospace,monospace}
+.hudNav{display:flex;align-items:center;gap:5px;color:#eaf4ff}
+.hudNav .arrowWrap{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;border-radius:50%;
+  background:rgba(20,50,90,0.55);border:1px solid rgba(120,200,255,0.55);
+  box-shadow:0 0 8px rgba(80,180,255,0.35);flex-shrink:0}
+.hudNav .arrow{display:inline-block;font-size:11px;line-height:1;color:#bfe9ff;
+  text-shadow:0 0 8px rgba(120,220,255,0.95);transform-origin:50% 50%;font-weight:900;
+  transition:transform .06s linear}
+.hudNav .hudName{color:#eaf4ff}
+.hudNav .hudDist{color:#7aa8d0;font-size:10px;letter-spacing:.06em}
+
+#roster{top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 8px);display:flex;flex-direction:column;gap:2px;font:700 9px/1.1 ui-monospace,monospace;z-index:10;pointer-events:none;transition:opacity .3s}
 .slot{display:flex;align-items:center;gap:5px;padding:2px 6px;border-radius:5px;background:rgba(6,12,22,0.72);border:1px solid rgba(90,150,215,0.35);color:#e0eeff;min-width:82px;transition:opacity .3s}
 .slot.dead{opacity:0.32}
 .slot.me{border-color:rgba(120,220,255,0.85)}
 .slot .dot{width:7px;height:7px;border-radius:2px;background:currentColor}
 .slot .nm{flex:1;text-align:left}
 .slot .hp{font-size:8px;color:#8fbfe0}
-#powerups{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 62px);left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:12;opacity:0}
+
+#powerups{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 62px);left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:12;opacity:0;pointer-events:none;transition:opacity .3s}
 #powerups.show{opacity:1}
 .pu{width:34px;height:34px;border-radius:9px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font:900 14px/1 ui-monospace,monospace;color:#fff;background:rgba(6,12,22,0.85);border:1.5px solid currentColor;box-shadow:0 0 12px currentColor}
 .pu .pbar{position:absolute;bottom:0;left:0;height:3px;background:currentColor}
+
+/* ============================================================
+   STATS — in alto a destra sotto la minimappa (landscape)
+   ============================================================ */
 #statsWrap{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:50%;transform:translateX(-50%);display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto auto;column-gap:14px;row-gap:4px;padding:8px 14px;background:rgba(6,12,22,0.85);border:1.5px solid rgba(90,150,215,0.55);border-radius:8px;opacity:0;pointer-events:none;z-index:12;transition:opacity .3s;font:700 10px/1.1 ui-monospace,monospace;color:#cfe6ff;min-width:240px}
 #statsWrap.show{opacity:1}
 #statsWrap .stLbl{font:700 8px/1 monospace;color:#7aa8d0;letter-spacing:.24em;text-align:center;padding-bottom:1px}
@@ -152,12 +167,14 @@ canvas{
 #statsWrap .hpNum{font:800 12px/1 monospace;color:#eaf4ff;text-align:center}
 #statsWrap .reloadState{font:700 9px/1 monospace;color:#7aa8d0;text-align:center;letter-spacing:.18em}
 #statsWrap .reloadState.reloading{color:#ffbb55;animation:reloadPulse .5s ease-in-out infinite alternate}
-#dmgVignette{inset:0;background:radial-gradient(circle at center,rgba(255,40,40,0) 30%,rgba(255,40,40,0.42) 100%);opacity:0;transition:opacity .12s;pointer-events:none}
-#hitMark{left:50%;top:50%;transform:translate(-50%,-50%) scale(0.5);font-size:26px;color:#fff;font-weight:900;text-shadow:0 0 10px #ff5050;opacity:0;transition:all .12s}
-#killFeed{top:calc(env(safe-area-inset-top,0px) + 138px);right:calc(env(safe-area-inset-right,0px) + 10px);display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+
+#dmgVignette{position:fixed;inset:0;background:radial-gradient(circle at center,rgba(255,40,40,0) 30%,rgba(255,40,40,0.42) 100%);opacity:0;transition:opacity .12s;pointer-events:none;z-index:10}
+#hitMark{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(0.5);font-size:26px;color:#fff;font-weight:900;text-shadow:0 0 10px #ff5050;opacity:0;transition:all .12s;z-index:10;pointer-events:none}
+#killFeed{position:fixed;top:calc(env(safe-area-inset-top,0px) + 138px);right:calc(env(safe-area-inset-right,0px) + 10px);display:flex;flex-direction:column;gap:4px;align-items:flex-end;z-index:10;pointer-events:none;transition:opacity .3s}
 .kf{font:700 10px/1.3 monospace;color:#e0eeff;padding:4px 8px;border-radius:6px;background:rgba(6,12,22,0.78);border:1px solid rgba(90,150,215,0.3);animation:kfIn .3s ease-out}
 @keyframes kfIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
-#turboBtn{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 130px);left:calc(env(safe-area-inset-left,0px) + 22px);width:88px;height:88px;border-radius:50%;border:none;background:transparent;padding:0;margin:0;pointer-events:auto;cursor:pointer;touch-action:none;z-index:20;display:flex;align-items:center;justify-content:center}
+
+#turboBtn{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 130px);left:calc(env(safe-area-inset-left,0px) + 22px);width:88px;height:88px;border-radius:50%;border:none;background:transparent;padding:0;margin:0;pointer-events:auto;cursor:pointer;touch-action:none;z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity .3s}
 #turboBtn::before{content:'';position:absolute;inset:10px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(255,180,80,0.35),rgba(200,60,20,0.22) 55%,rgba(100,20,0,0.12));pointer-events:none;z-index:0}
 #turboBtn:active{transform:scale(0.94)}
 .turboSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
@@ -169,7 +186,8 @@ canvas{
 #turboBtn.cooldown::before{background:radial-gradient(circle at 40% 35%,rgba(80,80,80,0.3),rgba(40,40,40,0.2))}
 #turboBtn.cooldown .turboTxt{color:rgba(170,170,170,0.75)}
 @keyframes turboPulse{from{transform:scale(1)}to{transform:scale(1.05)}}
-#fireBtn{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 130px);right:calc(env(safe-area-inset-right,0px) + 22px);width:88px;height:88px;border-radius:50%;border:none;background:transparent;padding:0;margin:0;pointer-events:auto;cursor:pointer;touch-action:none;z-index:20;display:flex;align-items:center;justify-content:center}
+
+#fireBtn{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 130px);right:calc(env(safe-area-inset-right,0px) + 22px);width:88px;height:88px;border-radius:50%;border:none;background:transparent;padding:0;margin:0;pointer-events:auto;cursor:pointer;touch-action:none;z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity .3s}
 #fireBtn::before{content:'';position:absolute;inset:10px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(255,90,90,0.35),rgba(200,30,40,0.22) 55%,rgba(90,10,20,0.14));pointer-events:none;z-index:0}
 #fireBtn:active{transform:scale(0.92)}
 #fireBtn.active::before{background:radial-gradient(circle at 40% 35%,rgba(255,200,200,0.95),rgba(255,80,90,0.95) 55%,rgba(200,20,30,0.85))}
@@ -177,7 +195,8 @@ canvas{
 .fireTxt{position:relative;font:900 11px/1 ui-monospace,monospace;color:#ffc8cc;letter-spacing:.12em;pointer-events:none;z-index:1}
 #fireBtn{box-shadow:0 0 18px rgba(255,60,60,0.45)}
 #fireBtn.active .fireTxt{color:#fff;text-shadow:0 0 12px rgba(255,180,180,1)}
-#missileBtn{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 210px);right:calc(env(safe-area-inset-right,0px) + 40px);width:62px;height:62px;border-radius:50%;border:none;background:transparent;padding:0;margin:0;pointer-events:auto;cursor:pointer;touch-action:none;z-index:20;display:flex;align-items:center;justify-content:center}
+
+#missileBtn{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 210px);right:calc(env(safe-area-inset-right,0px) + 40px);width:62px;height:62px;border-radius:50%;border:none;background:transparent;padding:0;margin:0;pointer-events:auto;cursor:pointer;touch-action:none;z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity .3s}
 #missileBtn::before{content:'';position:absolute;inset:8px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(200,120,255,0.40),rgba(140,60,220,0.25) 55%,rgba(60,20,120,0.15));pointer-events:none;z-index:0}
 #missileBtn:active{transform:scale(0.92)}
 #missileBtn.active::before{background:radial-gradient(circle at 40% 35%,rgba(240,200,255,0.95),rgba(180,90,255,0.9) 55%,rgba(100,20,200,0.85))}
@@ -187,63 +206,90 @@ canvas{
 #missileBtn.cooldown{box-shadow:none}
 #missileBtn.cooldown::before{background:radial-gradient(circle at 40% 35%,rgba(80,80,80,0.3),rgba(40,40,40,0.2))}
 #missileBtn.cooldown .missileTxt{color:rgba(170,170,170,0.75);text-shadow:none}
-#stick{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(60,120,200,0.10),rgba(30,70,140,0.05) 70%,rgba(20,50,110,0.02));border:1px solid rgba(120,190,255,0.18);pointer-events:none;-webkit-user-select:none;user-select:none;opacity:0;transition:opacity .12s;z-index:15}
-#stick .knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin-left:-28px;margin-top:-28px;border-radius:50%;background:radial-gradient(circle at 35% 32%,rgba(200,235,255,0.35),rgba(110,180,255,0.18) 55%,rgba(60,120,210,0.10));border:1px solid rgba(160,215,255,0.35);pointer-events:none;transition:transform .04s linear}
-#stick .knob::after{content:'';position:absolute;left:50%;top:50%;width:10px;height:10px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.35),rgba(160,215,255,0.05))}
+
+/* ============================================================
+   STICK — sempre visibile in basso a sinistra (home position)
+   ============================================================ */
+#stick{position:fixed;left:0;top:0;width:150px;height:150px;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,rgba(60,120,200,0.10),rgba(30,70,140,0.05) 70%,rgba(20,50,110,0.02));
+  border:1px solid rgba(120,190,255,0.18);
+  pointer-events:none;-webkit-user-select:none;user-select:none;
+  opacity:0;transition:opacity .18s;z-index:15}
+#stick.active{opacity:0.30}
+#stick .knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin-left:-28px;margin-top:-28px;border-radius:50%;
+  background:radial-gradient(circle at 35% 32%,rgba(200,235,255,0.35),rgba(110,180,255,0.18) 55%,rgba(60,120,210,0.10));
+  border:1px solid rgba(160,215,255,0.35);pointer-events:none;transition:transform .04s linear}
+#stick .knob::after{content:'';position:absolute;left:50%;top:50%;width:10px;height:10px;transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,0.35),rgba(160,215,255,0.05))}
+
+.game-hidden #hud,.game-hidden #roster,.game-hidden #statsWrap,
+.game-hidden #dmgVignette,.game-hidden #hitMark,.game-hidden #killFeed,
+.game-hidden #stick,.game-hidden #turboBtn,.game-hidden #fireBtn,
+.game-hidden #zoneWarning,.game-hidden #powerups,.game-hidden #missileBtn,
+.game-hidden #solarWarning{opacity:0;pointer-events:none}
 
 /* ============================================================
    LAYOUT LANDSCAPE
    ============================================================ */
 @media (orientation: landscape){
 
-  #stick{width:140px;height:140px}
-  #stick .knob{width:52px;height:52px;margin-left:-26px;margin-top:-26px}
+  /* --- HUD riga orizzontale compatta --- */
+  .hudRow{gap:10px;padding:4px 14px}
+  .hudItem{font-size:10px;letter-spacing:.10em;gap:5px}
+  #hudTime{font-size:11px}
+  .hudNav .arrowWrap{width:16px;height:16px}
+  .hudNav .arrow{font-size:10px}
+  .hudNav .hudDist{font-size:9px}
+  .hudSep{height:12px}
 
+  /* --- Stick in basso a sinistra, sempre visibile --- */
+  #stick{
+    left:calc(env(safe-area-inset-left,0px) + 22px);
+    bottom:calc(env(safe-area-inset-bottom,0px) + 22px);
+    top:auto;
+    width:130px;height:130px;
+    opacity:0.15
+  }
+  #stick.active{opacity:0.32}
+  #stick .knob{width:48px;height:48px;margin-left:-24px;margin-top:-24px}
+
+  /* --- Turbo accanto allo stick --- */
   #turboBtn{
     bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
-    left:calc(env(safe-area-inset-left,0px) + 180px);
-    width:76px;height:76px
+    left:calc(env(safe-area-inset-left,0px) + 170px);
+    width:72px;height:72px
   }
   .turboTxt{font-size:10px}
 
+  /* --- Fire in basso a destra --- */
   #fireBtn{
     bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
     right:calc(env(safe-area-inset-right,0px) + 22px);
-    width:108px;height:108px
+    width:104px;height:104px
   }
   .fireTxt{font-size:12px}
 
+  /* --- Missile accanto al fire (a sinistra del fire) --- */
   #missileBtn{
-    bottom:calc(env(safe-area-inset-bottom,0px) + 136px);
-    right:calc(env(safe-area-inset-right,0px) + 46px);
-    width:78px;height:78px
+    bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
+    right:calc(env(safe-area-inset-right,0px) + 138px);
+    width:76px;height:76px
   }
   .missileTxt{font-size:10px}
 
-  #hud{top:calc(env(safe-area-inset-top,0px) + 4px)}
-  #hud .gt{font-size:11px;margin-bottom:1px}
-  #hud .big{font-size:13px;gap:6px}
-  #hud .sub{font-size:9px}
-  #hud .kills{font-size:10px;margin-top:2px}
-  #hudZone{font-size:9px;margin-top:2px}
-
+  /* --- Minimappa in alto a destra --- */
   #minimap{
     width:96px;height:96px;
     top:calc(env(safe-area-inset-top,0px) + 6px);
     right:calc(env(safe-area-inset-right,0px) + 6px)
   }
 
-  #roster{font-size:8px;gap:1px;
-    top:calc(env(safe-area-inset-top,0px) + 6px);
-    left:calc(env(safe-area-inset-left,0px) + 6px)}
-  .slot{min-width:66px;padding:1px 5px;gap:4px}
-  .slot .dot{width:6px;height:6px}
-  .slot .hp{font-size:7px}
-
-  /* --- STATS (vita + munizioni) in basso a SINISTRA, sopra il turbo --- */
+  /* --- Stats in alto a destra sotto la minimappa --- */
   #statsWrap{
-    bottom:calc(env(safe-area-inset-bottom,0px) + 100px);
-    left:calc(env(safe-area-inset-left,0px) + 6px);
+    top:calc(env(safe-area-inset-top,0px) + 108px);
+    bottom:auto;
+    right:calc(env(safe-area-inset-right,0px) + 6px);
+    left:auto;
     transform:none;
     padding:6px 10px;
     row-gap:2px;
@@ -251,19 +297,34 @@ canvas{
     min-width:0;
     width:auto
   }
-  #statsWrap .stLbl{font-size:7px;letter-spacing:.20em}
-  #statsWrap .hpBarCell{width:92px;height:9px}
-  #statsWrap .ammoBullets{width:92px;height:9px;gap:3px}
+  #statsWrap .stLbl{font-size:7px;letter-spacing:.18em}
+  #statsWrap .hpBarCell{width:84px;height:9px}
+  #statsWrap .ammoBullets{width:84px;height:9px;gap:3px}
   #statsWrap .ammoBullets .b{width:4px;height:9px}
   #statsWrap .hpNum{font-size:11px}
   #statsWrap .reloadState{font-size:8px;letter-spacing:.14em}
 
-  #powerups{bottom:calc(env(safe-area-inset-bottom,0px) + 160px);left:calc(env(safe-area-inset-left,0px) + 6px);transform:none}
-  .pu{width:28px;height:28px;font-size:11px;border-radius:7px}
+  /* --- Roster compatto in alto a sinistra --- */
+  #roster{font-size:8px;gap:1px;
+    top:calc(env(safe-area-inset-top,0px) + 6px);
+    left:calc(env(safe-area-inset-left,0px) + 6px)}
+  .slot{min-width:66px;padding:1px 5px;gap:4px}
+  .slot .dot{width:6px;height:6px}
+  .slot .hp{font-size:7px}
 
+  /* --- Powerup al centro-bottom --- */
+  #powerups{
+    bottom:calc(env(safe-area-inset-bottom,0px) + 10px);
+    left:50%;
+    transform:translateX(-50%)
+  }
+  .pu{width:30px;height:30px;font-size:12px;border-radius:8px}
+
+  /* --- Kill feed --- */
   #killFeed{top:calc(env(safe-area-inset-top,0px) + 112px);right:calc(env(safe-area-inset-right,0px) + 6px)}
   .kf{font-size:9px;padding:3px 6px}
 
+  /* --- Lobby compatta --- */
   .lobby-content{max-width:520px;gap:10px}
   .brand{font-size:26px}
   .tagline{font-size:9px;margin-top:-4px}
@@ -318,13 +379,23 @@ canvas{
   <div class="rotateText">RUOTA IL DISPOSITIVO</div>
   <div class="rotateSub">Questa esperienza è progettata per l'orizzontale</div>
 </div>
+
 <div id="hud">
-  <div class="gt" id="hudTime">00:00</div>
-  <div class="big"><span class="arrowWrap"><span class="arrow" id="hudArrow">&#9650;</span></span><span id="hudName">&mdash;</span></div>
-  <div class="sub" id="hudDist">&mdash;</div>
-  <div class="kills" id="hudKills">KILL 0</div>
-  <div id="hudZone">ZONA &middot; &mdash;</div>
+  <div class="hudRow">
+    <div class="hudItem" id="hudTime">00:00</div>
+    <div class="hudSep"></div>
+    <div class="hudItem hudNav">
+      <span class="arrowWrap"><span class="arrow" id="hudArrow">&#9650;</span></span>
+      <span class="hudName" id="hudName">&mdash;</span>
+      <span class="hudDist" id="hudDist">&mdash;</span>
+    </div>
+    <div class="hudSep"></div>
+    <div class="hudItem" id="hudKills">KILL 0</div>
+    <div class="hudSep"></div>
+    <div class="hudItem" id="hudZone">ZONA &middot; &mdash;</div>
+  </div>
 </div>
+
 <div id="roster"></div>
 <div id="dmgVignette"></div>
 <div id="hitMark">X</div>
@@ -466,8 +537,6 @@ var AIM_ASSIST_CONE_DEG = 8;
 var AIM_ASSIST_STRENGTH = 0.55;
 var AIM_ASSIST_MAX_DIST = 2.5e8;
 
-// Posizione della navicella sullo schermo (0 = top, 1 = bottom).
-// Spostata più in basso per non toccare il mirino centrale.
 var PLAYER_SCREEN_Y = 0.78;
 
 var CHASSIS = {
@@ -1312,11 +1381,11 @@ function updateZone(dt){
   if(currentScreen==='match' && human.alive){
     if(outside){
       var outAU=(hDist-zoneRadius)/AU;
-      hudZoneEl.className='outside';
+      hudZoneEl.className='hudItem outside';
       hudZoneEl.textContent='FUORI ZONA \u00B7 '+outAU.toFixed(2)+' UA';
     } else {
       var inAU=(zoneRadius-hDist)/AU;
-      hudZoneEl.className='';
+      hudZoneEl.className='hudItem';
       hudZoneEl.textContent='ZONA \u00B7 '+inAU.toFixed(2)+' UA';
     }
   }
@@ -3134,7 +3203,9 @@ var canvasActive=false;
 function resetStickState(){
   canvasActive=false; stickActive=false; stickPointerId=null;
   input.ax=0; input.ay=0;
-  stickEl.style.opacity='0';
+  stickEl.classList.remove('active');
+  stickEl.style.left='';
+  stickEl.style.top='';
   knobEl.style.transform='translate(0px, 0px)';
 }
 canvas.addEventListener('pointerdown',function(e){
@@ -3144,7 +3215,7 @@ canvas.addEventListener('pointerdown',function(e){
   aim.active=false;
   stickEl.style.left=(stickOriginX-75)+'px';
   stickEl.style.top=(stickOriginY-75)+'px';
-  stickEl.style.opacity='0.22';
+  stickEl.classList.add('active');
   knobEl.style.transform='translate(0px, 0px)';
   input.ax=0; input.ay=0;
   try{canvas.setPointerCapture(e.pointerId);}catch(_){}
