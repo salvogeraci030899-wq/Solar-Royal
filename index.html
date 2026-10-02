@@ -267,9 +267,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 #turboBtn.cooldown .turboTxt{color:rgba(170,170,170,0.75)}
 @keyframes turboPulse{from{transform:scale(1)}to{transform:scale(1.05)}}
 
-/* ============================================================
-   FRENA — sopra lo stick a sinistra
-   ============================================================ */
 #brakeBtn{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 220px);left:calc(env(safe-area-inset-left,0px) + 22px);width:64px;height:64px;border-radius:50%;border:none;background:transparent;padding:0;margin:0;pointer-events:auto;cursor:pointer;touch-action:none;z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity .3s}
 #brakeBtn::before{content:'';position:absolute;inset:8px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(120,180,255,0.40),rgba(60,110,200,0.25) 55%,rgba(20,50,120,0.15));pointer-events:none;z-index:0}
 #brakeBtn:active{transform:scale(0.92)}
@@ -316,9 +313,26 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   background:radial-gradient(circle,rgba(255,255,255,0.55),rgba(160,255,190,0.08));
   box-shadow:0 0 8px rgba(200,255,220,0.45)}
 
+#stick2{position:fixed;left:0;top:0;width:150px;height:150px;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%, rgba(80,180,255,0.14), rgba(40,120,200,0.06) 70%, rgba(20,60,140,0.02));
+  border:1px solid rgba(120,200,255,0.30);
+  box-shadow:0 0 16px rgba(80,180,255,0.18),inset 0 0 20px rgba(80,180,255,0.10);
+  pointer-events:none;-webkit-user-select:none;user-select:none;
+  opacity:0;transition:opacity .18s,box-shadow .18s;z-index:15}
+#stick2.active{opacity:0.55;
+  box-shadow:0 0 24px rgba(80,180,255,0.45),inset 0 0 26px rgba(80,180,255,0.18)}
+#stick2 .knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin-left:-28px;margin-top:-28px;border-radius:50%;
+  background:radial-gradient(circle at 35% 32%, rgba(210,235,255,0.55), rgba(110,180,230,0.30) 55%, rgba(60,120,180,0.15));
+  border:1px solid rgba(160,220,255,0.50);
+  box-shadow:0 0 12px rgba(110,180,230,0.35),inset 0 0 10px rgba(255,255,255,0.12);
+  pointer-events:none;transition:transform .04s linear}
+#stick2 .knob::after{content:'';position:absolute;left:50%;top:50%;width:10px;height:10px;transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,0.55),rgba(160,220,255,0.08));
+  box-shadow:0 0 8px rgba(200,235,255,0.45)}
+
 .game-hidden #hud,.game-hidden #roster,.game-hidden #statsWrap,
 .game-hidden #dmgVignette,.game-hidden #hitMark,.game-hidden #killFeed,
-.game-hidden #stick,.game-hidden #turboBtn,.game-hidden #fireBtn,
+.game-hidden #stick,.game-hidden #stick2,.game-hidden #turboBtn,.game-hidden #fireBtn,
 .game-hidden #zoneWarning,.game-hidden #powerups,.game-hidden #missileBtn,
 .game-hidden #solarWarning,.game-hidden #brakeBtn,.game-hidden #brakeVignette{opacity:0;pointer-events:none}
 
@@ -344,6 +358,17 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   }
   #stick.active{opacity:0.60}
   #stick .knob{width:48px;height:48px;margin-left:-24px;margin-top:-24px}
+
+  #stick2{
+    right:calc(env(safe-area-inset-right,0px) + 22px);
+    bottom:calc(env(safe-area-inset-bottom,0px) + 130px);
+    top:auto;
+    left:auto;
+    width:130px;height:130px;
+    opacity:0.35
+  }
+  #stick2.active{opacity:0.60}
+  #stick2 .knob{width:48px;height:48px;margin-left:-24px;margin-top:-24px}
 
   #turboBtn{
     bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
@@ -451,6 +476,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   #rotateOverlay.show ~ #hud,
   #rotateOverlay.show ~ #roster,
   #rotateOverlay.show ~ #stick,
+  #rotateOverlay.show ~ #stick2,
   #rotateOverlay.show ~ #turboBtn,
   #rotateOverlay.show ~ #brakeBtn,
   #rotateOverlay.show ~ #fireBtn,
@@ -525,6 +551,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 <div id="killFeed"></div>
 <div id="powerups"></div>
 <div id="stick"><div class="knob" id="knob"></div></div>
+<div id="stick2"><div class="knob" id="knob2"></div></div>
 <button id="brakeBtn" aria-label="Frena">
   <svg class="brakeSvg" viewBox="0 0 100 100">
     <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(140,200,255,0.25)" stroke-width="6"/>
@@ -759,12 +786,40 @@ var PLANETS=[
   {name:'Nettuno',a:orbitDist(30.069),ang:3.1,r:2.4622e7,type:'gas',colors:{zone1:[92,138,218],zone2:[70,115,200],belt1:[50,88,175],belt2:[38,68,148],polar:[82,122,205],storm:[30,45,95],spot:[140,200,235]},noise:{scale:8e6,octaves:5},atmo:[100,155,240,0.38],bands:8,storm:true}
 ];
 for(var pi=0;pi<PLANETS.length;pi++){var pp=PLANETS[pi];pp.x=Math.cos(pp.ang)*pp.a;pp.y=Math.sin(pp.ang)*pp.a;pp.z=0;}
-var BODIES=[SUN].concat(PLANETS);
+
+// === LUNA: trattata come pianeta rocky ===
+var MOON={
+  name:'Luna', r:1.7374e6, type:'rocky',
+  colors:{dark:[58,58,64],mid:[112,112,120],light:[160,160,168],hi:[205,205,215],ice:[215,215,225]},
+  noise:{scale:3.2e5,octaves:7}, atmo:null,
+  orbitParent:null, orbitR:0, orbitAng:0, orbitEl:0, orbitSpeed:0.06,
+  x:0, y:0, z:0, isMoon:true
+};
+(function initMoon(){
+  var earth = PLANETS[2];
+  MOON.orbitParent = earth;
+  MOON.orbitR = earth.r * 60;
+  MOON.orbitAng = 2.4;
+  MOON.orbitEl = 0.10;
+  MOON.x = earth.x + MOON.orbitR*Math.cos(MOON.orbitAng)*Math.cos(MOON.orbitEl);
+  MOON.y = earth.y + MOON.orbitR*Math.sin(MOON.orbitAng)*Math.cos(MOON.orbitEl);
+  MOON.z = earth.z + MOON.orbitR*Math.sin(MOON.orbitEl);
+})();
+function updateMoon(dt){
+  if(!MOON.orbitParent) return;
+  MOON.orbitAng += MOON.orbitSpeed*dt*0.05;
+  MOON.x = MOON.orbitParent.x + MOON.orbitR*Math.cos(MOON.orbitAng)*Math.cos(MOON.orbitEl);
+  MOON.y = MOON.orbitParent.y + MOON.orbitR*Math.sin(MOON.orbitAng)*Math.cos(MOON.orbitEl);
+  MOON.z = MOON.orbitParent.z + MOON.orbitR*Math.sin(MOON.orbitEl);
+}
+
+var BODIES=[SUN].concat(PLANETS).concat([MOON]);
 var RINGED=PLANETS.filter(function(p){return p.rings;});
 var ATMO=PLANETS.filter(function(p){return p.atmo;});
 
 function bodyMarkerColor(b){
   if(b===SUN) return [255, 220, 130];
+  if(b===MOON) return [200, 205, 215];
   switch(b.name){
     case 'Mercurio': return [200, 190, 170];
     case 'Venere':   return [250, 230, 150];
@@ -879,15 +934,10 @@ function drawMinimap(){
     mmCtx.fillStyle=col;
     mmCtx.beginPath(); mmCtx.arc(px,py,2.2,0,TAU); mmCtx.fill();
   }
-
-  for(var i=0;i<satellites.length;i++){
-    var sat=satellites[i];
-    if(!sat.isMoon) continue;
-    var moonM=worldToMap(sat.x,sat.y);
-    mmCtx.fillStyle='#e8e8f0';
-    mmCtx.beginPath(); mmCtx.arc(moonM.x,moonM.y,1.8,0,TAU); mmCtx.fill();
-    mmCtx.strokeStyle='rgba(200,200,220,0.7)'; mmCtx.lineWidth=0.8; mmCtx.stroke();
-  }
+  // Luna sulla minimappa
+  var moonM=worldToMap(MOON.x,MOON.y);
+  mmCtx.fillStyle='#c8c8d2';
+  mmCtx.beginPath(); mmCtx.arc(moonM.x,moonM.y,1.4,0,TAU); mmCtx.fill();
 
   var pulse=0.5+0.5*Math.sin(gameTime*4);
   var enemyFill='rgb(255,'+(40+Math.round(50*pulse))+','+(50+Math.round(30*pulse))+')';
@@ -963,7 +1013,7 @@ var swarmTimer=0;
 var swarmDirX=1, swarmDirY=0, swarmDirZ=0;
 
 // ============================================================
-// SATELLITES + LUNA
+// SATELLITES (senza Luna — la Luna è un pianeta)
 // ============================================================
 var satellites=[];
 (function initSatellites(){
@@ -981,24 +1031,6 @@ var satellites=[];
     var au=8+Math.random()*20, a=orbitDist(au), ang=Math.random()*TAU, el=(Math.random()-0.5)*0.4;
     satellites.push({parent:null,orbitR:0,ang:ang,el:el,angVel:0,x:a*Math.cos(ang)*Math.cos(el),y:a*Math.sin(ang)*Math.cos(el),z:a*Math.sin(el)*0.5,variant:Math.floor(Math.random()*3)});
   }
-  (function(){
-    var earth = PLANETS[2];
-    var moonOrbit = earth.r * 60;
-    var moonAng = 2.4;
-    var moonEl = 0.10;
-    satellites.push({
-      parent: earth,
-      orbitR: moonOrbit,
-      ang: moonAng,
-      el: moonEl,
-      angVel: 0.06,
-      x: earth.x + moonOrbit*Math.cos(moonAng)*Math.cos(moonEl),
-      y: earth.y + moonOrbit*Math.sin(moonAng)*Math.cos(moonEl),
-      z: earth.z + moonOrbit*Math.sin(moonEl),
-      variant: 0,
-      isMoon: true
-    });
-  })();
 })();
 function updateSatellites(dt){
   for(var i=0;i<satellites.length;i++){
@@ -1176,6 +1208,7 @@ var swarmTimer = SWARM_INTERVAL;
 
 var bullets=[], missiles=[], explosions=[], trails=[], debris=[];
 var input={ax:0,ay:0};
+var input2={ax:0,ay:0};
 var shootingStars=[];
 var nextShootingStarT=4;
 
@@ -1683,7 +1716,7 @@ function computeAimAssist(ship, fx, fy, fz){
 }
 
 // ============================================================
-// CROSSHAIR DATA (LOCK + RADAR)
+// CROSSHAIR DATA (LOCK + RADAR NEMICO + RADAR ZONA)
 // ============================================================
 function getCrosshairData(ship){
   var cp=Math.cos(ship.pitch), sp=Math.sin(ship.pitch);
@@ -1716,7 +1749,35 @@ function getCrosshairData(ship){
       rny = yd/(zd*TAN_V);
     }
   }
-  return {locked: locked, hasRadar: nearestInFront !== null, nx: rnx, ny: rny};
+  // === RADAR ZONA (tempesta viola) ===
+  var zdx = zoneCx - ship.x;
+  var zdy = zoneCy - ship.y;
+  var zdz = zoneCz - ship.z;
+  var zdist = Math.sqrt(zdx*zdx + zdy*zdy + zdz*zdz);
+  var distToBorder = zoneRadius - zdist;
+  var warnDistAU = ZONE_WARN_DIST_AU * AU;
+  var zoneWarn = (distToBorder < warnDistAU);
+  var zoneNx = 0, zoneNy = 0;
+  var zoneVisible = false;
+  if(zdist > 1){
+    var zdot = (zdx*fx + zdy*fy + zdz*fz)/zdist;
+    var zxd = zdx*rx + zdy*ry + zdz*rz;
+    var zyd = zdx*ux + zdy*uy + zdz*uz;
+    if(zdot > 0.15){
+      // centro zona davanti: proietto
+      var zdView = zdist*zdot;
+      zoneNx = zxd / (zdView * tanH);
+      zoneNy = zyd / (zdView * TAN_V);
+      zoneVisible = true;
+    } else {
+      // centro dietro: uso solo la componente destra (ruota verso)
+      zoneNx = (zxd > 0 ? 1 : -1) * 1.0;
+      zoneNy = 0;
+      zoneVisible = true;
+    }
+  }
+  return {locked: locked, hasRadar: nearestInFront !== null, nx: rnx, ny: rny,
+          zoneNx: zoneNx, zoneNy: zoneNy, zoneWarn: zoneWarn, zoneVisible: zoneVisible};
 }
 
 // ============================================================
@@ -2177,63 +2238,6 @@ var satSprites=[];
     satSprites.push(spr);
   }
 })();
-
-// ============================================================
-// LUNA sprite 32x32
-// ============================================================
-var MOON_SPR=32;
-var moonSprite=(function(){
-  var spr=new Uint32Array(MOON_SPR*MOON_SPR);
-  var setPx=function(x,y,c){if(x<0||y<0||x>=MOON_SPR||y>=MOON_SPR)return;spr[y*MOON_SPR+x]=0xFF000000|((c[2]|0)<<16)|((c[1]|0)<<8)|(c[0]|0);};
-  var cx=MOON_SPR/2, cy=MOON_SPR/2;
-  var r=MOON_SPR/2-2;
-  var base=[205,205,212], light=[240,240,245], dark=[135,135,145];
-  var crater=[100,100,110], edge=[70,70,80];
-  for(var y=0;y<MOON_SPR;y++)for(var x=0;x<MOON_SPR;x++){
-    var dx=x-cx+0.5, dy=y-cy+0.5;
-    var d2=dx*dx+dy*dy;
-    if(d2>r*r) continue;
-    var dd=Math.sqrt(d2)/r;
-    var lightDot=(-dx-dy)/(r*1.5);
-    var c;
-    if(dd>0.94) c=edge;
-    else if(lightDot>0.35) c=light;
-    else if(lightDot>-0.3) c=base;
-    else c=dark;
-    var c1x=x-10, c1y=y-11;
-    var cd1=c1x*c1x+c1y*c1y;
-    if(cd1<9){ c=crater; }
-    else if(cd1<16 && dd<0.85){ c=[125,125,135]; }
-    var c2x=x-22, c2y=y-21;
-    var cd2=c2x*c2x+c2y*c2y;
-    if(cd2<6){ c=crater; }
-    var c3x=x-15, c3y=y-23;
-    var cd3=c3x*c3x+c3y*c3y;
-    if(cd3<4){ c=crater; }
-    var n=hash3(x*13+100,y*17+50,7);
-    if(n>0.93 && dd<0.75){ c=[150,150,158]; }
-    setPx(x,y,c);
-  }
-  return spr;
-})();
-function blitMoonSprite(cx,cy,scale,worldDist){
-  var tw=Math.max(2,Math.round(MOON_SPR*scale));
-  var th=Math.max(2,Math.round(MOON_SPR*scale));
-  var oxI=Math.round(cx), oyI=Math.round(cy);
-  for(var ty=0;ty<th;ty++){
-    var py=oyI+ty; if(py<0||py>=H)continue;
-    var sy=Math.floor(ty*MOON_SPR/th);
-    var srcRow=sy*MOON_SPR, dstRow=py*W;
-    for(var tx=0;tx<tw;tx++){
-      var px=oxI+tx; if(px<0||px>=W)continue;
-      if(depthBuf[dstRow+px]<worldDist)continue;
-      var sx=Math.floor(tx*MOON_SPR/tw);
-      var v=moonSprite[srcRow+sx];
-      if((v&0xFF000000)===0)continue;
-      buf32[dstRow+px]=v;
-    }
-  }
-}
 
 var PU_SPR=24;
 function buildPowerupSprite(color){
@@ -2908,22 +2912,44 @@ function drawMissiles(){
     var pr=projectToScreen(m.x,m.y,m.z);
     if(!pr)continue;
     if(Math.abs(pr.sxn)>1.3||Math.abs(pr.syn)>1.3)continue;
+    // === ROTAZIONE: calcolo angolo dal vettore velocità ===
+    var angle=0;
+    var vlen=Math.sqrt(m.vx*m.vx+m.vy*m.vy+m.vz*m.vz);
+    if(vlen>1){
+      var hpx=m.x+m.vx*(5e6/vlen);
+      var hpy=m.y+m.vy*(5e6/vlen);
+      var hpz=m.z+m.vz*(5e6/vlen);
+      var headPr=projectToScreen(hpx,hpy,hpz);
+      if(headPr){
+        var adx=headPr.scrX-pr.scrX;
+        var ady=headPr.scrY-pr.scrY;
+        angle=Math.atan2(ady,adx)+Math.PI/2; // sprite punta in alto
+      }
+    }
     var sc=1.3;
-    var tw=Math.max(2,Math.round(MISSILE_SPR*sc));
-    var th=Math.max(2,Math.round(MISSILE_SPR*sc));
-    var oxI=Math.round(pr.scrX-MISSILE_SPR*sc*0.5);
-    var oyI=Math.round(pr.scrY-MISSILE_SPR*sc*0.5);
-    for(var ty=0;ty<th;ty++){
-      var py=oyI+ty; if(py<0||py>=H)continue;
-      var sy=Math.floor(ty*MISSILE_SPR/th);
-      var srcRow=sy*MISSILE_SPR, dstRow=py*W;
-      for(var tx=0;tx<tw;tx++){
-        var px=oxI+tx; if(px<0||px>=W)continue;
-        if(depthBuf[dstRow+px]<pr.dist)continue;
-        var sx=Math.floor(tx*MISSILE_SPR/tw);
-        var v=missileSprite[srcRow+sx];
+    var cosA=Math.cos(-angle), sinA=Math.sin(-angle);
+    var scxI=MISSILE_SPR/2, scyI=MISSILE_SPR/2;
+    var halfW=MISSILE_SPR*sc*0.5, halfH=MISSILE_SPR*sc*0.5;
+    var diag=Math.sqrt(halfW*halfW+halfH*halfH)+2;
+    var x0=Math.max(0,Math.floor(pr.scrX-diag));
+    var y0=Math.max(0,Math.floor(pr.scrY-diag));
+    var x1=Math.min(W-1,Math.ceil(pr.scrX+diag));
+    var y1=Math.min(H-1,Math.ceil(pr.scrY+diag));
+    var invScale=1/sc;
+    for(var py=y0;py<=y1;py++){
+      var dyDst=py-pr.scrY;
+      var rowOff=py*W;
+      for(var px=x0;px<=x1;px++){
+        var dxDst=px-pr.scrX;
+        var rxSrc=dxDst*cosA-dyDst*sinA;
+        var rySrc=dxDst*sinA+dyDst*cosA;
+        var sx=Math.floor(rxSrc*invScale+scxI);
+        var sy=Math.floor(rySrc*invScale+scyI);
+        if(sx<0||sx>=MISSILE_SPR||sy<0||sy>=MISSILE_SPR)continue;
+        if(depthBuf[rowOff+px]<pr.dist)continue;
+        var v=missileSprite[sy*MISSILE_SPR+sx];
         if((v&0xFF000000)===0)continue;
-        buf32[dstRow+px]=v;
+        buf32[rowOff+px]=v;
       }
     }
     var mdx=m.x-m.prevX, mdy=m.y-m.prevY, mdz=m.z-m.prevZ;
@@ -2947,36 +2973,60 @@ function drawCrosshair(){
   var info = getCrosshairData(human);
   var locked = info.locked !== null;
 
-  var mainCol   = locked ? [255,70,70]   : [140,255,190];
-  var subCol    = locked ? [255,140,140] : [80,180,120];
-  var cornerCol = locked ? [255,110,110] : [45,115,85];
-  var radarCol  = [255,90,50];
+  // Colori
+  var lockCol  = [255,70,70];      // rosso solo per lock
+  var radarCol = [255,200,60];     // ambra per nemico
+  var zoneCol  = [80,220,255];     // ciano per zona
+  var greenCol = [140,255,190];
+  var greenSub = [80,180,120];
+  var greenCor = [45,115,85];
+
+  var mainCol, subCol, cornerCol;
+  if(locked){
+    mainCol=lockCol; subCol=[255,140,140]; cornerCol=[255,110,110];
+  } else {
+    mainCol=greenCol; subCol=greenSub; cornerCol=greenCor;
+  }
 
   plotPx(cx,cy,mainCol);
   plotPx(cx-1,cy,subCol);
   plotPx(cx,cy-1,subCol);
 
+  // Determina direzione radar: priorità alla zona se in pericolo, altrimenti nemico
   var radarThresh = 0.12;
-  var armTop   = !locked && info.hasRadar && info.ny >  radarThresh;
-  var armBot   = !locked && info.hasRadar && info.ny < -radarThresh;
-  var armLeft  = !locked && info.hasRadar && info.nx < -radarThresh;
-  var armRight = !locked && info.hasRadar && info.nx >  radarThresh;
+  var radarNx = 0, radarNy = 0;
+  var radarActive = false;
+  var radarColor = radarCol;
+  if(!locked){
+    if(info.zoneWarn && info.zoneVisible){
+      radarNx = info.zoneNx; radarNy = info.zoneNy;
+      radarActive = true; radarColor = zoneCol;
+    } else if(info.hasRadar){
+      radarNx = info.nx; radarNy = info.ny;
+      radarActive = true; radarColor = radarCol;
+    }
+  }
+
+  var armTop   = radarActive && radarNy >  radarThresh;
+  var armBot   = radarActive && radarNy < -radarThresh;
+  var armLeft  = radarActive && radarNx < -radarThresh;
+  var armRight = radarActive && radarNx >  radarThresh;
 
   var tS=5, tE=9;
   for(var i=tS;i<=tE;i++){
-    plotPx(cx, cy-i, armTop   ? radarCol : mainCol);
-    plotPx(cx, cy+i, armBot   ? radarCol : mainCol);
-    plotPx(cx-i, cy, armLeft  ? radarCol : mainCol);
-    plotPx(cx+i, cy, armRight ? radarCol : mainCol);
+    plotPx(cx, cy-i, armTop   ? radarColor : mainCol);
+    plotPx(cx, cy+i, armBot   ? radarColor : mainCol);
+    plotPx(cx-i, cy, armLeft  ? radarColor : mainCol);
+    plotPx(cx+i, cy, armRight ? radarColor : mainCol);
   }
   plotPx(cx,cy-tE-1,subCol); plotPx(cx,cy+tE+1,subCol);
   plotPx(cx-tE-1,cy,subCol); plotPx(cx+tE+1,cy,subCol);
 
   var bd=13, bl=4;
-  var tlCol = (!locked && armTop && armLeft ) ? radarCol : cornerCol;
-  var trCol = (!locked && armTop && armRight) ? radarCol : cornerCol;
-  var blCol = (!locked && armBot && armLeft ) ? radarCol : cornerCol;
-  var brCol = (!locked && armBot && armRight) ? radarCol : cornerCol;
+  var tlCol = (!locked && armTop && armLeft ) ? radarColor : cornerCol;
+  var trCol = (!locked && armTop && armRight) ? radarColor : cornerCol;
+  var blCol = (!locked && armBot && armLeft ) ? radarColor : cornerCol;
+  var brCol = (!locked && armBot && armRight) ? radarColor : cornerCol;
 
   for(var i=0;i<bl;i++){
     plotPx(cx-bd, cy-bd+i, tlCol);  plotPx(cx-bd+i, cy-bd, tlCol);
@@ -3212,7 +3262,6 @@ function applyCollisions(ship){
       }
     }
   }
-  // === NUOVO: collisione nave-nave per evitare sovrapposizione ===
   for(var i=0;i<SHIPS.length;i++){
     var o=SHIPS[i];
     if(o===ship||!o.alive)continue;
@@ -3248,6 +3297,12 @@ function updatePlayer(dt){
     if(human.turboCooldown<0) human.turboCooldown=0;
   }
 
+  // === Combina input delle due leve ===
+  var ax = input.ax + input2.ax;
+  var ay = input.ay + input2.ay;
+  if(ax>1)ax=1; else if(ax<-1)ax=-1;
+  if(ay>1)ay=1; else if(ay<-1)ay=-1;
+
   if(aim.active){
     aim.t+=dt;
     var u=Math.min(1,aim.t/aim.dur), e=u*u*(3-2*u);
@@ -3256,10 +3311,10 @@ function updatePlayer(dt){
     if(u>=1)aim.active=false;
     human.bank*=Math.max(0,1-dt*4);
   } else {
-    human.yaw+=input.ax*2.1*human.turnMul*dt;
-    human.pitch+=input.ay*1.45*human.turnMul*dt;
+    human.yaw+=ax*2.1*human.turnMul*dt;
+    human.pitch+=ay*1.45*human.turnMul*dt;
     human.pitch=Math.max(-1.4,Math.min(1.4,human.pitch));
-    var targetBank=input.ax*0.6;
+    var targetBank=ax*0.6;
     human.bank+=(targetBank-human.bank)*Math.min(1,dt*8);
   }
 
@@ -3464,17 +3519,10 @@ function render(){
     var pr=projectToScreen(sat.x,sat.y,sat.z);
     if(!pr)continue;
     if(Math.abs(pr.sxn)>1.3||Math.abs(pr.syn)>1.3)continue;
-    if(sat.isMoon){
-      var pixSize=2.5e7/(pr.zd*camTanV)*H;
-      var sc=pixSize/MOON_SPR*1.5;
-      if(sc>6)sc=6; if(sc<0.20)sc=0.20;
-      blitMoonSprite(pr.scrX-MOON_SPR*sc*0.5,pr.scrY-MOON_SPR*sc*0.5,sc,pr.dist);
-    } else {
-      var pixSize=2e6/(pr.zd*camTanV)*H;
-      var sc=pixSize/SAT_SPR*1.6;
-      if(sc>1.6)sc=1.6; if(sc<0.10)sc=0.10;
-      blitSatSprite(pr.scrX-SAT_SPR*sc*0.5,pr.scrY-SAT_SPR*sc*0.5,sc,sat.variant,pr.dist);
-    }
+    var pixSize=2e6/(pr.zd*camTanV)*H;
+    var sc=pixSize/SAT_SPR*1.6;
+    if(sc>1.6)sc=1.6; if(sc<0.10)sc=0.10;
+    blitSatSprite(pr.scrX-SAT_SPR*sc*0.5,pr.scrY-SAT_SPR*sc*0.5,sc,sat.variant,pr.dist);
   }
   for(var i=0;i<powerups.length;i++){
     var pu=powerups[i];
@@ -3603,15 +3651,21 @@ function render(){
 }
 
 // ============================================================
-// INPUT
+// INPUT — stick1 e stick2 (leve ridondanti)
 // ============================================================
 var stickEl=document.getElementById('stick');
 var knobEl=document.getElementById('knob');
+var stick2El=document.getElementById('stick2');
+var knob2El=document.getElementById('knob2');
 var STICK_RADIUS=70;
 var stickActive=false, stickPointerId=null;
+var stick2Active=false, stick2PointerId=null;
 var stickOriginX=0, stickOriginY=0;
+var stick2OriginX=0, stick2OriginY=0;
 var tapX=0, tapY=0, tapT=0, tapMove=0;
 var canvasActive=false;
+var canvasPointerId=null;
+
 function resetStickState(){
   canvasActive=false; stickActive=false; stickPointerId=null;
   input.ax=0; input.ay=0;
@@ -3620,8 +3674,54 @@ function resetStickState(){
   stickEl.style.top='';
   knobEl.style.transform='translate(0px, 0px)';
 }
+function resetStick2State(){
+  stick2Active=false; stick2PointerId=null;
+  input2.ax=0; input2.ay=0;
+  stick2El.classList.remove('active');
+  stick2El.style.left='';
+  stick2El.style.top='';
+  knob2El.style.transform='translate(0px, 0px)';
+}
+
+// --- Stick 2: div dedicato, pointer capture proprio ---
+stick2El.style.pointerEvents='auto';
+stick2El.addEventListener('pointerdown', function(e){
+  e.preventDefault(); e.stopPropagation();
+  stick2Active=true; stick2PointerId=e.pointerId;
+  stick2OriginX=e.clientX; stick2OriginY=e.clientY;
+  // La leva2 è ancorata alla sua posizione CSS di base, quindi mi serve il suo centro
+  var rect=stick2El.getBoundingClientRect();
+  stick2OriginX=rect.left+rect.width/2;
+  stick2OriginY=rect.top+rect.height/2;
+  stick2El.classList.add('active');
+  knob2El.style.transform='translate(0px, 0px)';
+  input2.ax=0; input2.ay=0;
+  try{stick2El.setPointerCapture(e.pointerId);}catch(_){}
+});
+stick2El.addEventListener('pointermove', function(e){
+  if(!stick2Active||e.pointerId!==stick2PointerId)return;
+  e.preventDefault(); e.stopPropagation();
+  var dx=e.clientX-stick2OriginX, dy=e.clientY-stick2OriginY;
+  var cdx=dx, cdy=dy;
+  var mag=Math.sqrt(dx*dx+dy*dy);
+  if(mag>STICK_RADIUS){cdx=dx/mag*STICK_RADIUS; cdy=dy/mag*STICK_RADIUS;}
+  knob2El.style.transform='translate('+cdx.toFixed(1)+'px, '+cdy.toFixed(1)+'px)';
+  input2.ax=cdx/STICK_RADIUS;
+  input2.ay=-cdy/STICK_RADIUS;
+});
+function releaseStick2(e){
+  if(!stick2Active||e.pointerId!==stick2PointerId)return;
+  e.preventDefault(); e.stopPropagation();
+  resetStick2State();
+}
+stick2El.addEventListener('pointerup', releaseStick2);
+stick2El.addEventListener('pointercancel', releaseStick2);
+stick2El.addEventListener('lostpointercapture', function(){ resetStick2State(); });
+
+// --- Stick 1: sul canvas (dinamica, dove tocchi) ---
 canvas.addEventListener('pointerdown',function(e){
   canvasActive=true; stickActive=true; stickPointerId=e.pointerId;
+  canvasPointerId=e.pointerId;
   stickOriginX=e.clientX; stickOriginY=e.clientY;
   tapX=e.clientX; tapY=e.clientY; tapT=performance.now(); tapMove=0;
   aim.active=false;
@@ -3653,14 +3753,9 @@ function releasePointer(e){
 }
 canvas.addEventListener('pointerup',releasePointer);
 canvas.addEventListener('pointercancel',releasePointer);
-window.addEventListener('blur',resetStickState);
-window.addEventListener('pointerup',function(e){
-  if(canvasActive&&e.pointerId===stickPointerId){
-    setTimeout(function(){if(canvasActive&&e.pointerId===stickPointerId)resetStickState();},50);
-  }
-});
+window.addEventListener('blur',function(){resetStickState(); resetStick2State();});
 document.addEventListener('visibilitychange',function(){
-  if(document.hidden){resetStickState(); closeMinimapFullscreen();}
+  if(document.hidden){resetStickState(); resetStick2State(); closeMinimapFullscreen();}
 });
 function findTappedTarget(px,py){
   var nx=(px/window.innerWidth)*2-1;
@@ -3712,14 +3807,14 @@ window.addEventListener('keydown',function(e){
 window.addEventListener('keyup',function(e){keys[e.key.toLowerCase()]=false;});
 function readKeyboard(){
   if(aim.active)return;
-  if(stickActive)return;
+  if(stickActive||stick2Active)return;
   var kx=0, ky=0;
   if(keys['arrowleft']||keys['a'])kx-=1;
   if(keys['arrowright']||keys['d'])kx+=1;
   if(keys['arrowup']||keys['w'])ky+=1;
   if(keys['arrowdown']||keys['s'])ky-=1;
   if(kx||ky){input.ax=kx; input.ay=ky;}
-  else if(!stickActive){input.ax=0; input.ay=0;}
+  else if(!stickActive&&!stick2Active){input.ax=0; input.ay=0;}
 }
 function formatDist(m){
   if(m<1000)return m.toFixed(0)+' m';
@@ -3939,6 +4034,7 @@ function loop(now){
     frameAcc=0; frameCount=0;
   }
   gameTime+=dt;
+  updateMoon(dt);
   if(currentScreen==='lobby'||currentScreen==='queue'){
     updateLobbyCamera(dt); updateSatellites(dt); render();
   } else if(currentScreen==='match'){
