@@ -240,13 +240,26 @@ canvas{
   .slot .dot{width:6px;height:6px}
   .slot .hp{font-size:7px}
 
+  /* --- STATS (vita + munizioni) in basso a SINISTRA, sopra il turbo --- */
   #statsWrap{
-    bottom:calc(env(safe-area-inset-bottom,0px) + 6px);
-    padding:6px 12px;row-gap:3px;min-width:220px
+    bottom:calc(env(safe-area-inset-bottom,0px) + 100px);
+    left:calc(env(safe-area-inset-left,0px) + 6px);
+    transform:none;
+    padding:6px 10px;
+    row-gap:2px;
+    column-gap:10px;
+    min-width:0;
+    width:auto
   }
+  #statsWrap .stLbl{font-size:7px;letter-spacing:.20em}
+  #statsWrap .hpBarCell{width:92px;height:9px}
+  #statsWrap .ammoBullets{width:92px;height:9px;gap:3px}
+  #statsWrap .ammoBullets .b{width:4px;height:9px}
+  #statsWrap .hpNum{font-size:11px}
+  #statsWrap .reloadState{font-size:8px;letter-spacing:.14em}
 
-  #powerups{bottom:calc(env(safe-area-inset-bottom,0px) + 54px)}
-  .pu{width:30px;height:30px;font-size:12px;border-radius:8px}
+  #powerups{bottom:calc(env(safe-area-inset-bottom,0px) + 160px);left:calc(env(safe-area-inset-left,0px) + 6px);transform:none}
+  .pu{width:28px;height:28px;font-size:11px;border-radius:7px}
 
   #killFeed{top:calc(env(safe-area-inset-top,0px) + 112px);right:calc(env(safe-area-inset-right,0px) + 6px)}
   .kf{font-size:9px;padding:3px 6px}
@@ -452,6 +465,10 @@ var SWARM_COUNT = 14;
 var AIM_ASSIST_CONE_DEG = 8;
 var AIM_ASSIST_STRENGTH = 0.55;
 var AIM_ASSIST_MAX_DIST = 2.5e8;
+
+// Posizione della navicella sullo schermo (0 = top, 1 = bottom).
+// Spostata più in basso per non toccare il mirino centrale.
+var PLAYER_SCREEN_Y = 0.78;
 
 var CHASSIS = {
   snappy:   { hp:80,  speedMul:1.15, turnMul:1.40, fireRateMul:1.15 },
@@ -2361,7 +2378,7 @@ function blendPx(x,y,r,g,b,alpha){
 }
 function drawBeams(){
   var playerCenterX=W*0.5;
-  var playerCenterY=H*0.65+Math.sin(gameTime*4)*1.2;
+  var playerCenterY=H*PLAYER_SCREEN_Y+Math.sin(gameTime*4)*1.2;
   var crossX=W*0.5, crossY=H*0.5;
   for(var i=0;i<bullets.length;i++){
     var b=bullets[i];
@@ -3067,7 +3084,7 @@ function render(){
   if(currentScreen==='match'&&human.alive){
     var playerScale=SHIP_MAX_SCALE;
     var cx=W*0.5;
-    var cy=H*0.65+Math.sin(gameTime*4)*1.2;
+    var cy=H*PLAYER_SCREEN_Y+Math.sin(gameTime*4)*1.2;
     var turboIntensity=0;
     if(human.turboActive){
       var elapsed=TURBO_DURATION-human.turboTimer;
@@ -3084,7 +3101,7 @@ function render(){
       for(var yy=-sr;yy<=sr;yy++)for(var xx=-sr;xx<=sr;xx++){
         var d2=xx*xx+yy*yy; var d=Math.sqrt(d2);
         if(d>sr||d<sr-2.5)continue;
-        var px2=(W*0.5|0)+xx, py2=(H*0.65|0)+yy;
+        var px2=(W*0.5|0)+xx, py2=(cy|0)+yy;
         if(px2<0||py2<0||px2>=W||py2>=H)continue;
         blendPx(px2,py2,100,180,255,alphaS);
       }
@@ -3388,7 +3405,6 @@ if(window.screen && window.screen.orientation && window.screen.orientation.addEv
   window.screen.orientation.addEventListener('change', function(){setTimeout(resize,150);});
 }
 
-// Tenta il lock dell'orientamento (funziona in PWA fullscreen / Android)
 function tryLockOrientation(){
   try{
     if(window.screen && window.screen.orientation && window.screen.orientation.lock){
