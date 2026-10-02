@@ -116,7 +116,11 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   border:1px solid rgba(90,150,215,0.35);
   border-radius:22px;
   box-shadow:0 2px 14px rgba(0,0,0,0.55);
-  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  pointer-events:auto;cursor:pointer;
+  transition:background .15s,border-color .15s}
+.hudRow:hover{background:rgba(14,26,48,0.7)}
+.hudRow:active{background:rgba(20,50,90,0.75);border-color:rgba(120,200,255,0.6)}
 .hudSep{width:1px;height:14px;background:rgba(90,150,215,0.35);flex-shrink:0}
 .hudItem{display:flex;align-items:center;gap:6px;
   font:800 11px/1 ui-monospace,monospace;letter-spacing:.14em;
@@ -140,6 +144,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   transition:transform .06s linear}
 .hudNav .hudName{color:#eaf4ff}
 .hudNav .hudDist{color:#7aa8d0;font-size:10px;letter-spacing:.06em}
+.hudExpand{font-size:9px;color:#7aa8d0;opacity:0.7;letter-spacing:0;margin-left:-2px}
 
 /* ============================================================
    STATS CIRCOLARI (HULL + AMMO) — in alto a sinistra
@@ -192,6 +197,71 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .kf{font:700 10px/1.3 monospace;color:#e0eeff;padding:4px 8px;border-radius:6px;background:rgba(6,12,22,0.78);border:1px solid rgba(90,150,215,0.3);animation:kfIn .3s ease-out}
 @keyframes kfIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
 
+/* ============================================================
+   PAGINA STATISTICHE FULLSCREEN (hold su HUD top bar)
+   ============================================================ */
+#statsPage{
+  position:fixed;inset:0;z-index:150;
+  background:rgba(4,8,16,0.94);
+  display:none;flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) calc(env(safe-area-inset-right,0px) + 20px)
+          calc(env(safe-area-inset-bottom,0px) + 14px) calc(env(safe-area-inset-left,0px) + 20px);
+  color:#eaf4ff;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  animation:statsFadeIn .18s ease-out;
+  pointer-events:auto}
+@keyframes statsFadeIn{from{opacity:0}to{opacity:1}}
+#statsPage.show{display:flex}
+.spHeader{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:8px;border-bottom:1px solid rgba(90,150,215,0.4);
+  margin-bottom:10px;flex-shrink:0}
+.spTitle{
+  font:900 13px/1 ui-monospace,monospace;
+  letter-spacing:.30em;color:#eaf4ff;
+  text-shadow:0 0 12px rgba(110,180,255,0.4)}
+.spAliveWrap{
+  font:800 11px/1 ui-monospace,monospace;
+  color:#80ff80;letter-spacing:.16em;
+  display:flex;align-items:baseline;gap:6px}
+.spAliveWrap .num{font-size:18px;font-weight:900}
+.spList{
+  flex:1;display:flex;flex-direction:column;gap:4px;
+  overflow-y:auto;padding-right:2px}
+.spRow{
+  display:grid;
+  grid-template-columns:24px 10px minmax(80px,1fr) 1fr 48px 78px;
+  align-items:center;gap:10px;
+  padding:7px 12px;border-radius:8px;
+  background:rgba(14,26,48,0.55);
+  border:1px solid rgba(90,150,215,0.22);
+  font:700 12px/1 ui-monospace,monospace;
+  color:#e0eeff;flex-shrink:0;
+  transition:opacity .2s,border-color .2s}
+.spRow.dead{opacity:0.42}
+.spRow.me{
+  border-color:rgba(120,220,255,0.75);
+  background:rgba(20,50,90,0.55);
+  box-shadow:0 0 12px rgba(120,220,255,0.18)}
+.spNum{font-size:11px;color:#7aa8d0;text-align:right}
+.spDot{width:8px;height:8px;border-radius:2px;box-shadow:0 0 5px currentColor}
+.spName{font-weight:800;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spHpBar{
+  height:10px;
+  background:rgba(0,0,0,0.55);
+  border:1px solid rgba(90,150,215,0.4);
+  border-radius:3px;overflow:hidden}
+.spHpFill{height:100%;transition:width .18s linear,background .18s linear}
+.spHp{font-size:12px;font-weight:800;text-align:right;color:#eaf4ff}
+.spRow.dead .spHp{color:#ff8090;letter-spacing:.1em}
+.spKills{font-size:12px;font-weight:800;text-align:right;color:#ff8899}
+.spKillLbl{font-size:8px;color:#7aa8d0;letter-spacing:.14em;font-weight:700;margin-left:2px}
+.spHint{
+  text-align:center;
+  font:700 9px/1 ui-monospace,monospace;
+  color:#7aa8d0;letter-spacing:.26em;
+  padding-top:10px;opacity:0.7;flex-shrink:0}
+
 #turboBtn{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 130px);left:calc(env(safe-area-inset-left,0px) + 22px);width:88px;height:88px;border-radius:50%;border:none;background:transparent;padding:0;margin:0;pointer-events:auto;cursor:pointer;touch-action:none;z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity .3s}
 #turboBtn::before{content:'';position:absolute;inset:10px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(255,180,80,0.35),rgba(200,60,20,0.22) 55%,rgba(100,20,0,0.12));pointer-events:none;z-index:0}
 #turboBtn:active{transform:scale(0.94)}
@@ -225,9 +295,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 #missileBtn.cooldown::before{background:radial-gradient(circle at 40% 35%,rgba(80,80,80,0.3),rgba(40,40,40,0.2))}
 #missileBtn.cooldown .missileTxt{color:rgba(170,170,170,0.75);text-shadow:none}
 
-/* ============================================================
-   STICK — VERDE, sempre visibile in basso a sinistra
-   ============================================================ */
 #stick{position:fixed;left:0;top:0;width:150px;height:150px;border-radius:50%;
   background:radial-gradient(circle at 50% 50%, rgba(80,220,140,0.14), rgba(40,170,90,0.06) 70%, rgba(20,110,60,0.02));
   border:1px solid rgba(120,255,160,0.30);
@@ -265,6 +332,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   .hudNav .arrow{font-size:10px}
   .hudNav .hudDist{font-size:9px}
   .hudSep{height:12px}
+  .hudExpand{font-size:8px}
 
   #stick{
     left:calc(env(safe-area-inset-left,0px) + 22px);
@@ -330,6 +398,18 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   #killFeed{top:calc(env(safe-area-inset-top,0px) + 112px);right:calc(env(safe-area-inset-right,0px) + 6px)}
   .kf{font-size:9px;padding:3px 6px}
 
+  /* Stats page compact in landscape */
+  #statsPage{padding:10px 18px}
+  .spHeader{padding-bottom:6px;margin-bottom:8px}
+  .spTitle{font-size:12px;letter-spacing:.24em}
+  .spAliveWrap{font-size:10px}
+  .spAliveWrap .num{font-size:16px}
+  .spRow{padding:5px 10px;font-size:11px;grid-template-columns:22px 10px minmax(70px,1fr) 1fr 44px 70px}
+  .spName{font-size:11px}
+  .spHp{font-size:11px}
+  .spKills{font-size:11px}
+  .spHint{font-size:8px;padding-top:6px}
+
   .lobby-content{max-width:520px;gap:10px}
   .brand{font-size:26px}
   .tagline{font-size:9px;margin-top:-4px}
@@ -386,7 +466,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 </div>
 
 <div id="hud">
-  <div class="hudRow">
+  <div class="hudRow" id="hudRow">
     <div class="hudItem" id="hudTime">00:00</div>
     <div class="hudSep"></div>
     <div class="hudItem hudNav">
@@ -403,7 +483,17 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
     <div class="hudItem" id="hudKills">KILL 0</div>
     <div class="hudSep"></div>
     <div class="hudItem" id="hudZone">ZONA &middot; &mdash;</div>
+    <div class="hudExpand">&#9660;</div>
   </div>
+</div>
+
+<div id="statsPage">
+  <div class="spHeader">
+    <div class="spTitle">STATISTICHE PARTITA</div>
+    <div class="spAliveWrap"><span class="num" id="spAlive">10</span> VIVI</div>
+  </div>
+  <div class="spList" id="spList"></div>
+  <div class="spHint">RILASCIA PER CHIUDERE</div>
 </div>
 
 <div id="statsWrap">
@@ -522,11 +612,8 @@ var TURBO_DURATION=5;
 var TURBO_COOLDOWN=20;
 var TURBO_MULT=2.5;
 
-// ============================================================
-// RIGENERAZIONE HP
-// ============================================================
-var HP_REGEN_DELAY = 5.0;   // secondi senza subire danni prima di iniziare a rigenerare
-var HP_REGEN_RATE  = 1.0;   // HP recuperati al secondo
+var HP_REGEN_DELAY = 5.0;
+var HP_REGEN_RATE  = 1.0;
 
 var MISSILE_CD = 8.0;
 var MISSILE_DMG = 35;
@@ -1021,7 +1108,7 @@ var SHIPS=[];
 var human={isHuman:true,alive:true,hp:MAX_HP,maxHp:MAX_HP,x:0,y:0,z:0,yaw:0,pitch:0,bank:0,speed:0,recoil:0,fireCd:0,flash:0,
   ammo:MAX_AMMO,reloadT:0, missileCd:0, missileTarget:null,
   turboActive:false, turboTimer:0, turboCooldown:0,
-  powerups:[], shieldPulse:0, regenDelay:0,
+  powerups:[], shieldPulse:0, regenDelay:0, kills:0,
   chassis:'balanced', speedMul:1, turnMul:1, fireRateMul:1,
   palette:PAL_PLAYER,name:'TU',dotColor:PAL_PLAYER.dot,ai:null,trailTimer:0,index:0};
 SHIPS.push(human);
@@ -1029,7 +1116,7 @@ for(var si=0;si<TOTAL_PLAYERS-1;si++){
   SHIPS.push({
     isHuman:false,alive:true,hp:MAX_HP,maxHp:MAX_HP,x:0,y:0,z:0,yaw:0,pitch:0,bank:0,speed:0,recoil:0,fireCd:0,flash:0,
     ammo:MAX_AMMO,reloadT:0, missileCd:0, missileTarget:null,
-    powerups:[], shieldPulse:0, regenDelay:0,
+    powerups:[], shieldPulse:0, regenDelay:0, kills:0,
     chassis:'balanced', speedMul:1, turnMul:1, fireRateMul:1,
     palette:PAL_RED,name:'AI',dotColor:PAL_RED.dot,
     ai:PERSONALITIES.hunter, evadeT:0, strafeDir:1, trailTimer:0, hideTarget:null, hideTargetTimer:0, index:si+1
@@ -1067,8 +1154,91 @@ var hudZoneEl=document.getElementById('hudZone');
 var powerupsEl=document.getElementById('powerups');
 var powerupsDomEls={};
 
+// Stats page refs
+var statsPageEl=document.getElementById('statsPage');
+var spListEl=document.getElementById('spList');
+var spAliveEl=document.getElementById('spAlive');
+var hudRowEl=document.getElementById('hudRow');
+var statsHoldTimer=null;
+var statsPageVisible=false;
+
+function showStatsPage(){
+  if(currentScreen!=='match') return;
+  statsPageVisible=true;
+  buildStatsPage();
+  statsPageEl.classList.add('show');
+}
+function hideStatsPage(){
+  if(!statsPageVisible) return;
+  statsPageVisible=false;
+  statsPageEl.classList.remove('show');
+}
+function buildStatsPage(){
+  var alive=0;
+  var sorted=SHIPS.slice().sort(function(a, b){
+    if(a.alive !== b.alive) return a.alive ? -1 : 1;
+    if((b.kills||0) !== (a.kills||0)) return (b.kills||0) - (a.kills||0);
+    return b.hp - a.hp;
+  });
+  var html='';
+  for(var i=0;i<sorted.length;i++){
+    var s=sorted[i];
+    if(s.alive) alive++;
+    var hpFrac = s.alive ? Math.max(0, s.hp / s.maxHp) : 0;
+    var hpColor = hpFrac > 0.5 ? '#6ec0ff' : hpFrac > 0.25 ? '#ffd06e' : '#ff6e6e';
+    if(!s.alive) hpColor = '#666';
+    var c=s.dotColor;
+    var colorStr='rgb('+c[0]+','+c[1]+','+c[2]+')';
+    var isMe=s.isHuman;
+    var kills=s.kills||0;
+    var statusText = s.alive ? Math.ceil(s.hp) : 'KIA';
+    html += '<div class="spRow'+(isMe?' me':'')+(s.alive?'':' dead')+'">';
+    html += '<div class="spNum">'+(i+1)+'</div>';
+    html += '<div class="spDot" style="background:'+colorStr+';color:'+colorStr+'"></div>';
+    html += '<div class="spName">'+s.name+'</div>';
+    html += '<div class="spHpBar"><div class="spHpFill" style="width:'+(hpFrac*100)+'%;background:'+hpColor+'"></div></div>';
+    html += '<div class="spHp">'+statusText+'</div>';
+    html += '<div class="spKills">'+kills+' <span class="spKillLbl">KILL</span></div>';
+    html += '</div>';
+  }
+  spListEl.innerHTML=html;
+  spAliveEl.textContent = alive;
+}
+
+hudRowEl.addEventListener('pointerdown', function(e){
+  e.preventDefault();
+  e.stopPropagation();
+  if(currentScreen !== 'match') return;
+  if(statsHoldTimer) { clearTimeout(statsHoldTimer); statsHoldTimer = null; }
+  statsHoldTimer = setTimeout(function(){
+    statsHoldTimer = null;
+    showStatsPage();
+  }, 180);
+});
+hudRowEl.addEventListener('pointerup', function(e){
+  e.preventDefault();
+  e.stopPropagation();
+  if(statsHoldTimer){ clearTimeout(statsHoldTimer); statsHoldTimer = null; }
+});
+hudRowEl.addEventListener('pointercancel', function(e){
+  if(statsHoldTimer){ clearTimeout(statsHoldTimer); statsHoldTimer = null; }
+  hideStatsPage();
+});
+hudRowEl.addEventListener('pointerleave', function(e){
+  // Non chiude: aspetta il pointerup globale
+});
+document.addEventListener('pointerup', function(e){
+  if(statsHoldTimer){ clearTimeout(statsHoldTimer); statsHoldTimer = null; }
+  hideStatsPage();
+});
+document.addEventListener('pointercancel', function(e){
+  if(statsHoldTimer){ clearTimeout(statsHoldTimer); statsHoldTimer = null; }
+  hideStatsPage();
+});
+
 function showScreen(n){
   if(n!=='match'&&minimapFullscreen) closeMinimapFullscreen();
+  if(n!=='match') hideStatsPage();
   currentScreen=n;
   lobbyEl.classList.toggle('active',n==='lobby');
   queueEl.classList.toggle('active',n==='queue');
@@ -1184,6 +1354,7 @@ function beginMatch(){
   human.turboActive=false; human.turboTimer=0; human.turboCooldown=0;
   human.powerups=[];
   human.regenDelay=0;
+  human.kills=0;
   {
     var dx=mars.x-human.x,dy=mars.y-human.y,dz=mars.z-human.z;
     var dl=Math.sqrt(dx*dx+dy*dy+dz*dz);
@@ -1203,6 +1374,7 @@ function beginMatch(){
     s.evadeT=0; s.strafeDir=Math.random()<0.5?1:-1; s.trailTimer=0;
     s.powerups=[]; s.hideTarget=null; s.hideTargetTimer=0;
     s.regenDelay=0;
+    s.kills=0;
     var dx=-s.x,dy=-s.y,dz=-s.z;
     var dl=Math.sqrt(dx*dx+dy*dy+dz*dz);
     s.yaw=Math.atan2(dy,dx); s.pitch=Math.asin(dz/dl);
@@ -1227,6 +1399,7 @@ function buildRoster(){
 
 function endMatch(won){
   matchActive=false;
+  hideStatsPage();
   var alive=SHIPS.filter(function(s){return s.alive;}).length;
   placement=won?1:alive+1;
   var t=gameTime-matchStats.startTime;
@@ -1305,6 +1478,7 @@ function updateDynamicEvents(dt){
       var d=Math.sqrt(s.x*s.x+s.y*s.y+s.z*s.z);
       if(d < SOLAR_FLARE_RADIUS_AU*AU){
         s.hp-=dmgPerSec*dt; s.flash=0.15;
+        s.regenDelay = HP_REGEN_DELAY;
         if(s.hp<=0){ s.hp=0; s.alive=false; spawnExplosion(s.x,s.y,s.z,8e5);
           if(s.isHuman){playerEliminated=true;setTimeout(function(){endMatch(false);},900);}
         }
@@ -1535,7 +1709,6 @@ function damageShip(target,dmg,source){
     if(dmgBuff) dmg*=2.0;
   }
   target.hp-=dmg; target.flash=0.2;
-  // Reset del timer di rigenerazione
   target.regenDelay = HP_REGEN_DELAY;
   if(source===human) matchStats.damage+=dmg;
   if(target===human){
@@ -1553,8 +1726,12 @@ function damageShip(target,dmg,source){
   if(target.hp<=0){
     target.hp=0; target.alive=false;
     spawnExplosion(target.x, target.y, target.z, 8e5);
+    // Track kill for the source ship
+    if(source && source !== target){
+      source.kills = (source.kills || 0) + 1;
+      if(source === human) matchStats.kills = human.kills;
+    }
     if(source===human && !target.isHuman){
-      matchStats.kills++;
       showKillFeed('HAI ELIMINATO '+target.name);
       hitMark.style.opacity=1; hitMark.style.transform='translate(-50%,-50%) scale(1.2)';
       setTimeout(function(){hitMark.style.opacity=0; hitMark.style.transform='translate(-50%,-50%) scale(0.5)';},150);
@@ -1946,22 +2123,26 @@ for(var kk=0;kk<POWERUP_KEYS.length;kk++){
   puSprites[key]=buildPowerupSprite(POWERUP_DEFS[key].color);
 }
 
+// Missile sprite: meno voluminoso (corpo 2px + pinne piccole)
 var MISSILE_SPR=16;
 var missileSprite=(function(){
   var spr=new Uint32Array(MISSILE_SPR*MISSILE_SPR);
   var setPx=function(x,y,c){if(x<0||y<0||x>=MISSILE_SPR||y>=MISSILE_SPR)return;spr[y*MISSILE_SPR+x]=0xFF000000|((c[2]|0)<<16)|((c[1]|0)<<8)|(c[0]|0);};
-  var cx=8, cy=8;
-  for(var y=2;y<14;y++)for(var x=6;x<10;x++){
-    var nx=(x-cx)/2;
-    if(Math.abs(nx)>1-Math.abs(y-8)/6.5)continue;
-    var c=[220,220,230];
-    if(x<7)c=[240,240,255];
-    else if(x>8)c=[140,140,160];
-    if(y>10)c=[255,120,80];
-    setPx(x,y,c);
+  var BODY_L=[240,240,255];
+  var BODY_R=[150,150,170];
+  var FIN=[170,170,195];
+  // Corpo sottile (2 px), da y=3 a y=12
+  for(var y=3;y<=12;y++){
+    setPx(7,y,BODY_L);
+    setPx(8,y,BODY_R);
   }
+  // Pinne piccole alla base (y=11)
+  setPx(5,11,FIN); setPx(6,11,BODY_L);
+  setPx(9,11,BODY_R); setPx(10,11,FIN);
+  // Punta
   setPx(7,2,[255,255,255]); setPx(8,2,[255,255,255]);
-  setPx(7,1,[255,200,200]); setPx(8,1,[255,200,200]);
+  setPx(7,1,[255,220,220]); setPx(8,1,[255,220,220]);
+  // Fiamma motore
   setPx(7,13,[255,180,80]); setPx(8,13,[255,180,80]);
   setPx(7,14,[255,120,60]); setPx(8,14,[255,120,60]);
   setPx(7,15,[255,80,40]); setPx(8,15,[255,80,40]);
@@ -2233,6 +2414,30 @@ function buildUfoSprite(pal){
     else setPx(x,y,DARK);
   }
   for(var x=3;x<29;x++){if(x%3===0)setPx(x,15,ACC);}
+
+  // Post-processing: aggiungi bordo bianco ESTERNO al contorno scuro
+  // Il contorno scuro (OUT) è il bordo attuale, ora diventa bordo interno
+  // Il nuovo bordo esterno sarà bianco, per staccarsi dal nero dello sfondo
+  var WHITE_OUTER = [200, 235, 255];
+  var darkR = OUT[0], darkG = OUT[1], darkB = OUT[2];
+  var dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+  var copy = new Uint32Array(spr);
+  for(var yy=0; yy<UFO_H; yy++){
+    for(var xx=0; xx<UFO_W; xx++){
+      var v = copy[yy*UFO_W + xx];
+      if((v & 0xFF000000) === 0) continue; // trasparente
+      var rr = v & 0xFF, gg = (v>>8)&0xFF, bb = (v>>16)&0xFF;
+      if(rr !== darkR || gg !== darkG || bb !== darkB) continue; // non è OUT
+      for(var d=0; d<4; d++){
+        var nx2 = xx + dirs[d][0], ny2 = yy + dirs[d][1];
+        if(nx2<0 || ny2<0 || nx2>=UFO_W || ny2>=UFO_H) continue;
+        var nv = copy[ny2*UFO_W + nx2];
+        if((nv & 0xFF000000) !== 0) continue; // non è trasparente
+        setPx(nx2, ny2, WHITE_OUTER);
+      }
+    }
+  }
+
   return spr;
 }
 function getUfoSprite(pal){
@@ -2577,7 +2782,7 @@ function drawMissiles(){
     var pr=projectToScreen(m.x,m.y,m.z);
     if(!pr)continue;
     if(Math.abs(pr.sxn)>1.3||Math.abs(pr.syn)>1.3)continue;
-    var sc=1.8;
+    var sc=1.3; // scala ridotta da 1.8 a 1.3
     var tw=Math.max(2,Math.round(MISSILE_SPR*sc));
     var th=Math.max(2,Math.round(MISSILE_SPR*sc));
     var oxI=Math.round(pr.scrX-MISSILE_SPR*sc*0.5);
@@ -3488,16 +3693,13 @@ function updateHUD(){
   var mins=Math.floor(elapsed/60), secs=Math.floor(elapsed%60);
   hudTime.textContent=String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0');
 
-  // Kills: solo numero
   hudKills.textContent='KILL '+matchStats.kills;
 
-  // Giocatori vivi
   var aliveCount=0;
   for(var i=0;i<SHIPS.length;i++) if(SHIPS[i].alive) aliveCount++;
   hudAliveCount.textContent = aliveCount;
   var aliveColor = aliveCount > 5 ? '#80ff80' : aliveCount > 2 ? '#ffd76a' : '#ff8080';
   hudAliveEl.style.color = aliveColor;
-  hudAliveEl.style.textShadow = '0 0 8px ' + aliveColor.replace(')', ',0.35)').replace('rgb','rgba');
 
   if(human.alive&&currentScreen==='match'){
     var frac=human.hp/human.maxHp;
@@ -3516,6 +3718,10 @@ function updateHUD(){
       el.classList.toggle('dead',!s.alive);
       el.querySelector('.hp').textContent=s.alive?Math.ceil(s.hp):'KIA';
     }
+  }
+  // Se la stats page è aperta, aggiorna in tempo reale
+  if(statsPageVisible){
+    buildStatsPage();
   }
 }
 
