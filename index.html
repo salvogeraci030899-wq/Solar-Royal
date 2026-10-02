@@ -607,7 +607,7 @@ var SHIP_MAX_SCALE=1.4;
 var SHIP_MIN_SCALE=0.05;
 var SCALE_REF_CLOSE=2.0e6;
 var SCALE_REF_FAR=5.0e8;
-var MAX_SPEED=4e11;
+var MAX_SPEED=7e11;
 var TURBO_DURATION=5;
 var TURBO_COOLDOWN=20;
 var TURBO_MULT=2.5;
@@ -3048,8 +3048,8 @@ function computeSpeed(ship){
     var d=Math.sqrt((ship.x-o.x)*(ship.x-o.x)+(ship.y-o.y)*(ship.y-o.y)+(ship.z-o.z)*(ship.z-o.z))*1.5;
     if(d<nearest)nearest=d;
   }
-  if(nearest<1e4)nearest=1e4;
-  return Math.min(MAX_SPEED, Math.max(3000, nearest*0.5));
+  if(nearest<2e4)nearest=2e4;
+return Math.min(MAX_SPEED, Math.max(9000, nearest*1.1));
 }
 function applyCollisions(ship){
   for(var i=0;i<BODIES.length;i++){
