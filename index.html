@@ -138,6 +138,38 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .hudNav .hudName{color:#eaf4ff}
 .hudNav .hudDist{color:#7aa8d0;font-size:10px;letter-spacing:.06em}
 
+/* ============================================================
+   STATS CIRCOLARI (HULL + AMMO) — in alto a sinistra
+   ============================================================ */
+#statsWrap{position:fixed;
+  top:calc(env(safe-area-inset-top,0px) + 8px);
+  left:calc(env(safe-area-inset-left,0px) + 8px);
+  width:104px;height:104px;
+  z-index:13;pointer-events:none;opacity:0;transition:opacity .3s;
+  display:flex;align-items:center;justify-content:center;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,0.65))}
+#statsWrap.show{opacity:1}
+#statsWrap .statsRing{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#statsWrap .statsCenter{
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;width:100%;height:100%;text-align:center}
+#statsWrap .hpNum{
+  font:900 22px/1 ui-monospace,monospace;color:#eaf4ff;
+  text-shadow:0 0 10px rgba(110,200,255,0.65),0 1px 2px #000;
+  letter-spacing:.02em}
+#statsWrap .ammoBullets{display:flex;gap:3px;align-items:center;justify-content:center;margin-top:1px}
+#statsWrap .ammoBullets .b{width:4px;height:9px;border-radius:1.5px;
+  background:linear-gradient(180deg,#ffe27a,#ff9a30);
+  box-shadow:0 0 4px rgba(255,190,80,0.55),inset 0 0 2px rgba(255,255,255,0.5);
+  transition:opacity .12s,background .12s}
+#statsWrap .ammoBullets .b.empty{background:#1a1a1a;box-shadow:none;opacity:0.35}
+#statsWrap.reloading .ammoBullets .b{animation:reloadPulse .5s ease-in-out infinite alternate}
+@keyframes reloadPulse{from{opacity:0.25}to{opacity:0.85}}
+#statsWrap .reloadState{font:800 7px/1 ui-monospace,monospace;color:#7aa8d0;
+  letter-spacing:.20em;margin-top:1px}
+#statsWrap .reloadState.reloading{color:#ffbb55;animation:reloadPulse .5s ease-in-out infinite alternate}
+#statsWrap.outside .hpNum{color:#ff9ab0}
+
 #roster{top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 8px);display:flex;flex-direction:column;gap:2px;font:700 9px/1.1 ui-monospace,monospace;z-index:10;pointer-events:none;transition:opacity .3s}
 .slot{display:flex;align-items:center;gap:5px;padding:2px 6px;border-radius:5px;background:rgba(6,12,22,0.72);border:1px solid rgba(90,150,215,0.35);color:#e0eeff;min-width:82px;transition:opacity .3s}
 .slot.dead{opacity:0.32}
@@ -150,23 +182,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 #powerups.show{opacity:1}
 .pu{width:34px;height:34px;border-radius:9px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font:900 14px/1 ui-monospace,monospace;color:#fff;background:rgba(6,12,22,0.85);border:1.5px solid currentColor;box-shadow:0 0 12px currentColor}
 .pu .pbar{position:absolute;bottom:0;left:0;height:3px;background:currentColor}
-
-/* ============================================================
-   STATS — in alto a destra sotto la minimappa (landscape)
-   ============================================================ */
-#statsWrap{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:50%;transform:translateX(-50%);display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto auto;column-gap:14px;row-gap:4px;padding:8px 14px;background:rgba(6,12,22,0.85);border:1.5px solid rgba(90,150,215,0.55);border-radius:8px;opacity:0;pointer-events:none;z-index:12;transition:opacity .3s;font:700 10px/1.1 ui-monospace,monospace;color:#cfe6ff;min-width:240px}
-#statsWrap.show{opacity:1}
-#statsWrap .stLbl{font:700 8px/1 monospace;color:#7aa8d0;letter-spacing:.24em;text-align:center;padding-bottom:1px}
-#statsWrap .hpBarCell{width:110px;height:11px;background:rgba(0,0,0,0.55);border:1px solid rgba(90,150,215,0.5);border-radius:3px;overflow:hidden;display:flex}
-#statsWrap .hpFill{height:100%;width:100%;background:linear-gradient(90deg,#3a7ad0,#6ec0ff,#a8e0ff);transition:width .18s linear}
-#statsWrap .ammoBullets{width:110px;height:11px;display:flex;gap:4px;align-items:center;justify-content:center}
-#statsWrap .ammoBullets .b{width:5px;height:11px;border-radius:1.5px;background:linear-gradient(180deg,#ffe27a,#ff9a30);box-shadow:0 0 5px rgba(255,190,80,0.6);transition:opacity .12s}
-#statsWrap .ammoBullets .b.empty{background:#1a1a1a;box-shadow:none;opacity:0.35}
-#statsWrap.reloading .ammoBullets .b{animation:reloadPulse .5s ease-in-out infinite alternate}
-@keyframes reloadPulse{from{opacity:0.25}to{opacity:0.85}}
-#statsWrap .hpNum{font:800 12px/1 monospace;color:#eaf4ff;text-align:center}
-#statsWrap .reloadState{font:700 9px/1 monospace;color:#7aa8d0;text-align:center;letter-spacing:.18em}
-#statsWrap .reloadState.reloading{color:#ffbb55;animation:reloadPulse .5s ease-in-out infinite alternate}
 
 #dmgVignette{position:fixed;inset:0;background:radial-gradient(circle at center,rgba(255,40,40,0) 30%,rgba(255,40,40,0.42) 100%);opacity:0;transition:opacity .12s;pointer-events:none;z-index:10}
 #hitMark{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(0.5);font-size:26px;color:#fff;font-weight:900;text-shadow:0 0 10px #ff5050;opacity:0;transition:all .12s;z-index:10;pointer-events:none}
@@ -208,19 +223,24 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 #missileBtn.cooldown .missileTxt{color:rgba(170,170,170,0.75);text-shadow:none}
 
 /* ============================================================
-   STICK — sempre visibile in basso a sinistra (home position)
+   STICK — VERDE, sempre visibile in basso a sinistra
    ============================================================ */
 #stick{position:fixed;left:0;top:0;width:150px;height:150px;border-radius:50%;
-  background:radial-gradient(circle at 50% 50%,rgba(60,120,200,0.10),rgba(30,70,140,0.05) 70%,rgba(20,50,110,0.02));
-  border:1px solid rgba(120,190,255,0.18);
+  background:radial-gradient(circle at 50% 50%, rgba(80,220,140,0.14), rgba(40,170,90,0.06) 70%, rgba(20,110,60,0.02));
+  border:1px solid rgba(120,255,160,0.30);
+  box-shadow:0 0 16px rgba(80,220,140,0.18),inset 0 0 20px rgba(80,220,140,0.10);
   pointer-events:none;-webkit-user-select:none;user-select:none;
-  opacity:0;transition:opacity .18s;z-index:15}
-#stick.active{opacity:0.30}
+  opacity:0;transition:opacity .18s,box-shadow .18s;z-index:15}
+#stick.active{opacity:0.55;
+  box-shadow:0 0 24px rgba(80,220,140,0.45),inset 0 0 26px rgba(80,220,140,0.18)}
 #stick .knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin-left:-28px;margin-top:-28px;border-radius:50%;
-  background:radial-gradient(circle at 35% 32%,rgba(200,235,255,0.35),rgba(110,180,255,0.18) 55%,rgba(60,120,210,0.10));
-  border:1px solid rgba(160,215,255,0.35);pointer-events:none;transition:transform .04s linear}
+  background:radial-gradient(circle at 35% 32%, rgba(210,255,225,0.55), rgba(110,230,160,0.30) 55%, rgba(60,180,110,0.15));
+  border:1px solid rgba(160,255,190,0.50);
+  box-shadow:0 0 12px rgba(110,230,160,0.35),inset 0 0 10px rgba(255,255,255,0.12);
+  pointer-events:none;transition:transform .04s linear}
 #stick .knob::after{content:'';position:absolute;left:50%;top:50%;width:10px;height:10px;transform:translate(-50%,-50%);border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,0.35),rgba(160,215,255,0.05))}
+  background:radial-gradient(circle,rgba(255,255,255,0.55),rgba(160,255,190,0.08));
+  box-shadow:0 0 8px rgba(200,255,220,0.45)}
 
 .game-hidden #hud,.game-hidden #roster,.game-hidden #statsWrap,
 .game-hidden #dmgVignette,.game-hidden #hitMark,.game-hidden #killFeed,
@@ -233,7 +253,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
    ============================================================ */
 @media (orientation: landscape){
 
-  /* --- HUD riga orizzontale compatta --- */
   .hudRow{gap:10px;padding:4px 14px}
   .hudItem{font-size:10px;letter-spacing:.10em;gap:5px}
   #hudTime{font-size:11px}
@@ -242,18 +261,17 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   .hudNav .hudDist{font-size:9px}
   .hudSep{height:12px}
 
-  /* --- Stick in basso a sinistra, sempre visibile --- */
+  /* --- Stick verde in basso a sinistra --- */
   #stick{
     left:calc(env(safe-area-inset-left,0px) + 22px);
     bottom:calc(env(safe-area-inset-bottom,0px) + 22px);
     top:auto;
     width:130px;height:130px;
-    opacity:0.15
+    opacity:0.35
   }
-  #stick.active{opacity:0.32}
+  #stick.active{opacity:0.60}
   #stick .knob{width:48px;height:48px;margin-left:-24px;margin-top:-24px}
 
-  /* --- Turbo accanto allo stick --- */
   #turboBtn{
     bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
     left:calc(env(safe-area-inset-left,0px) + 170px);
@@ -261,7 +279,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   }
   .turboTxt{font-size:10px}
 
-  /* --- Fire in basso a destra --- */
   #fireBtn{
     bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
     right:calc(env(safe-area-inset-right,0px) + 22px);
@@ -269,7 +286,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   }
   .fireTxt{font-size:12px}
 
-  /* --- Missile accanto al fire (a sinistra del fire) --- */
   #missileBtn{
     bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
     right:calc(env(safe-area-inset-right,0px) + 138px);
@@ -277,42 +293,31 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   }
   .missileTxt{font-size:10px}
 
-  /* --- Minimappa in alto a destra --- */
   #minimap{
     width:96px;height:96px;
     top:calc(env(safe-area-inset-top,0px) + 6px);
     right:calc(env(safe-area-inset-right,0px) + 6px)
   }
 
-  /* --- Stats in alto a destra sotto la minimappa --- */
+  /* --- Stats circolari in alto a sinistra --- */
   #statsWrap{
-    top:calc(env(safe-area-inset-top,0px) + 108px);
-    bottom:auto;
-    right:calc(env(safe-area-inset-right,0px) + 6px);
-    left:auto;
-    transform:none;
-    padding:6px 10px;
-    row-gap:2px;
-    column-gap:10px;
-    min-width:0;
-    width:auto
-  }
-  #statsWrap .stLbl{font-size:7px;letter-spacing:.18em}
-  #statsWrap .hpBarCell{width:84px;height:9px}
-  #statsWrap .ammoBullets{width:84px;height:9px;gap:3px}
-  #statsWrap .ammoBullets .b{width:4px;height:9px}
-  #statsWrap .hpNum{font-size:11px}
-  #statsWrap .reloadState{font-size:8px;letter-spacing:.14em}
-
-  /* --- Roster compatto in alto a sinistra --- */
-  #roster{font-size:8px;gap:1px;
     top:calc(env(safe-area-inset-top,0px) + 6px);
+    left:calc(env(safe-area-inset-left,0px) + 6px);
+    width:92px;height:92px
+  }
+  #statsWrap .hpNum{font-size:19px}
+  #statsWrap .ammoBullets{gap:2px}
+  #statsWrap .ammoBullets .b{width:3px;height:8px}
+  #statsWrap .reloadState{font-size:6.5px;letter-spacing:.16em}
+
+  /* --- Roster sotto la stats circolare --- */
+  #roster{font-size:8px;gap:1px;
+    top:calc(env(safe-area-inset-top,0px) + 104px);
     left:calc(env(safe-area-inset-left,0px) + 6px)}
   .slot{min-width:66px;padding:1px 5px;gap:4px}
   .slot .dot{width:6px;height:6px}
   .slot .hp{font-size:7px}
 
-  /* --- Powerup al centro-bottom --- */
   #powerups{
     bottom:calc(env(safe-area-inset-bottom,0px) + 10px);
     left:50%;
@@ -320,11 +325,9 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   }
   .pu{width:30px;height:30px;font-size:12px;border-radius:8px}
 
-  /* --- Kill feed --- */
   #killFeed{top:calc(env(safe-area-inset-top,0px) + 112px);right:calc(env(safe-area-inset-right,0px) + 6px)}
   .kf{font-size:9px;padding:3px 6px}
 
-  /* --- Lobby compatta --- */
   .lobby-content{max-width:520px;gap:10px}
   .brand{font-size:26px}
   .tagline{font-size:9px;margin-top:-4px}
@@ -396,6 +399,20 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   </div>
 </div>
 
+<div id="statsWrap">
+  <svg class="statsRing" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="6"/>
+    <circle id="hpRing" cx="50" cy="50" r="42" fill="none" stroke="#6ec0ff" stroke-width="6"
+      stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round"
+      transform="rotate(-90 50 50)" style="transition:stroke .18s linear,stroke-dashoffset .18s linear"/>
+  </svg>
+  <div class="statsCenter">
+    <div class="hpNum" id="hpNum">100</div>
+    <div class="ammoBullets" id="ammoBullets"></div>
+    <div class="reloadState" id="reloadState">READY</div>
+  </div>
+</div>
+
 <div id="roster"></div>
 <div id="dmgVignette"></div>
 <div id="hitMark">X</div>
@@ -423,14 +440,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   </svg>
   <span class="fireTxt">SPARA</span>
 </button>
-<div id="statsWrap">
-  <div class="stLbl">HULL</div>
-  <div class="stLbl">AMMO</div>
-  <div class="hpBarCell"><div class="hpFill" id="hpFill"></div></div>
-  <div class="ammoBullets" id="ammoBullets"></div>
-  <div class="hpNum" id="hpNum">100</div>
-  <div class="reloadState" id="reloadState">READY</div>
-</div>
 <div id="lobby" class="overlay active">
   <div class="lobby-content">
     <div class="brand">SOLAR ROYALE</div>
@@ -538,6 +547,8 @@ var AIM_ASSIST_STRENGTH = 0.55;
 var AIM_ASSIST_MAX_DIST = 2.5e8;
 
 var PLAYER_SCREEN_Y = 0.78;
+
+var STATS_RING_CIRC = 2 * PI * 42; // raggio 42 nel viewBox 100x100
 
 var CHASSIS = {
   snappy:   { hp:80,  speedMul:1.15, turnMul:1.40, fireRateMul:1.15 },
@@ -1535,7 +1546,7 @@ var hudName=document.getElementById('hudName'), hudDist=document.getElementById(
 var hudTime=document.getElementById('hudTime'), hudKills=document.getElementById('hudKills');
 var hudArrow=document.getElementById('hudArrow');
 var dmgVig=document.getElementById('dmgVignette'), hitMark=document.getElementById('hitMark');
-var hpFill=document.getElementById('hpFill'), hpNum=document.getElementById('hpNum');
+var hpRingEl=document.getElementById('hpRing'), hpNum=document.getElementById('hpNum');
 var ammoBulletsEl=document.getElementById('ammoBullets');
 var reloadStateEl=document.getElementById('reloadState');
 var W=0,H=0,pixScale=3,imgData=null,buf32=null,dynScale=1.0, depthBuf=null;
@@ -3443,11 +3454,9 @@ function updateHUD(){
   hudKills.textContent='KILL '+matchStats.kills+' / '+(TOTAL_PLAYERS-1);
   if(human.alive&&currentScreen==='match'){
     var frac=human.hp/human.maxHp;
-    hpFill.style.width=(frac*100)+'%';
+    hpRingEl.style.strokeDashoffset=String(STATS_RING_CIRC*(1-frac));
+    hpRingEl.style.stroke=frac>0.5?'#6ec0ff':frac>0.25?'#ffd06e':'#ff6e6e';
     hpNum.textContent=Math.ceil(human.hp);
-    if(frac>0.5)hpFill.style.background='linear-gradient(90deg,#3a7ad0,#6ec0ff,#a8e0ff)';
-    else if(frac>0.25)hpFill.style.background='linear-gradient(90deg,#d0a03a,#ffd06e,#ffe0a8)';
-    else hpFill.style.background='linear-gradient(90deg,#d03a3a,#ff6e6e,#ffa8a8)';
     updateAmmoDisplay();
     updateTurboButton();
     updateMissileButton();
