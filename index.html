@@ -123,6 +123,9 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   color:#a8d4ff;text-shadow:0 0 8px #000;white-space:nowrap}
 #hudTime{color:#cfe6ff;font-size:12px}
 #hudKills{color:#ff8899;text-shadow:0 0 10px rgba(255,60,60,0.55)}
+#hudAlive{color:#80ff80;text-shadow:0 0 8px rgba(80,255,80,0.35);transition:color .3s}
+.hudAliveLbl{font-size:9px;letter-spacing:.18em;opacity:0.85}
+#hudAliveCount{font-size:13px;font-weight:900}
 #hudZone{color:#c8a8ff;text-shadow:0 0 8px rgba(140,60,255,0.55)}
 #hudZone.outside{color:#ff9ab0;text-shadow:0 0 10px rgba(255,60,100,0.9);
   animation:hudZonePulse .55s ease-in-out infinite alternate}
@@ -256,12 +259,13 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   .hudRow{gap:10px;padding:4px 14px}
   .hudItem{font-size:10px;letter-spacing:.10em;gap:5px}
   #hudTime{font-size:11px}
+  #hudAliveCount{font-size:12px}
+  .hudAliveLbl{font-size:8px}
   .hudNav .arrowWrap{width:16px;height:16px}
   .hudNav .arrow{font-size:10px}
   .hudNav .hudDist{font-size:9px}
   .hudSep{height:12px}
 
-  /* --- Stick verde in basso a sinistra --- */
   #stick{
     left:calc(env(safe-area-inset-left,0px) + 22px);
     bottom:calc(env(safe-area-inset-bottom,0px) + 22px);
@@ -299,7 +303,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
     right:calc(env(safe-area-inset-right,0px) + 6px)
   }
 
-  /* --- Stats circolari in alto a sinistra --- */
   #statsWrap{
     top:calc(env(safe-area-inset-top,0px) + 6px);
     left:calc(env(safe-area-inset-left,0px) + 6px);
@@ -310,7 +313,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   #statsWrap .ammoBullets .b{width:3px;height:8px}
   #statsWrap .reloadState{font-size:6.5px;letter-spacing:.16em}
 
-  /* --- Roster sotto la stats circolare --- */
   #roster{font-size:8px;gap:1px;
     top:calc(env(safe-area-inset-top,0px) + 104px);
     left:calc(env(safe-area-inset-left,0px) + 6px)}
@@ -391,6 +393,11 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
       <span class="arrowWrap"><span class="arrow" id="hudArrow">&#9650;</span></span>
       <span class="hudName" id="hudName">&mdash;</span>
       <span class="hudDist" id="hudDist">&mdash;</span>
+    </div>
+    <div class="hudSep"></div>
+    <div class="hudItem" id="hudAlive">
+      <span class="hudAliveLbl">VIVI</span>
+      <span id="hudAliveCount">10</span>
     </div>
     <div class="hudSep"></div>
     <div class="hudItem" id="hudKills">KILL 0</div>
@@ -515,6 +522,12 @@ var TURBO_DURATION=5;
 var TURBO_COOLDOWN=30;
 var TURBO_MULT=2.5;
 
+// ============================================================
+// RIGENERAZIONE HP
+// ============================================================
+var HP_REGEN_DELAY = 5.0;   // secondi senza subire danni prima di iniziare a rigenerare
+var HP_REGEN_RATE  = 1.0;   // HP recuperati al secondo
+
 var MISSILE_CD = 8.0;
 var MISSILE_DMG = 35;
 var MISSILE_LIFE = 4.0;
@@ -548,7 +561,7 @@ var AIM_ASSIST_MAX_DIST = 2.5e8;
 
 var PLAYER_SCREEN_Y = 0.78;
 
-var STATS_RING_CIRC = 2 * PI * 42; // raggio 42 nel viewBox 100x100
+var STATS_RING_CIRC = 2 * PI * 42;
 
 var CHASSIS = {
   snappy:   { hp:80,  speedMul:1.15, turnMul:1.40, fireRateMul:1.15 },
@@ -942,6 +955,21 @@ function getActivePowerup(ship,type){
 }
 
 // ============================================================
+// RIGENERAZIONE HP
+// ============================================================
+function updateShipRegen(ship, dt){
+  if(!ship.alive) return;
+  if(ship.regenDelay > 0){
+    ship.regenDelay -= dt;
+    if(ship.regenDelay < 0) ship.regenDelay = 0;
+    return;
+  }
+  if(ship.hp < ship.maxHp){
+    ship.hp = Math.min(ship.maxHp, ship.hp + HP_REGEN_RATE * dt);
+  }
+}
+
+// ============================================================
 // PALETTE
 // ============================================================
 var BASE_H1=[118,130,152], BASE_H2=[165,178,200], BASE_H3=[210,222,240], BASE_H4=[245,250,255];
@@ -993,7 +1021,7 @@ var SHIPS=[];
 var human={isHuman:true,alive:true,hp:MAX_HP,maxHp:MAX_HP,x:0,y:0,z:0,yaw:0,pitch:0,bank:0,speed:0,recoil:0,fireCd:0,flash:0,
   ammo:MAX_AMMO,reloadT:0, missileCd:0, missileTarget:null,
   turboActive:false, turboTimer:0, turboCooldown:0,
-  powerups:[], shieldPulse:0,
+  powerups:[], shieldPulse:0, regenDelay:0,
   chassis:'balanced', speedMul:1, turnMul:1, fireRateMul:1,
   palette:PAL_PLAYER,name:'TU',dotColor:PAL_PLAYER.dot,ai:null,trailTimer:0,index:0};
 SHIPS.push(human);
@@ -1001,7 +1029,7 @@ for(var si=0;si<TOTAL_PLAYERS-1;si++){
   SHIPS.push({
     isHuman:false,alive:true,hp:MAX_HP,maxHp:MAX_HP,x:0,y:0,z:0,yaw:0,pitch:0,bank:0,speed:0,recoil:0,fireCd:0,flash:0,
     ammo:MAX_AMMO,reloadT:0, missileCd:0, missileTarget:null,
-    powerups:[], shieldPulse:0,
+    powerups:[], shieldPulse:0, regenDelay:0,
     chassis:'balanced', speedMul:1, turnMul:1, fireRateMul:1,
     palette:PAL_RED,name:'AI',dotColor:PAL_RED.dot,
     ai:PERSONALITIES.hunter, evadeT:0, strafeDir:1, trailTimer:0, hideTarget:null, hideTargetTimer:0, index:si+1
@@ -1155,6 +1183,7 @@ function beginMatch(){
   human.ammo=MAX_AMMO; human.reloadT=0; human.missileCd=0; human.missileTarget=null;
   human.turboActive=false; human.turboTimer=0; human.turboCooldown=0;
   human.powerups=[];
+  human.regenDelay=0;
   {
     var dx=mars.x-human.x,dy=mars.y-human.y,dz=mars.z-human.z;
     var dl=Math.sqrt(dx*dx+dy*dy+dz*dz);
@@ -1173,6 +1202,7 @@ function beginMatch(){
     s.rank=b.rank; s.rankLabel=b.rankLabel; s.ai=PERSONALITIES[b.personality];
     s.evadeT=0; s.strafeDir=Math.random()<0.5?1:-1; s.trailTimer=0;
     s.powerups=[]; s.hideTarget=null; s.hideTargetTimer=0;
+    s.regenDelay=0;
     var dx=-s.x,dy=-s.y,dz=-s.z;
     var dl=Math.sqrt(dx*dx+dy*dy+dz*dz);
     s.yaw=Math.atan2(dy,dx); s.pitch=Math.asin(dz/dl);
@@ -1358,6 +1388,7 @@ function updateZone(dt){
     var frac=Math.min(1,zoneOutsideTime/5);
     var dmgRate=ZONE_DAMAGE_BASE+(ZONE_DAMAGE_MAX-ZONE_DAMAGE_BASE)*frac;
     human.hp-=dmgRate*dt;
+    human.regenDelay = HP_REGEN_DELAY;
     if(human.hp<=0){human.hp=0;human.alive=false;spawnExplosion(human.x,human.y,human.z,8e5);playerEliminated=true;setTimeout(function(){endMatch(false);},900);}
     zoneWarning=Math.min(1, zoneWarning+dt*3);
   } else {
@@ -1382,6 +1413,7 @@ function updateZone(dt){
     var sDist2=sdx*sdx+sdy*sdy+sdz*sdz;
     if(sDist2>zoneRadius*zoneRadius){
       s.hp-=ZONE_DAMAGE_BASE*dt;
+      s.regenDelay = HP_REGEN_DELAY;
       if(s.hp<=0){s.hp=0;s.alive=false;spawnExplosion(s.x,s.y,s.z,8e5);
         var al=SHIPS.filter(function(x){return x.alive;});
         if(al.length===1&&al[0]===human) setTimeout(function(){endMatch(true);},900);
@@ -1503,6 +1535,8 @@ function damageShip(target,dmg,source){
     if(dmgBuff) dmg*=2.0;
   }
   target.hp-=dmg; target.flash=0.2;
+  // Reset del timer di rigenerazione
+  target.regenDelay = HP_REGEN_DELAY;
   if(source===human) matchStats.damage+=dmg;
   if(target===human){
     shakeMag=Math.min(2.5,shakeMag+0.8);
@@ -1545,6 +1579,8 @@ var canvas=document.getElementById('c'), ctx=canvas.getContext('2d',{alpha:false
 var hudName=document.getElementById('hudName'), hudDist=document.getElementById('hudDist');
 var hudTime=document.getElementById('hudTime'), hudKills=document.getElementById('hudKills');
 var hudArrow=document.getElementById('hudArrow');
+var hudAliveCount=document.getElementById('hudAliveCount');
+var hudAliveEl=document.getElementById('hudAlive');
 var dmgVig=document.getElementById('dmgVignette'), hitMark=document.getElementById('hitMark');
 var hpRingEl=document.getElementById('hpRing'), hpNum=document.getElementById('hpNum');
 var ammoBulletsEl=document.getElementById('ammoBullets');
@@ -3451,7 +3487,18 @@ function updateHUD(){
   var elapsed=Math.max(0,gameTime);
   var mins=Math.floor(elapsed/60), secs=Math.floor(elapsed%60);
   hudTime.textContent=String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0');
-  hudKills.textContent='KILL '+matchStats.kills+' / '+(TOTAL_PLAYERS-1);
+
+  // Kills: solo numero
+  hudKills.textContent='KILL '+matchStats.kills;
+
+  // Giocatori vivi
+  var aliveCount=0;
+  for(var i=0;i<SHIPS.length;i++) if(SHIPS[i].alive) aliveCount++;
+  hudAliveCount.textContent = aliveCount;
+  var aliveColor = aliveCount > 5 ? '#80ff80' : aliveCount > 2 ? '#ffd76a' : '#ff8080';
+  hudAliveEl.style.color = aliveColor;
+  hudAliveEl.style.textShadow = '0 0 8px ' + aliveColor.replace(')', ',0.35)').replace('rgb','rgba');
+
   if(human.alive&&currentScreen==='match'){
     var frac=human.hp/human.maxHp;
     hpRingEl.style.strokeDashoffset=String(STATS_RING_CIRC*(1-frac));
@@ -3519,6 +3566,7 @@ function loop(now){
       readKeyboard();
       updatePlayer(dt);
       for(var i=1;i<SHIPS.length;i++)updateAI(SHIPS[i],dt);
+      for(var i=0;i<SHIPS.length;i++)updateShipRegen(SHIPS[i],dt);
       updateBullets(dt);
       updateMissiles(dt);
       updateZone(dt);
