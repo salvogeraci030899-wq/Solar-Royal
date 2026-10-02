@@ -1383,7 +1383,8 @@ function beginMatch(){
   zoneRadius=ZONE_RADIUS_START_AU*AU;
   zoneOutsideTime=0; zoneWarning=0;
   solarFlareTimer=SOLAR_FLARE_INTERVAL; solarFlareActive=false; solarFlareT=0;
-  swarmTimer=SWARM_INTERVAL; swarmActive=false; swarmTimer=0;
+  // FIX #1: niente swarmTimer=0 (lo sciame partiva subito)
+  swarmTimer=SWARM_INTERVAL; swarmActive=false;
 
   var ch=CHASSIS[profile.chassis]||CHASSIS.balanced;
   human.maxHp=ch.hp; human.hp=ch.hp;
@@ -1441,7 +1442,9 @@ function buildRoster(){
   }
 }
 
+// FIX #3: guard contro doppia chiusura partita
 function endMatch(won){
+  if(!matchActive) return;
   matchActive=false;
   hideStatsPage();
   var alive=SHIPS.filter(function(s){return s.alive;}).length;
@@ -1526,6 +1529,11 @@ function updateDynamicEvents(dt){
         s.regenDelay = HP_REGEN_DELAY;
         if(s.hp<=0){ s.hp=0; s.alive=false; spawnExplosion(s.x,s.y,s.z,8e5);
           if(s.isHuman){playerEliminated=true;setTimeout(function(){endMatch(false);},900);}
+          // FIX #2: se un bot muore per brillamento e resta solo l'umano → vittoria
+          else {
+            var al=SHIPS.filter(function(x){return x.alive;});
+            if(al.length===1&&al[0]===human) setTimeout(function(){endMatch(true);},900);
+          }
         }
       }
     }
