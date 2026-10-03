@@ -29,30 +29,18 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 #minimapCanvas{display:block;width:100%;height:100%;border-radius:50%;image-rendering:pixelated}
 #minimap.fullscreen{top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;z-index:200;background:#000;filter:none;transition:none;border-radius:0}
 #minimap.fullscreen #minimapCanvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90vmin;height:90vmin;border-radius:50%}
-
 #minimap .mm-legend{display:none}
 #minimap.fullscreen .mm-legend{
-  display:flex;
-  flex-direction:column;
-  position:absolute;
+  display:flex;flex-direction:column;position:absolute;
   top:calc(env(safe-area-inset-top, 0px) + 2vmin);
   left:calc(env(safe-area-inset-left, 0px) + 2vmin);
-  padding:11px 13px;
-  background:rgba(6,12,22,0.88);
-  border:1px solid rgba(90,150,215,0.42);
-  border-radius:12px;
+  padding:11px 13px;background:rgba(6,12,22,0.88);
+  border:1px solid rgba(90,150,215,0.42);border-radius:12px;
   box-shadow:0 8px 28px rgba(0,0,0,0.6);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  font:700 11px/1.45 ui-monospace,monospace;
-  color:#e0eeff;
-  letter-spacing:.06em;
-  gap:3px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  font:700 11px/1.45 ui-monospace,monospace;color:#e0eeff;letter-spacing:.06em;gap:3px;
   max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 4vmin);
-  overflow-y:auto;
-  z-index:201;
-  pointer-events:none;
-  animation:mmLegendIn .25s ease-out;
+  overflow-y:auto;z-index:201;pointer-events:none;animation:mmLegendIn .25s ease-out;
 }
 @keyframes mmLegendIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 .mm-legend-title{font:900 12px/1 ui-monospace,monospace;letter-spacing:.32em;color:#6ec0ff;text-shadow:0 0 10px rgba(110,200,255,0.55);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(90,150,215,0.4);text-align:center}
@@ -64,7 +52,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 @keyframes mmDotPulse{0%,100%{transform:scale(1);opacity:0.9}50%{transform:scale(1.25);opacity:1}}
 .mm-tri{width:10px;height:10px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;line-height:1;flex-shrink:0;text-shadow:0 0 6px rgba(120,200,255,0.85)}
 .mm-ring{width:10px;height:10px;border-radius:50%;border:1.5px dashed;background:transparent;flex-shrink:0}
-
 #vignette{position:fixed;inset:0;pointer-events:none;z-index:5;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,0.42) 100%)}
 #zoneWarning{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(circle at center,transparent 28%,rgba(140,60,255,0.42) 78%,rgba(120,40,240,0.72) 100%)}
 #solarWarning{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(circle at center,transparent 40%,rgba(255,180,60,0.30) 80%,rgba(255,120,20,0.55) 100%);transition:opacity .35s}
@@ -89,7 +76,12 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 }
 #splash:not(.active){opacity:0;pointer-events:none}
 .splash-content{text-align:center;display:flex;flex-direction:column;gap:22px;align-items:center;animation:slideUp .9s cubic-bezier(.2,.9,.3,1.2)}
-.splash-logo{font:900 clamp(28px,7vw,56px)/1.05 ui-monospace,monospace;letter-spacing:.18em;color:#eaf4ff;text-shadow:0 0 24px rgba(110,180,255,0.7),0 0 60px rgba(60,120,255,0.45),0 0 120px rgba(40,80,200,0.25);animation:splashPulse 2.6s ease-in-out infinite}
+.splash-logo{
+  font:900 clamp(28px,7vw,56px)/1.05 ui-monospace,monospace;
+  letter-spacing:.18em;color:#eaf4ff;
+  text-shadow:0 0 24px rgba(110,180,255,0.7),0 0 60px rgba(60,120,255,0.45),0 0 120px rgba(40,80,200,0.25);
+  animation:splashPulse 2.6s ease-in-out infinite;
+}
 @keyframes splashPulse{0%,100%{opacity:1}50%{opacity:0.78}}
 .splash-sub{font:700 clamp(10px,1.8vw,13px)/1.4 ui-monospace,monospace;letter-spacing:.42em;color:#7aa8d0}
 .splash-tap{margin-top:44px;font:800 clamp(11px,1.9vw,14px)/1 ui-monospace,monospace;letter-spacing:.30em;color:#6ec0ff;text-shadow:0 0 14px rgba(110,200,255,0.8),0 0 30px rgba(60,150,255,0.4);animation:splashBlink 1.7s ease-in-out infinite}
@@ -99,6 +91,31 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .splash-dots span:nth-child(2){animation-delay:.2s}
 .splash-dots span:nth-child(3){animation-delay:.4s}
 @keyframes splashDot{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.5);opacity:1}}
+
+/* ============================================================
+   LLM SETUP SCREEN (obbligatoria al primo avvio)
+   ============================================================ */
+#llmSetup{z-index:400;background:radial-gradient(ellipse at center,#0a1a30 0%,#000006 80%)}
+.llm-content{width:100%;max-width:400px;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center;animation:slideUp .6s cubic-bezier(.2,.9,.3,1.2)}
+.llm-icon{font-size:56px;color:#6ec0ff;text-shadow:0 0 30px rgba(110,192,255,0.75);animation:llmPulse 2s ease-in-out infinite}
+@keyframes llmPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.llm-title{font:900 15px/1 ui-monospace,monospace;letter-spacing:.30em;color:#eaf4ff;text-shadow:0 0 14px rgba(110,180,255,0.65)}
+.llm-desc{font:600 12px/1.55 sans-serif;color:#a8c8e8;max-width:340px}
+.llm-info{width:100%;display:flex;flex-direction:column;gap:7px;padding:12px 16px;border-radius:12px;background:rgba(14,26,48,0.65);border:1px solid rgba(90,150,215,0.3)}
+.llm-info-row{display:flex;justify-content:space-between;font:700 11px/1.4 ui-monospace,monospace;color:#cfe6ff;gap:12px}
+.llm-info-row span:first-child{color:#7aa8d0;letter-spacing:.14em;flex-shrink:0}
+.llm-info-row span:last-child{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.llm-progress-wrap{width:100%;display:none;flex-direction:column;gap:7px}
+.llm-progress-wrap.active{display:flex}
+.llm-progress-bar{width:100%;height:10px;border-radius:5px;overflow:hidden;background:rgba(14,26,48,0.9);border:1px solid rgba(90,150,215,0.4)}
+.llm-progress-fill{height:100%;width:0%;border-radius:5px;background:linear-gradient(90deg,#4a90e2,#6ee0ff);transition:width .25s ease-out;box-shadow:0 0 12px rgba(110,200,255,0.55)}
+.llm-progress-text{font:800 11px/1 ui-monospace,monospace;color:#7aa8d0;letter-spacing:.16em;text-align:center;min-height:14px}
+.llm-status{font:600 10px/1.4 ui-monospace,monospace;color:#6a94bc;letter-spacing:.06em;min-height:14px;max-width:340px;text-align:center}
+.llm-status.err{color:#ff8899}
+.llm-status.ok{color:#80ffb0}
+#llmDownloadBtn{width:100%}
+#llmDownloadBtn:disabled{opacity:0.55;cursor:not-allowed}
+.llm-note{font:600 10px/1.5 ui-monospace,monospace;color:#6a94bc;max-width:320px;letter-spacing:.06em;text-align:center;opacity:0.85}
 
 .lobby-content{width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px;align-items:stretch;animation:slideUp .6s cubic-bezier(.2,.9,.3,1.2);max-height:100dvh;overflow-y:auto}
 @keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
@@ -129,42 +146,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .btn-primary small{font:600 9px/1 ui-monospace,monospace;color:#c8e0ff;letter-spacing:.18em;opacity:.85}
 .btn-primary:active{transform:scale(0.97)}
 .btn-ghost{appearance:none;cursor:pointer;padding:12px 20px;border-radius:10px;background:transparent;border:1px solid rgba(90,150,215,0.4);color:#a8c8e8;font:700 11px/1 sans-serif;letter-spacing:.18em}
-
-/* ============================================================
-   STATO WEBLLM (badge discreto in lobby)
-   ============================================================ */
-.llm-status{
-  display:flex;align-items:center;gap:8px;
-  padding:6px 10px;border-radius:8px;
-  background:rgba(14,26,48,0.5);
-  border:1px solid rgba(90,150,215,0.22);
-  font:700 9px/1 ui-monospace,monospace;
-  color:#7aa8d0;letter-spacing:.18em;
-  transition:all .3s;
-}
-.llm-status .llm-dot{
-  width:7px;height:7px;border-radius:50%;flex-shrink:0;
-  background:#666;box-shadow:0 0 6px rgba(0,0,0,0.5);
-  transition:background .3s,box-shadow .3s;
-}
-.llm-status.loading .llm-dot{background:#ffbb55;box-shadow:0 0 8px #ffbb55;animation:llmPulse 1.2s ease-in-out infinite}
-.llm-status.ready .llm-dot{background:#80ffb0;box-shadow:0 0 10px #80ffb0}
-.llm-status.failed .llm-dot{background:#ff5577;box-shadow:0 0 8px #ff5577}
-.llm-status.ready{color:#80ffb0;border-color:rgba(128,255,176,0.35)}
-.llm-status.failed{color:#ff8090;border-color:rgba(255,128,144,0.35)}
-@keyframes llmPulse{0%,100%{opacity:0.5}50%{opacity:1}}
-.llm-status .llm-bar{
-  flex:1;height:3px;border-radius:2px;
-  background:rgba(0,0,0,0.4);overflow:hidden;min-width:40px;
-}
-.llm-status .llm-bar-fill{
-  height:100%;width:0%;border-radius:2px;
-  background:linear-gradient(90deg,#ffbb55,#ffd76a);
-  transition:width .3s;
-}
-.llm-status.ready .llm-bar{display:none}
-.llm-status.failed .llm-bar{display:none}
-
 .queue-content{width:100%;max-width:440px;display:flex;flex-direction:column;gap:16px;align-items:center}
 .queue-pulse{width:70px;height:70px;border-radius:50%;border:3px solid rgba(110,180,255,0.35);position:relative}
 .queue-pulse::before,.queue-pulse::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:3px solid rgba(110,180,255,0.85);animation:ring 2.2s cubic-bezier(.3,.6,.5,1) infinite}
@@ -243,7 +224,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .slot .dot{width:7px;height:7px;border-radius:2px;background:currentColor}
 .slot .nm{flex:1;text-align:left}
 .slot .hp{font-size:8px;color:#8fbfe0}
-.slot .role{font-size:7px;color:#7aa8d0;margin-left:2px;letter-spacing:.1em}
 
 #powerups{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 62px);left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:12;opacity:0;pointer-events:none;transition:opacity .3s}
 #powerups.show{opacity:1}
@@ -326,8 +306,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   box-shadow:0 0 16px rgba(110,200,255,0.18),inset 0 0 20px rgba(110,200,255,0.10);
   pointer-events:none;-webkit-user-select:none;user-select:none;
   opacity:0;transition:opacity .18s,box-shadow .18s;z-index:15}
-#stick.active, #stick2.active{opacity:0.55;
-  box-shadow:0 0 24px rgba(110,200,255,0.45),inset 0 0 26px rgba(110,200,255,0.18)}
+#stick.active, #stick2.active{opacity:0.55;box-shadow:0 0 24px rgba(110,200,255,0.45),inset 0 0 26px rgba(110,200,255,0.18)}
 #stick .knob, #stick2 .knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin-left:-28px;margin-top:-28px;border-radius:50%;
   background:radial-gradient(circle at 35% 32%, rgba(220,240,255,0.55), rgba(120,190,255,0.30) 55%, rgba(60,130,210,0.15));
   border:1px solid rgba(170,220,255,0.50);
@@ -378,7 +357,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   .slot{min-width:66px;padding:1px 5px;gap:4px}
   .slot .dot{width:6px;height:6px}
   .slot .hp{font-size:7px}
-  .slot .role{display:none}
   #powerups{bottom:calc(env(safe-area-inset-bottom,0px) + 10px);left:50%;transform:translateX(-50%)}
   .pu{width:30px;height:30px;font-size:12px;border-radius:8px}
   #killFeed{top:calc(env(safe-area-inset-top,0px) + 112px);right:calc(env(safe-area-inset-right,0px) + 6px)}
@@ -425,20 +403,21 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   .mm-legend-row{font-size:10px;padding:0}
   .mm-legend-section{font-size:8px;margin-top:6px;margin-bottom:2px}
   .mm-dot,.mm-ring,.mm-tri{width:9px;height:9px}
+  .llm-content{max-width:520px;gap:12px}
+  .llm-icon{font-size:44px}
+  .llm-title{font-size:13px}
+  .llm-desc{font-size:11px;max-width:480px}
+  .llm-info{padding:10px 14px;gap:5px}
+  .llm-info-row{font-size:10px}
+  .llm-progress-bar{height:8px}
+  .llm-progress-text{font-size:10px}
+  .llm-note{font-size:9px}
 }
-
 @media (orientation: portrait){
-  #rotateOverlay.show ~ #hud,
-  #rotateOverlay.show ~ #roster,
-  #rotateOverlay.show ~ #stick,
-  #rotateOverlay.show ~ #stick2,
-  #rotateOverlay.show ~ #turboBtn,
-  #rotateOverlay.show ~ #brakeBtn,
-  #rotateOverlay.show ~ #fireBtn,
-  #rotateOverlay.show ~ #missileBtn,
-  #rotateOverlay.show ~ #statsWrap,
-  #rotateOverlay.show ~ #powerups,
-  #rotateOverlay.show ~ #minimap{opacity:0;pointer-events:none}
+  #rotateOverlay.show ~ #hud,#rotateOverlay.show ~ #roster,#rotateOverlay.show ~ #stick,
+  #rotateOverlay.show ~ #stick2,#rotateOverlay.show ~ #turboBtn,#rotateOverlay.show ~ #brakeBtn,
+  #rotateOverlay.show ~ #fireBtn,#rotateOverlay.show ~ #missileBtn,#rotateOverlay.show ~ #statsWrap,
+  #rotateOverlay.show ~ #powerups,#rotateOverlay.show ~ #minimap{opacity:0;pointer-events:none}
 }
 </style>
 </head>
@@ -486,6 +465,27 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
     <div class="splash-sub">10 PILOTI &middot; 1 VINCITORE</div>
     <div class="splash-tap">TOCCA PER INIZIARE</div>
     <div class="splash-dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<div id="llmSetup" class="overlay">
+  <div class="llm-content">
+    <div class="llm-icon">&#9889;</div>
+    <div class="llm-title">POTENZIAMENTO IA</div>
+    <div class="llm-desc">Royal Solar Arena usa un modello IA locale per rendere i nemici adattivi, cooperativi e imprevedibili. Il pacchetto va scaricato una sola volta.</div>
+    <div class="llm-info">
+      <div class="llm-info-row"><span>MODELLO</span><span>Qwen2.5 1.5B Instruct</span></div>
+      <div class="llm-info-row"><span>DIMENSIONE</span><span>~1.0 GB</span></div>
+      <div class="llm-info-row"><span>ESECUZIONE</span><span>100% locale, offline</span></div>
+      <div class="llm-info-row"><span>COSTO</span><span>Gratis, nessun server</span></div>
+    </div>
+    <div class="llm-progress-wrap" id="llmProgressWrap">
+      <div class="llm-progress-bar"><div class="llm-progress-fill" id="llmProgressFill"></div></div>
+      <div class="llm-progress-text" id="llmProgressText">0%</div>
+    </div>
+    <button class="btn-primary" id="llmDownloadBtn"><span>SCARICA PACCHETTO IA</span><small>OBBLIGATORIO AL PRIMO AVVIO</small></button>
+    <div class="llm-status" id="llmStatus"></div>
+    <div class="llm-note">Il download avviene una sola volta. Le partite successive partiranno istantaneamente dalla cache.</div>
   </div>
 </div>
 
@@ -599,11 +599,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
       </div>
     </div>
     <button class="btn-primary" id="findMatch"><span>TROVA PARTITA</span><small>SISTEMA SOLARE &middot; 10 GIOCATORI</small></button>
-    <div class="llm-status" id="llmStatus">
-      <span class="llm-dot"></span>
-      <span id="llmText">AI TATTICA: inizializzazione…</span>
-      <div class="llm-bar"><div class="llm-bar-fill" id="llmBar"></div></div>
-    </div>
   </div>
 </div>
 <div id="queue" class="overlay">
@@ -696,9 +691,6 @@ var SWARM_INTERVAL = 120;
 var SWARM_DURATION = 12;
 var SWARM_COUNT = 14;
 
-// ============================================================
-// POI (Points of Interest)
-// ============================================================
 var POI_SPR = 48;
 var POI_DEFS = [
   { id:'aurora',   name:'Stazione Aurora',    color:[120,200,255], au:[ 0.60, 0.00, 0.05], r:5.0e7, rotSpeed:0.10 },
@@ -722,12 +714,188 @@ function initPois(){
   }
 }
 
+// ============================================================
+// AI DIRECTOR — WebLLM per nemici intelligenti
+// ============================================================
+var AI_DIRECTOR = {
+  engine: null,
+  ready: false,
+  loading: false,
+  busyDirector: false,
+  busyCoord: false,
+  directorTimer: 0,
+  coordinatorTimer: 0,
+  defaultMods: { aggressione:1, precisione:1, cooperazione:1, evasione:1, distanza:1, priorita:1 }
+};
+var LLM_MODEL = 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC';
+var LLM_FLAG_KEY = 'royal_solar_arena_llm_ready_v1';
+
+function clampNum(v, min, max, fallback){
+  var n = parseFloat(v);
+  if (isNaN(n)) return fallback;
+  if (n < min) return min;
+  if (n > max) return max;
+  return n;
+}
+function extractJson(text){
+  if (!text) return null;
+  var m = text.match(/\{[\s\S]*\}/);
+  if (!m) return null;
+  try { return JSON.parse(m[0]); } catch(e){ return null; }
+}
+
+async function initLLM(progressCb){
+  if (AI_DIRECTOR.engine) return AI_DIRECTOR.engine;
+  if (AI_DIRECTOR.loading) {
+    while (AI_DIRECTOR.loading) await new Promise(r => setTimeout(r, 200));
+    return AI_DIRECTOR.engine;
+  }
+  AI_DIRECTOR.loading = true;
+  try {
+    if (!navigator.gpu) throw new Error('WebGPU non supportato su questo dispositivo');
+    var webllm = await import('https://esm.run/@mlc-ai/web-llm');
+    var engine = await webllm.CreateMLCEngine(
+      LLM_MODEL,
+      { initProgressCallback: function(report){
+          if (progressCb) progressCb(report.progress || 0, report.text || '');
+        }
+      }
+    );
+    AI_DIRECTOR.engine = engine;
+    AI_DIRECTOR.ready = true;
+    return engine;
+  } finally {
+    AI_DIRECTOR.loading = false;
+  }
+}
+
+function initLLMInBackground(){
+  initLLM(function(){ /* silenzioso */ }).catch(function(e){
+    console.warn('[AI] background load failed:', e);
+  });
+}
+
+async function runTacticalDirector(){
+  if (!AI_DIRECTOR.engine || AI_DIRECTOR.busyDirector) return;
+  AI_DIRECTOR.busyDirector = true;
+  try {
+    var aliveBots = 0;
+    for (var i=1;i<SHIPS.length;i++) if (SHIPS[i].alive) aliveBots++;
+    var playerHp = human.alive ? Math.round(human.hp) : 0;
+    var playerKills = human.kills || 0;
+    var elapsed = Math.round(gameTime);
+    var hpFrac = human.alive ? Math.round(human.hp / human.maxHp * 100) : 0;
+
+    var prompt =
+      'Sei il direttore tattico di un\'arena spaziale 3D. Analizza la partita e rispondi SOLO con un oggetto JSON.\n\n' +
+      'STATISTICHE:\n' +
+      '- Kill giocatore: ' + playerKills + '\n' +
+      '- HP giocatore: ' + playerHp + '/100 (' + hpFrac + '%)\n' +
+      '- Tempo trascorso: ' + elapsed + 's\n' +
+      '- Bot vivi: ' + aliveBots + '\n\n' +
+      'Rispondi con SOLO questo JSON, senza testo attorno:\n' +
+      '{"aggressione":1.0,"precisione":1.0,"cooperazione":1.0,"evasione":1.0,"distanza":1.0,"priorita":1.0}\n\n' +
+      'Valori tra 0.5 e 2.0. Significato:\n' +
+      '- aggressione: 0.5=evitano scontri, 2.0=molto aggressivi\n' +
+      '- precisione: 0.5=fuoco lento, 2.0=fuoco rapido\n' +
+      '- cooperazione: 0.5=ognuno per sé, 2.0=coordinati\n' +
+      '- evasione: 0.5=combattono fino alla morte, 2.0=fuggono spesso\n' +
+      '- distanza: 0.5=corpo a corpo, 2.0=combattimento a distanza\n' +
+      '- priorita: 0.5=ignorano il giocatore, 2.0=focus sul giocatore';
+
+    var reply = await AI_DIRECTOR.engine.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.4,
+      max_tokens: 80
+    });
+    var text = reply.choices && reply.choices[0] && reply.choices[0].message
+      ? reply.choices[0].message.content : '';
+    var obj = extractJson(text);
+    if (!obj) return;
+
+    var mods = {
+      aggressione: clampNum(obj.aggressione, 0.5, 2.0, 1.0),
+      precisione:  clampNum(obj.precisione,  0.5, 2.0, 1.0),
+      cooperazione:clampNum(obj.cooperazione,0.5, 2.0, 1.0),
+      evasione:    clampNum(obj.evasione,    0.5, 2.0, 1.0),
+      distanza:    clampNum(obj.distanza,    0.5, 2.0, 1.0),
+      priorita:    clampNum(obj.priorita,    0.5, 2.0, 1.0)
+    };
+    for (var i=1;i<SHIPS.length;i++){
+      if (SHIPS[i].alive) SHIPS[i].aiMods = mods;
+    }
+  } catch(e){
+    // fallback silenzioso — i bot continuano con i mod attuali
+  } finally {
+    AI_DIRECTOR.busyDirector = false;
+  }
+}
+
+async function runBotCoordinator(){
+  if (!AI_DIRECTOR.engine || AI_DIRECTOR.busyCoord) return;
+  AI_DIRECTOR.busyCoord = true;
+  try {
+    var bots = [];
+    for (var i=1;i<SHIPS.length;i++){
+      var s = SHIPS[i];
+      if (!s.alive) continue;
+      bots.push({
+        id: s.index,
+        hp: Math.round(s.hp),
+        x: Math.round(s.x / 1e9),
+        y: Math.round(s.y / 1e9),
+        z: Math.round(s.z / 1e9)
+      });
+    }
+    if (bots.length < 3) return;
+    var hx = Math.round(human.x/1e9), hy = Math.round(human.y/1e9), hz = Math.round(human.z/1e9);
+    var hHp = human.alive ? Math.round(human.hp) : 0;
+
+    var prompt =
+      'Sei il coordinatore tattico di ' + bots.length + ' piloti in un\'arena spaziale 3D.\n\n' +
+      'PILOTI (id, hp, posizione in unità arbitrarie):\n' + JSON.stringify(bots) + '\n\n' +
+      'GIOCATORE UMANO: hp ' + hHp + ', posizione [' + hx + ',' + hy + ',' + hz + ']\n\n' +
+      'Assegna un ruolo a ogni pilota. Rispondi SOLO con JSON, senza testo attorno:\n' +
+      '{"roles":[{"id":1,"role":"attacco"},{"id":2,"role":"supporto"},{"id":3,"role":"flank"},{"id":4,"role":"ritirata"}]}\n\n' +
+      'Ruoli validi: attacco, supporto, flank, ritirata\n' +
+      '- attacco: carica il nemico più vicino\n' +
+      '- supporto: combatte a distanza, copre gli alleati\n' +
+      '- flank: attacca da un lato\n' +
+      '- ritirata: fugge e si cura se ferito';
+
+    var reply = await AI_DIRECTOR.engine.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.6,
+      max_tokens: 250
+    });
+    var text = reply.choices && reply.choices[0] && reply.choices[0].message
+      ? reply.choices[0].message.content : '';
+    var obj = extractJson(text);
+    if (!obj || !obj.roles || !Array.isArray(obj.roles)) return;
+
+    var validRoles = { attacco:1, supporto:1, flank:1, ritirata:1 };
+    for (var k=0;k<obj.roles.length;k++){
+      var r = obj.roles[k];
+      if (!r || !validRoles[r.role]) continue;
+      for (var j=1;j<SHIPS.length;j++){
+        if (SHIPS[j].index === r.id && SHIPS[j].alive){
+          SHIPS[j].role = r.role;
+          break;
+        }
+      }
+    }
+  } catch(e){
+    // fallback silenzioso
+  } finally {
+    AI_DIRECTOR.busyCoord = false;
+  }
+}
+
 var AIM_ASSIST_CONE_DEG = 8;
 var AIM_ASSIST_STRENGTH = 0.55;
 var AIM_ASSIST_MAX_DIST = 2.5e8;
 
 var PLAYER_SCREEN_Y = 0.78;
-
 var STATS_RING_CIRC = 2 * PI * 42;
 
 var CHASSIS = {
@@ -1251,7 +1419,7 @@ var human={isHuman:true,alive:true,hp:MAX_HP,maxHp:MAX_HP,x:0,y:0,z:0,yaw:0,pitc
   powerups:[], shieldPulse:0, regenDelay:0, kills:0,
   chassis:'balanced', speedMul:1, turnMul:1, fireRateMul:1,
   palette:PAL_PLAYER,name:'TU',dotColor:PAL_PLAYER.dot,ai:null,trailTimer:0,index:0,
-  aiMods:{aggressione:1,precisione:1,cooperazione:1,evasione:1,distanza:1,priorita:1},role:'attacco',roleTarget:null};
+  aiMods:{aggressione:1,precisione:1,cooperazione:1,evasione:1,distanza:1,priorita:1},role:null,roleTarget:null};
 SHIPS.push(human);
 for(var si=0;si<TOTAL_PLAYERS-1;si++){
   SHIPS.push({
@@ -1261,7 +1429,7 @@ for(var si=0;si<TOTAL_PLAYERS-1;si++){
     chassis:'balanced', speedMul:1, turnMul:1, fireRateMul:1,
     palette:PAL_RED,name:'AI',dotColor:PAL_RED.dot,
     ai:PERSONALITIES.hunter, evadeT:0, strafeDir:1, trailTimer:0, hideTarget:null, hideTargetTimer:0, index:si+1,
-    aiMods:{aggressione:1,precisione:1,cooperazione:1,evasione:1,distanza:1,priorita:1},role:'attacco',roleTarget:null,forceRetreat:false
+    aiMods:{aggressione:1,precisione:1,cooperazione:1,evasione:1,distanza:1,priorita:1},role:null,roleTarget:null
   });
 }
 
@@ -1307,252 +1475,67 @@ var hudRowEl=document.getElementById('hudRow');
 var statsHoldTimer=null;
 var statsPageVisible=false;
 
-// ============================================================
-// WEBLLM — Direttore tattico e Coordinatore ruoli
-// ============================================================
-var llmEngine = null;
-var llmReady = false;
-var llmLoading = false;
-var llmFailed = false;
-var llmStatusEl = document.getElementById('llmStatus');
-var llmTextEl = document.getElementById('llmText');
-var llmBarEl = document.getElementById('llmBar');
-
-var aiDirectorTimer = 0;
-var aiCoordinatorTimer = 0;
-var directorBusy = false;
-var coordinatorBusy = false;
-
-var DEFAULT_MODS = { aggressione:1, precisione:1, cooperazione:1, evasione:1, distanza:1, priorita:1 };
-var lastMods = { aggressione:1, precisione:1, cooperazione:1, evasione:1, distanza:1, priorita:1 };
-
-// Metriche giocatore per il direttore tattico
-var playerMetrics = {
-  shots: 0,
-  hits: 0,
-  hpSum: 0,
-  hpSamples: 0,
-  engagementDistSum: 0,
-  engagementDistCount: 0,
-  fleeTime: 0,
-  metricsTimer: 0
-};
-function resetPlayerMetrics(){
-  playerMetrics.shots = 0;
-  playerMetrics.hits = 0;
-  playerMetrics.hpSum = 0;
-  playerMetrics.hpSamples = 0;
-  playerMetrics.engagementDistSum = 0;
-  playerMetrics.engagementDistCount = 0;
-  playerMetrics.fleeTime = 0;
-  playerMetrics.metricsTimer = 0;
-}
-
-function setLlmStatus(state, text){
-  if(!llmStatusEl) return;
-  llmStatusEl.classList.remove('loading','ready','failed');
-  if(state) llmStatusEl.classList.add(state);
-  if(text) llmTextEl.textContent = text;
-  if(state === 'ready' || state === 'failed') llmBarEl.style.width = '0%';
-}
-
-async function initWebLLM(){
-  if(llmLoading || llmReady || llmFailed) return;
-  llmLoading = true;
-  setLlmStatus('loading', 'AI TATTICA: preparazione…');
-  try {
-    if(!navigator.gpu){
-      throw new Error('WebGPU non disponibile');
-    }
-    setLlmStatus('loading', 'AI TATTICA: download libreria…');
-    const webllm = await import("https://esm.run/@mlc-ai/web-llm");
-    const engine = await webllm.CreateMLCEngine(
-      "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
-      {
-        initProgressCallback: (r) => {
-          const p = Math.max(0, Math.min(100, Math.round((r.progress || 0) * 100)));
-          llmBarEl.style.width = p + '%';
-          setLlmStatus('loading', 'AI TATTICA: download ' + p + '%');
-        }
-      }
-    );
-    llmEngine = engine;
-    llmReady = true;
-    llmLoading = false;
-    setLlmStatus('ready', 'AI TATTICA: attiva');
-    // Dopo 4s nascondi il badge (o lascialo, vedi tu)
-    setTimeout(() => { if(llmStatusEl) llmStatusEl.style.opacity = '0.7'; }, 4000);
-  } catch(e) {
-    console.warn('[WebLLM] init fallita:', e);
-    llmLoading = false;
-    llmFailed = true;
-    setLlmStatus('failed', 'AI TATTICA: non disponibile');
-    setTimeout(() => { if(llmStatusEl) llmStatusEl.style.opacity = '0.4'; }, 4000);
-  }
-}
-
-function parseJsonSafe(str){
-  if(!str) return null;
-  try { return JSON.parse(str); }
-  catch(_) {
-    // Fallback: prova a estrarre il primo blocco {...} o [...]
-    var m = str.match(/[\[{][\s\S]*[\]}]/);
-    if(m){ try { return JSON.parse(m[0]); } catch(_2){} }
-    return null;
-  }
-}
-
-async function tacticalDirector(){
-  if(!llmReady || directorBusy) return;
-  if(!matchActive) return;
-  var aliveBots = 0;
-  for(var i=1;i<SHIPS.length;i++) if(SHIPS[i].alive) aliveBots++;
-  if(aliveBots < 2) return;
-
-  // Se il giocatore è in mischia, salta (evita lag percepibile)
-  var nearestEnemy = Infinity;
-  for(var i=1;i<SHIPS.length;i++){
-    if(!SHIPS[i].alive) continue;
-    var dx = SHIPS[i].x - human.x, dy = SHIPS[i].y - human.y, dz = SHIPS[i].z - human.z;
-    var d = Math.sqrt(dx*dx + dy*dy + dz*dz);
-    if(d < nearestEnemy) nearestEnemy = d;
-  }
-  if(nearestEnemy < 5e7) return;
-
-  directorBusy = true;
-  try {
-    var accuracy = playerMetrics.shots > 0 ? (playerMetrics.hits / playerMetrics.shots) : 0.5;
-    var avgHp = playerMetrics.hpSamples > 0 ? (playerMetrics.hpSum / playerMetrics.hpSamples) : 100;
-    var avgDist = playerMetrics.engagementDistCount > 0
-      ? (playerMetrics.engagementDistSum / playerMetrics.engagementDistCount) / 1e6
-      : 250;
-    var fleeRatio = gameTime > 0 ? (playerMetrics.fleeTime / gameTime) : 0;
-
-    var prompt = 'You are the tactical director of a space arena. Analyze the human player and return ONLY JSON.\n\n' +
-      'PLAYER STATS:\n' +
-      '- Kills: ' + human.kills + '\n' +
-      '- Current HP: ' + Math.round(human.hp) + '/100\n' +
-      '- Average HP: ' + Math.round(avgHp) + '/100\n' +
-      '- Accuracy: ' + (accuracy*100).toFixed(0) + '%\n' +
-      '- Avg engagement distance: ' + avgDist.toFixed(0) + ' million km\n' +
-      '- Flee tendency: ' + (fleeRatio*100).toFixed(0) + '%\n' +
-      '- Alive bots: ' + aliveBots + '\n' +
-      '- Time elapsed: ' + Math.round(gameTime) + 's\n' +
-      '- Zone phase: ' + zonePhaseIndex + '/8\n\n' +
-      'Return EXACTLY this JSON with 6 numbers (0.5 to 2.0):\n' +
-      '{"aggressione":1.0,"precisione":1.0,"cooperazione":1.0,"evasione":1.0,"distanza":1.0,"priorita":1.0}\n\n' +
-      'Rules:\n' +
-      '- aggressione: 1.0 base, higher if bots too passive, lower if dying too fast\n' +
-      '- precisione: higher if player dominates, lower if bots too strong\n' +
-      '- cooperazione: higher if bots are dying alone, lower if too many\n' +
-      '- evasione: higher if bots die too fast, lower if too aggressive\n' +
-      '- distanza: higher if player is a sniper, lower if player is a brawler\n' +
-      '- priorita: higher if player is winning, lower if already losing';
-
-    var reply = await llmEngine.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.4,
-      max_tokens: 80
-    });
-    var content = reply.choices && reply.choices[0] && reply.choices[0].message ? reply.choices[0].message.content : '';
-    var mods = parseJsonSafe(content);
-    if(mods && typeof mods === 'object'){
-      // Clamp
-      ['aggressione','precisione','cooperazione','evasione','distanza','priorita'].forEach(function(k){
-        var v = parseFloat(mods[k]);
-        if(!isFinite(v)) v = 1.0;
-        if(v < 0.5) v = 0.5; else if(v > 2.0) v = 2.0;
-        lastMods[k] = v;
-      });
-      for(var i=1;i<SHIPS.length;i++){
-        if(SHIPS[i].alive) SHIPS[i].aiMods = lastMods;
-      }
-    }
-  } catch(e){
-    console.warn('[Director] fallito:', e);
-  } finally {
-    directorBusy = false;
-  }
-}
-
-async function coordinateBots(){
-  if(!llmReady || coordinatorBusy) return;
-  if(!matchActive) return;
-  var aliveBots = [];
-  for(var i=1;i<SHIPS.length;i++){
-    if(SHIPS[i].alive) aliveBots.push(SHIPS[i]);
-  }
-  if(aliveBots.length < 3) return;
-
-  coordinatorBusy = true;
-  try {
-    var pilots = aliveBots.map(function(s){
-      return { id: s.index, hp: Math.round(s.hp), kills: s.kills || 0 };
-    });
-    var prompt = 'You are coordinating ' + pilots.length + ' pilots in a 3D space arena.\n\n' +
-      'PILOTS:\n' + JSON.stringify(pilots) + '\n\n' +
-      'HUMAN PLAYER: kills=' + human.kills + ', hp=' + Math.round(human.hp) + '\n\n' +
-      'Assign one role per pilot. Reply ONLY with a JSON array:\n' +
-      '[{"id":1,"ruolo":"attacco"},{"id":2,"ruolo":"supporto"}]\n\n' +
-      'Valid roles: attacco, supporto, flank, ritirata\n' +
-      '- attacco: charge directly, high aggression\n' +
-      '- supporto: keep distance, suppress fire\n' +
-      '- flank: approach from off-angle\n' +
-      '- ritirata: retreat and regenerate\n\n' +
-      'Rules:\n' +
-      '- At least 1 supporto or flank if 3+ pilots alive\n' +
-      '- If a pilot is below 30 HP, assign ritirata\n' +
-      '- Don\'t assign all the same role';
-
-    var reply = await llmEngine.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.6,
-      max_tokens: 250
-    });
-    var content = reply.choices && reply.choices[0] && reply.choices[0].message ? reply.choices[0].message.content : '';
-    var roles = parseJsonSafe(content);
-    if(Array.isArray(roles)){
-      roles.forEach(function(r){
-        if(!r || typeof r.id !== 'number') return;
-        var bot = null;
-        for(var i=1;i<SHIPS.length;i++){
-          if(SHIPS[i].index === r.id){ bot = SHIPS[i]; break; }
-        }
-        if(!bot || !bot.alive) return;
-        var validRoles = ['attacco','supporto','flank','ritirata'];
-        if(validRoles.indexOf(r.ruolo) < 0) return;
-        bot.role = r.ruolo;
-      });
-      // Applica i ruoli anche ai bot non menzionati (fallback)
-      aliveBots.forEach(function(b){
-        if(!b.role || b.role === 'attacco') {
-          if(b.hp < 30) b.role = 'ritirata';
-        }
-      });
-    }
-  } catch(e){
-    console.warn('[Coordinator] fallito:', e);
-  } finally {
-    coordinatorBusy = false;
-  }
-}
-
-// ============================================================
-
 var splashEl=document.getElementById('splash');
 var splashDismissed=false;
+var llmSetupEl=document.getElementById('llmSetup');
+var llmDownloadBtn=document.getElementById('llmDownloadBtn');
+var llmProgressWrap=document.getElementById('llmProgressWrap');
+var llmProgressFill=document.getElementById('llmProgressFill');
+var llmProgressText=document.getElementById('llmProgressText');
+var llmStatusEl=document.getElementById('llmStatus');
+
 function dismissSplash(){
   if(splashDismissed) return;
   splashDismissed=true;
   splashEl.classList.remove('active');
   tryLockOrientation();
-  // Avvia il download WebLLM in background dopo il primo tocco
-  initWebLLM();
+  // Controlla stato LLM
+  var flag = false;
+  try { flag = localStorage.getItem(LLM_FLAG_KEY) === '1'; } catch(_){}
+  if (flag) {
+    // Già scaricato: carica in background silenzioso
+    initLLMInBackground();
+  } else {
+    // Primo avvio: setup obbligatorio
+    llmSetupEl.classList.add('active');
+  }
 }
 splashEl.addEventListener('pointerdown', function(e){ e.preventDefault(); dismissSplash(); });
 splashEl.addEventListener('touchstart', function(e){ e.preventDefault(); dismissSplash(); }, {passive:false});
-window.addEventListener('keydown', function(e){
-  if(!splashDismissed){ dismissSplash(); }
+window.addEventListener('keydown', function(e){ if(!splashDismissed){ dismissSplash(); } });
+
+llmDownloadBtn.addEventListener('click', async function(){
+  if (llmDownloadBtn.disabled) return;
+  llmDownloadBtn.disabled = true;
+  llmDownloadBtn.querySelector('span').textContent = 'DOWNLOAD IN CORSO...';
+  llmDownloadBtn.querySelector('small').textContent = 'NON CHIUDERE L\'APP';
+  llmProgressWrap.classList.add('active');
+  llmStatusEl.className = 'llm-status';
+  llmStatusEl.textContent = 'Connessione al server...';
+
+  try {
+    await initLLM(function(progress, text){
+      var pct = Math.max(0, Math.min(100, Math.round((progress||0)*100)));
+      llmProgressFill.style.width = pct + '%';
+      llmProgressText.textContent = pct + '%';
+      if (text) llmStatusEl.textContent = text.slice(0, 90);
+    });
+    try { localStorage.setItem(LLM_FLAG_KEY, '1'); } catch(_){}
+    llmProgressFill.style.width = '100%';
+    llmProgressText.textContent = '100%';
+    llmStatusEl.className = 'llm-status ok';
+    llmStatusEl.textContent = 'Pacchetto IA pronto. Buona caccia.';
+    setTimeout(function(){
+      llmSetupEl.classList.remove('active');
+    }, 700);
+  } catch(e){
+    console.error(e);
+    llmDownloadBtn.disabled = false;
+    llmDownloadBtn.querySelector('span').textContent = 'RIPROVA';
+    llmDownloadBtn.querySelector('small').textContent = 'CONTROLLA LA CONNESSIONE E RIPROVA';
+    llmStatusEl.className = 'llm-status err';
+    llmStatusEl.textContent = 'ERRORE: ' + (e && e.message ? e.message : 'download fallito');
+  }
 });
 
 function showStatsPage(){
@@ -1599,18 +1582,13 @@ function buildStatsPage(){
 }
 
 hudRowEl.addEventListener('pointerdown', function(e){
-  e.preventDefault();
-  e.stopPropagation();
+  e.preventDefault(); e.stopPropagation();
   if(currentScreen !== 'match') return;
   if(statsHoldTimer) { clearTimeout(statsHoldTimer); statsHoldTimer = null; }
-  statsHoldTimer = setTimeout(function(){
-    statsHoldTimer = null;
-    showStatsPage();
-  }, 180);
+  statsHoldTimer = setTimeout(function(){ statsHoldTimer = null; showStatsPage(); }, 180);
 });
 hudRowEl.addEventListener('pointerup', function(e){
-  e.preventDefault();
-  e.stopPropagation();
+  e.preventDefault(); e.stopPropagation();
   if(statsHoldTimer){ clearTimeout(statsHoldTimer); statsHoldTimer = null; }
 });
 hudRowEl.addEventListener('pointercancel', function(e){
@@ -1690,10 +1668,7 @@ function startMatchmaking(){
   var sts=[{t:400,txt:'Ping: 24 ms - EU-WEST'},{t:900,txt:'Ricerca giocatori...'},{t:1500,txt:needed+' giocatori trovati'}];
   sts.forEach(function(s){queueTimers.push(setTimeout(function(){document.getElementById('queueStatus').textContent=s.txt;},s.t));});
   for(var k=0;k<needed;k++){
-    (function(idx){
-      var t=900+idx*(2200/needed);
-      queueTimers.push(setTimeout(function(){fillQueueSlot(idx);}, t));
-    })(k);
+    (function(idx){ var t=900+idx*(2200/needed); queueTimers.push(setTimeout(function(){fillQueueSlot(idx);}, t)); })(k);
   }
   queueTimers.push(setTimeout(beginMatch,4100));
 }
@@ -1726,36 +1701,31 @@ function beginMatch(){
   powerups.length=0; swarmAsteroids.length=0;
   shootingStars.length=0; nextShootingStarT=3;
   nextPowerupSpawnT=2;
-  zonePhaseIndex = 0;
-  zonePhaseT = 0;
-  zoneCurrentDPS = 0;
-  zonePhaseAnnounced = {};
+  zonePhaseIndex = 0; zonePhaseT = 0; zoneCurrentDPS = 0; zonePhaseAnnounced = {};
   zoneRadius = ZONE_PHASES[0].from * AU;
   zoneOutsideTime=0; zoneWarning=0;
   solarFlareTimer=SOLAR_FLARE_INTERVAL; solarFlareActive=false; solarFlareT=0;
   swarmTimer=SWARM_INTERVAL; swarmActive=false;
 
   initPois();
-  resetPlayerMetrics();
-  aiDirectorTimer = 0;
-  aiCoordinatorTimer = 0;
-  directorBusy = false;
-  coordinatorBusy = false;
+
+  // Reset AI Director
+  AI_DIRECTOR.directorTimer = 0;
+  AI_DIRECTOR.coordinatorTimer = 6;
+  AI_DIRECTOR.busyDirector = false;
+  AI_DIRECTOR.busyCoord = false;
 
   var ch=CHASSIS[profile.chassis]||CHASSIS.balanced;
   human.maxHp=ch.hp; human.hp=ch.hp;
   human.speedMul=ch.speedMul; human.turnMul=ch.turnMul; human.fireRateMul=ch.fireRateMul;
   human.chassis=profile.chassis;
-  human.aiMods = DEFAULT_MODS;
 
   spawnNearCenter(human);
   human.alive=true; human.flash=0; human.bank=0; human.recoil=0; human.speed=0;
   human.ammo=MAX_AMMO; human.reloadT=0; human.missileCd=0; human.missileTarget=null;
   human.turboActive=false; human.turboTimer=0; human.turboCooldown=0;
   human.powerups=[];
-  human.regenDelay=0;
-  human.kills=0;
-  human.braking=false;
+  human.regenDelay=0; human.kills=0; human.braking=false;
   {
     var dx=-human.x,dy=-human.y,dz=-human.z;
     var dl=Math.sqrt(dx*dx+dy*dy+dz*dz);
@@ -1773,13 +1743,10 @@ function beginMatch(){
     s.rank=b.rank; s.rankLabel=b.rankLabel; s.ai=PERSONALITIES[b.personality];
     s.evadeT=0; s.strafeDir=Math.random()<0.5?1:-1; s.trailTimer=0;
     s.powerups=[]; s.hideTarget=null; s.hideTargetTimer=0;
-    s.regenDelay=0;
-    s.kills=0;
-    s.braking=false;
-    s.aiMods = DEFAULT_MODS;
-    s.role = 'attacco';
+    s.regenDelay=0; s.kills=0; s.braking=false;
+    s.aiMods = { aggressione:1, precisione:1, cooperazione:1, evasione:1, distanza:1, priorita:1 };
+    s.role = null;
     s.roleTarget = null;
-    s.forceRetreat = false;
     var dx=-s.x,dy=-s.y,dz=-s.z;
     var dl=Math.sqrt(dx*dx+dy*dy+dz*dz);
     s.yaw=Math.atan2(dy,dx); s.pitch=Math.asin(dz/dl);
@@ -1871,19 +1838,15 @@ function updateDynamicEvents(dt){
     }
   } else {
     solarFlareT-=dt;
-    if(solarFlareT<=0){
-      solarFlareActive=false; solarFlareTimer=SOLAR_FLARE_INTERVAL;
-    }
+    if(solarFlareT<=0){ solarFlareActive=false; solarFlareTimer=SOLAR_FLARE_INTERVAL; }
   }
-
   if(solarFlareActive){
     var dmgPerSec=SOLAR_FLARE_DPS;
     for(var i=0;i<SHIPS.length;i++){
       var s=SHIPS[i]; if(!s.alive)continue;
       var d=Math.sqrt(s.x*s.x+s.y*s.y+s.z*s.z);
       if(d < SOLAR_FLARE_RADIUS_AU*AU){
-        s.hp-=dmgPerSec*dt; s.flash=0.15;
-        s.regenDelay = HP_REGEN_DELAY;
+        s.hp-=dmgPerSec*dt; s.flash=0.15; s.regenDelay = HP_REGEN_DELAY;
         if(s.hp<=0){ s.hp=0; s.alive=false; spawnExplosion(s.x,s.y,s.z,8e5);
           if(s.isHuman){playerEliminated=true;setTimeout(function(){endMatch(false);},900);}
           else {
@@ -1894,14 +1857,9 @@ function updateDynamicEvents(dt){
       }
     }
     var hd=Math.sqrt(human.x*human.x+human.y*human.y+human.z*human.z);
-    if(hd < SOLAR_FLARE_RADIUS_AU*AU && human.alive){
-      solarWarningEl.style.opacity='0.85';
-    } else {
-      solarWarningEl.style.opacity='0';
-    }
-  } else {
-    solarWarningEl.style.opacity='0';
-  }
+    if(hd < SOLAR_FLARE_RADIUS_AU*AU && human.alive) solarWarningEl.style.opacity='0.85';
+    else solarWarningEl.style.opacity='0';
+  } else solarWarningEl.style.opacity='0';
 
   if(!swarmActive){
     swarmTimer-=dt;
@@ -1920,13 +1878,8 @@ function updateDynamicEvents(dt){
         var py=zoneCy+r*Math.sin(ang2)*Math.sin(ang1) - swarmDirY*zoneRadius*0.6;
         var pz=zoneCz+r*Math.cos(ang2) - swarmDirZ*zoneRadius*0.6;
         var speed=8e7+Math.random()*5e7;
-        swarmAsteroids.push({
-          x:px, y:py, z:pz,
-          vx:swarmDirX*speed, vy:swarmDirY*speed, vz:swarmDirZ*speed,
-          r:8e5+Math.random()*1.5e6,
-          variant:Math.floor(Math.random()*3),
-          life:SWARM_DURATION
-        });
+        swarmAsteroids.push({ x:px, y:py, z:pz, vx:swarmDirX*speed, vy:swarmDirY*speed, vz:swarmDirZ*speed,
+          r:8e5+Math.random()*1.5e6, variant:Math.floor(Math.random()*3), life:SWARM_DURATION });
       }
       if(currentScreen==='match') showKillFeed('\u26A0 SCIAME DI ASTEROIDI');
     }
@@ -1934,7 +1887,6 @@ function updateDynamicEvents(dt){
     swarmTimer-=dt;
     if(swarmTimer<=0){ swarmActive=false; swarmAsteroids.length=0; swarmTimer=SWARM_INTERVAL; }
   }
-
   for(var i=swarmAsteroids.length-1;i>=0;i--){
     var a=swarmAsteroids[i];
     a.x+=a.vx*dt; a.y+=a.vy*dt; a.z+=a.vz*dt; a.life-=dt;
@@ -1944,8 +1896,7 @@ function updateDynamicEvents(dt){
       var dx=s.x-a.x, dy=s.y-a.y, dz=s.z-a.z;
       var d2=dx*dx+dy*dy+dz*dz;
       if(d2<(a.r+4e5)*(a.r+4e5)){
-        var push=2e6;
-        var dd=Math.sqrt(d2)||1;
+        var push=2e6; var dd=Math.sqrt(d2)||1;
         s.x+=dx/dd*push; s.y+=dy/dd*push; s.z+=dz/dd*push;
         damageShip(s, 8, null);
       }
@@ -1958,15 +1909,12 @@ function updateZone(dt){
     zonePhaseT += dt;
     var ph = ZONE_PHASES[zonePhaseIndex];
     if(zonePhaseT >= ph.dur && zonePhaseIndex < ZONE_PHASES.length - 1){
-      zonePhaseIndex++;
-      zonePhaseT = 0;
-      ph = ZONE_PHASES[zonePhaseIndex];
+      zonePhaseIndex++; zonePhaseT = 0; ph = ZONE_PHASES[zonePhaseIndex];
     }
     var u = Math.min(1, zonePhaseT / ph.dur);
     var targetR = (ph.from + (ph.to - ph.from) * u) * AU;
     zoneRadius = targetR;
     zoneCurrentDPS = ph.dps;
-
     if(!zonePhaseAnnounced[zonePhaseIndex]){
       zonePhaseAnnounced[zonePhaseIndex] = true;
       if(currentScreen === 'match' && ph.dps > 0 && zonePhaseIndex < ZONE_PHASES.length - 1){
@@ -1976,11 +1924,9 @@ function updateZone(dt){
       }
     }
   }
-
   var hdx = human.x - zoneCx, hdy = human.y - zoneCy, hdz = human.z - zoneCz;
   var hDist = Math.sqrt(hdx*hdx + hdy*hdy + hdz*hdz);
   var outside = (hDist > zoneRadius);
-
   if(human.alive && outside && zoneCurrentDPS > 0){
     zoneOutsideTime += dt;
     var frac = Math.min(1, zoneOutsideTime / 5);
@@ -2006,10 +1952,8 @@ function updateZone(dt){
       zoneWarning += (0 - zoneWarning) * Math.min(1, dt * 3);
     }
   }
-
   var pulseW = 0.75 + 0.25 * Math.sin(gameTime * 5);
   zoneWarningEl.style.opacity = (zoneWarning * (outside ? pulseW : 1)).toFixed(3);
-
   for(var i = 1; i < SHIPS.length; i++){
     var s = SHIPS[i]; if(!s.alive) continue;
     var sdx = s.x - zoneCx, sdy = s.y - zoneCy, sdz = s.z - zoneCz;
@@ -2025,7 +1969,6 @@ function updateZone(dt){
       }
     }
   }
-
   if(currentScreen === 'match' && human.alive){
     if(outside){
       var outAU = (hDist - zoneRadius) / AU;
@@ -2093,15 +2036,12 @@ function getCrosshairData(ship){
       rny = yd/(zd*TAN_V);
     }
   }
-  var zdx = zoneCx - ship.x;
-  var zdy = zoneCy - ship.y;
-  var zdz = zoneCz - ship.z;
+  var zdx = zoneCx - ship.x, zdy = zoneCy - ship.y, zdz = zoneCz - ship.z;
   var zdist = Math.sqrt(zdx*zdx + zdy*zdy + zdz*zdz);
   var distToBorder = zoneRadius - zdist;
   var warnDistAU = ZONE_WARN_DIST_AU * AU;
   var zoneWarn = (distToBorder < warnDistAU);
-  var zoneNx = 0, zoneNy = 0;
-  var zoneVisible = false;
+  var zoneNx = 0, zoneNy = 0; var zoneVisible = false;
   if(zdist > 1){
     var zdot = (zdx*fx + zdy*fy + zdz*fz)/zdist;
     var zxd = zdx*rx + zdy*ry + zdz*rz;
@@ -2111,11 +2051,7 @@ function getCrosshairData(ship){
       zoneNx = zxd / (zdView * tanH);
       zoneNy = zyd / (zdView * TAN_V);
       zoneVisible = true;
-    } else {
-      zoneNx = (zxd > 0 ? 1 : -1) * 1.0;
-      zoneNy = 0;
-      zoneVisible = true;
-    }
+    } else { zoneNx = (zxd > 0 ? 1 : -1) * 1.0; zoneNy = 0; zoneVisible = true; }
   }
   return {locked: locked, hasRadar: nearestInFront !== null, nx: rnx, ny: rny,
           zoneNx: zoneNx, zoneNy: zoneNy, zoneWarn: zoneWarn, zoneVisible: zoneVisible};
@@ -2123,10 +2059,7 @@ function getCrosshairData(ship){
 
 function fireFrom(ship){
   var hasRapid=!!getActivePowerup(ship,'rapid');
-  if(!hasRapid){
-    if(ship.ammo<=0) return false;
-    if(ship.reloadT>0) return false;
-  }
+  if(!hasRapid){ if(ship.ammo<=0) return false; if(ship.reloadT>0) return false; }
   var cp=Math.cos(ship.pitch),sp=Math.sin(ship.pitch);
   var cy=Math.cos(ship.yaw),sy=Math.sin(ship.yaw);
   var fx=cp*cy, fy=cp*sy, fz=sp;
@@ -2135,14 +2068,9 @@ function fireFrom(ship){
   fx=assist[0]; fy=assist[1]; fz=assist[2];
   var off=6e5; var bs=ship.speed+1.5e8;
   bullets.push({x:ship.x+fx*off, y:ship.y+fy*off, z:ship.z+fz*off,
-    vx:fx*bs, vy:fy*bs, vz:fz*bs, life:BULLET_LIFE, maxLife:BULLET_LIFE, owner:ship,
-    lockedTarget: cross.locked});
+    vx:fx*bs, vy:fy*bs, vz:fz*bs, life:BULLET_LIFE, maxLife:BULLET_LIFE, owner:ship, lockedTarget: cross.locked});
   ship.recoil=1.0;
-  if(!hasRapid){
-    ship.ammo--;
-    if(ship.ammo<=0) ship.reloadT=RELOAD_TIME;
-  }
-  if(ship.isHuman) playerMetrics.shots++;
+  if(!hasRapid){ ship.ammo--; if(ship.ammo<=0) ship.reloadT=RELOAD_TIME; }
   for(var i=0;i<4;i++){
     trails.push({x:ship.x+fx*off, y:ship.y+fy*off, z:ship.z+fz*off,
       vx:fx*1e8+(Math.random()-0.5)*3e7, vy:fy*1e8+(Math.random()-0.5)*3e7, vz:fz*1e8+(Math.random()-0.5)*3e7,
@@ -2167,40 +2095,25 @@ function fireMissile(ship){
     if(dot>bestDot){bestDot=dot;best=o;}
   }
   var off=8e5;
-  missiles.push({
-    x:ship.x+fx*off, y:ship.y+fy*off, z:ship.z+fz*off,
+  missiles.push({ x:ship.x+fx*off, y:ship.y+fy*off, z:ship.z+fz*off,
     vx:fx*MISSILE_SPEED, vy:fy*MISSILE_SPEED, vz:fz*MISSILE_SPEED,
     life:MISSILE_LIFE, maxLife:MISSILE_LIFE, trackT:MISSILE_TRACK_TIME,
-    owner:ship, target:best,
-    prevX:ship.x, prevY:ship.y, prevZ:ship.z
-  });
-  ship.missileCd=MISSILE_CD;
-  ship.recoil=1.4;
+    owner:ship, target:best, prevX:ship.x, prevY:ship.y, prevZ:ship.z });
+  ship.missileCd=MISSILE_CD; ship.recoil=1.4;
   return true;
 }
 function tickReload(ship,dt){
   var hasRapid=!!getActivePowerup(ship,'rapid');
-  if(hasRapid){
-    ship.reloadT=0;
-    if(ship.ammo<=0) ship.ammo=MAX_AMMO;
-    return;
-  }
+  if(hasRapid){ ship.reloadT=0; if(ship.ammo<=0) ship.ammo=MAX_AMMO; return; }
   if(ship.reloadT>0){ship.reloadT-=dt;if(ship.reloadT<=0){ship.reloadT=0;ship.ammo=MAX_AMMO;}}
 }
 function damageShip(target,dmg,source){
   if(!target.alive)return;
   var shield=getActivePowerup(target,'shield');
   if(shield){dmg*=0.2; target.shieldPulse=0.4;}
-  if(source){
-    var dmgBuff=getActivePowerup(source,'damage');
-    if(dmgBuff) dmg*=2.0;
-  }
-  target.hp-=dmg; target.flash=0.2;
-  target.regenDelay = HP_REGEN_DELAY;
-  if(source===human){
-    matchStats.damage+=dmg;
-    if(!target.isHuman) playerMetrics.hits++;
-  }
+  if(source){ var dmgBuff=getActivePowerup(source,'damage'); if(dmgBuff) dmg*=2.0; }
+  target.hp-=dmg; target.flash=0.2; target.regenDelay = HP_REGEN_DELAY;
+  if(source===human) matchStats.damage+=dmg;
   if(target===human){
     shakeMag=Math.min(2.5,shakeMag+0.8);
     dmgVig.style.opacity=Math.max(0.35,parseFloat(dmgVig.style.opacity)||0);
@@ -2258,19 +2171,13 @@ function updateOrientationOverlay(){
   var overlay = document.getElementById('rotateOverlay');
   if(!overlay) return;
   var isMobileish = Math.min(window.innerWidth, window.innerHeight) < 700;
-  if(isPortrait && isMobileish){
-    overlay.classList.add('show');
-  } else {
-    overlay.classList.remove('show');
-  }
+  if(isPortrait && isMobileish) overlay.classList.add('show');
+  else overlay.classList.remove('show');
 }
 function resize(){
   updateOrientationOverlay();
   var cw=window.innerWidth, ch=window.innerHeight;
-  if(window.visualViewport){
-    cw=window.visualViewport.width;
-    ch=window.visualViewport.height;
-  }
+  if(window.visualViewport){ cw=window.visualViewport.width; ch=window.visualViewport.height; }
   var base=Math.max(2,Math.round(cw/280));
   pixScale=Math.max(2,Math.round(base*dynScale));
   W=Math.max(80,Math.round(cw/pixScale));
@@ -2565,10 +2472,7 @@ var satSprites=[];
     var PANEL=[40,80,160],PANEL_L=[90,140,220],PANEL_D=[25,50,110];
     var BODY=[180,185,200],BODY_L=[230,235,245],BODY_D=[90,95,110],ANT=[240,80,80];
     for(var y=6;y<=10;y++)for(var x=6;x<=9;x++){
-      var c=BODY;
-      if(x<7||y<7)c=BODY_L;
-      else if(x>8)c=BODY_D;
-      setPx(x,y,c);
+      var c=BODY; if(x<7||y<7)c=BODY_L; else if(x>8)c=BODY_D; setPx(x,y,c);
     }
     for(var y=7;y<=9;y++)for(var x=0;x<=5;x++){var c=(x<2)?PANEL_D:PANEL;if((x+y)%2===0)c=PANEL_L;setPx(x,y,c);}
     for(var y=7;y<=9;y++)for(var x=10;x<=15;x++){var c=(x>13)?PANEL_D:PANEL;if((x+y)%2===0)c=PANEL_L;setPx(x,y,c);}
@@ -2597,10 +2501,7 @@ function buildPoiSprites(){
         var c=(d>RO-1||d<RI+1)?MD:(dx+dy<0?ML:M);
         _poiSetPx(spr,x,y,c);
         if((Math.floor((a+PI)/TAU*16)&1)===0 && d>RI+2 && d<RO-2) _poiSetPx(spr,x,y,G);
-      } else if(d<=HUB){
-        var c=d>HUB-1?MD:(dx+dy<0?ML:M);
-        _poiSetPx(spr,x,y,c);
-      }
+      } else if(d<=HUB){ var c=d>HUB-1?MD:(dx+dy<0?ML:M); _poiSetPx(spr,x,y,c); }
     }
     for(var k=0;k<4;k++){
       var a=k*TAU/4;
@@ -2613,7 +2514,6 @@ function buildPoiSprites(){
     _poiSetPx(spr,cx,cy-1,GL);_poiSetPx(spr,cx,cy+1,GL);
     poiSprites.aurora = spr;
   })();
-
   (function(){
     var spr = new Uint32Array(POI_SPR*POI_SPR);
     var M=[130,110,90], ML=[190,165,140], MD=[60,50,40], BURN=[30,22,18], GLOW=[255,140,60];
@@ -2623,10 +2523,7 @@ function buildPoiSprites(){
       if(d>1)continue;
       if(x>POI_SPR-11 && hash3(x*7,y*5,3)>0.5) continue;
       var c;
-      if(d>0.85)c=MD;
-      else if(ny<-0.3)c=ML;
-      else if(ny>0.3)c=MD;
-      else c=M;
+      if(d>0.85)c=MD; else if(ny<-0.3)c=ML; else if(ny>0.3)c=MD; else c=M;
       _poiSetPx(spr,x,y,c);
     }
     for(var i=0;i<4;i++){
@@ -2642,7 +2539,6 @@ function buildPoiSprites(){
     }
     poiSprites.titano = spr;
   })();
-
   (function(){
     var spr = new Uint32Array(POI_SPR*POI_SPR);
     var METAL=[130,110,90], METAL_L=[180,160,140], METAL_D=[60,50,40];
@@ -2656,9 +2552,7 @@ function buildPoiSprites(){
       _poiSetPx(spr,x,y,c);
     }
     for(var y=-4;y<=4;y++){
-      _poiSetPx(spr,cx-1,cy+y,METAL_L);
-      _poiSetPx(spr,cx,cy+y,METAL);
-      _poiSetPx(spr,cx+1,cy+y,METAL_D);
+      _poiSetPx(spr,cx-1,cy+y,METAL_L); _poiSetPx(spr,cx,cy+y,METAL); _poiSetPx(spr,cx+1,cy+y,METAL_D);
     }
     _poiSetPx(spr,cx,cy-4,GLOW);
     for(var k=0;k<6;k++){
@@ -2673,7 +2567,6 @@ function buildPoiSprites(){
     }
     poiSprites.heph = spr;
   })();
-
   (function(){
     var spr = new Uint32Array(POI_SPR*POI_SPR);
     var MAST=[200,200,220], MAST_D=[80,80,100], MAST_L=[240,240,255];
@@ -2681,9 +2574,7 @@ function buildPoiSprites(){
     var BLINK=[255,80,80];
     var cx=POI_SPR/2;
     for(var y=8;y<POI_SPR-8;y++){
-      _poiSetPx(spr,cx-1,y,MAST_D);
-      _poiSetPx(spr,cx,y,MAST);
-      _poiSetPx(spr,cx+1,y,MAST_L);
+      _poiSetPx(spr,cx-1,y,MAST_D); _poiSetPx(spr,cx,y,MAST); _poiSetPx(spr,cx+1,y,MAST_L);
     }
     for(var y=POI_SPR-12;y<POI_SPR-8;y++)for(var x=cx-6;x<=cx+6;x++){
       if(Math.abs(x-cx)+Math.abs(y-(POI_SPR-10))>8)continue;
@@ -2700,12 +2591,9 @@ function buildPoiSprites(){
         _poiSetPx(spr,cx+dxOff+x,dy+y,c);
       }
     }
-    _poiSetPx(spr,cx,8,BLINK);
-    _poiSetPx(spr,cx-1,8,BLINK);
-    _poiSetPx(spr,cx+1,8,BLINK);
+    _poiSetPx(spr,cx,8,BLINK); _poiSetPx(spr,cx-1,8,BLINK); _poiSetPx(spr,cx+1,8,BLINK);
     poiSprites.echo = spr;
   })();
-
   (function(){
     var spr = new Uint32Array(POI_SPR*POI_SPR);
     var TANK=[220,180,120], TANK_L=[255,220,160], TANK_D=[140,100,50];
@@ -2723,27 +2611,19 @@ function buildPoiSprites(){
         if(Math.abs(y+4)<1 && (x&1)===0) c = STRIPE;
         _poiSetPx(spr,tx+x,ty+y,c);
       }
-      _poiSetPx(spr,tx,ty-10,TANK_D);
-      _poiSetPx(spr,tx-1,ty-10,TANK_D);
-      _poiSetPx(spr,tx+1,ty-10,TANK_D);
+      _poiSetPx(spr,tx,ty-10,TANK_D); _poiSetPx(spr,tx-1,ty-10,TANK_D); _poiSetPx(spr,tx+1,ty-10,TANK_D);
     }
     for(var x=-5;x<=5;x++){
-      _poiSetPx(spr,cx-4+x,cy-2,PIPE);
-      _poiSetPx(spr,cx-4+x,cy-1,PIPE_L);
+      _poiSetPx(spr,cx-4+x,cy-2,PIPE); _poiSetPx(spr,cx-4+x,cy-1,PIPE_L);
     }
-    _poiSetPx(spr,cx,cy+12,GLOW);
-    _poiSetPx(spr,cx-1,cy+12,GLOW);
-    _poiSetPx(spr,cx+1,cy+12,GLOW);
+    _poiSetPx(spr,cx,cy+12,GLOW); _poiSetPx(spr,cx-1,cy+12,GLOW); _poiSetPx(spr,cx+1,cy+12,GLOW);
     poiSprites.prometeo = spr;
   })();
-
   (function(){
     var spr = new Uint32Array(POI_SPR*POI_SPR);
     var ROCK=[110,100,90], ROCK_L=[150,140,125], ROCK_D=[55,50,45];
     var cx=POI_SPR/2, cy=POI_SPR/2;
-    var clusters = [
-      [0,0,8],[-10,4,5],[8,-6,6],[-6,-8,4],[10,7,5],[-13,-3,3],[3,10,4]
-    ];
+    var clusters = [ [0,0,8],[-10,4,5],[8,-6,6],[-6,-8,4],[10,7,5],[-13,-3,3],[3,10,4] ];
     for(var k=0;k<clusters.length;k++){
       var clx=cx+clusters[k][0], cly=cy+clusters[k][1], rad=clusters[k][2];
       var seed = k*777;
@@ -2753,9 +2633,7 @@ function buildPoiSprites(){
         var rEff = rad + n*2;
         if(d>rEff)continue;
         var c;
-        if(d>rEff-1)c=ROCK_D;
-        else if(x+y<0)c=ROCK_L;
-        else c=ROCK;
+        if(d>rEff-1)c=ROCK_D; else if(x+y<0)c=ROCK_L; else c=ROCK;
         _poiSetPx(spr,clx+x,cly+y,c);
       }
     }
@@ -2801,8 +2679,7 @@ var missileSprite=(function(){
   var setPx=function(x,y,c){if(x<0||y<0||x>=MISSILE_SPR||y>=MISSILE_SPR)return;spr[y*MISSILE_SPR+x]=0xFF000000|((c[2]|0)<<16)|((c[1]|0)<<8)|(c[0]|0);};
   var BODY_L=[240,240,255], BODY_R=[150,150,170], FIN=[170,170,195];
   for(var y=3;y<=12;y++){ setPx(7,y,BODY_L); setPx(8,y,BODY_R); }
-  setPx(5,11,FIN); setPx(6,11,BODY_L);
-  setPx(9,11,BODY_R); setPx(10,11,FIN);
+  setPx(5,11,FIN); setPx(6,11,BODY_L); setPx(9,11,BODY_R); setPx(10,11,FIN);
   setPx(7,2,[255,255,255]); setPx(8,2,[255,255,255]);
   setPx(7,1,[255,220,220]); setPx(8,1,[255,220,220]);
   setPx(7,13,[255,180,80]); setPx(8,13,[255,180,80]);
@@ -3065,9 +2942,7 @@ function drawPois(){
 function drawSunFlare(){
   var pr=projectToScreen(SUN.x,SUN.y,SUN.z); if(!pr)return;
   var spx=pr.scrX|0, spy=pr.scrY|0;
-  if(spx>=0&&spy>=0&&spx<W&&spy<H){
-    if(depthBuf[spy*W+spx]<pr.dist-SUN.r) return;
-  }
+  if(spx>=0&&spy>=0&&spx<W&&spy<H){ if(depthBuf[spy*W+spx]<pr.dist-SUN.r) return; }
   var dx=SUN.x-camX, dy=SUN.y-camY, dz=SUN.z-camZ;
   var cosView=(dx*camDx+dy*camDy+dz*camDz)/Math.sqrt(dx*dx+dy*dy+dz*dz);
   if(cosView<0.2)return;
@@ -3133,7 +3008,6 @@ function buildUfoSprite(pal){
     else setPx(x,y,DARK);
   }
   for(var x=3;x<29;x++){if(x%3===0)setPx(x,15,ACC);}
-
   var WHITE_OUTER = [200, 235, 255];
   var darkR = OUT[0], darkG = OUT[1], darkB = OUT[2];
   var dirs = [[-1,0],[1,0],[0,-1],[0,1]];
@@ -3458,9 +3332,7 @@ function drawBeams(){
         var t=s/steps;
         var x=tailX+(headX-tailX)*t, y=tailY+(headY-tailY)*t;
         var xi=x|0, yi=y|0;
-        if(xi>=0&&yi>=0&&xi<W&&yi<H){
-          if(depthBuf[yi*W+xi]<bulletWorldDist)continue;
-        }
+        if(xi>=0&&yi>=0&&xi<W&&yi<H){ if(depthBuf[yi*W+xi]<bulletWorldDist)continue; }
         var cr,cg,cb;
         if(t>0.65){cr=255;cg=255;cb=255;}
         else{cr=Math.min(255,acc[0]+boost);cg=Math.min(255,acc[1]+boost);cb=Math.min(255,acc[2]+boost);}
@@ -3556,44 +3428,28 @@ function drawCrosshair(){
   var cx=W>>1, cy=H>>1;
   var info = getCrosshairData(human);
   var locked = info.locked !== null;
-
   var lockCol  = [255,70,70];
   var radarCol = [255,200,60];
   var zoneCol  = [80,220,255];
   var greenCol = [140,255,190];
   var greenSub = [80,180,120];
   var greenCor = [45,115,85];
-
   var mainCol, subCol, cornerCol;
-  if(locked){
-    mainCol=lockCol; subCol=[255,140,140]; cornerCol=[255,110,110];
-  } else {
-    mainCol=greenCol; subCol=greenSub; cornerCol=greenCor;
-  }
-
-  plotPx(cx,cy,mainCol);
-  plotPx(cx-1,cy,subCol);
-  plotPx(cx,cy-1,subCol);
-
+  if(locked){ mainCol=lockCol; subCol=[255,140,140]; cornerCol=[255,110,110]; }
+  else { mainCol=greenCol; subCol=greenSub; cornerCol=greenCor; }
+  plotPx(cx,cy,mainCol); plotPx(cx-1,cy,subCol); plotPx(cx,cy-1,subCol);
   var radarThresh = 0.12;
   var radarNx = 0, radarNy = 0;
   var radarActive = false;
   var radarColor = radarCol;
   if(!locked){
-    if(info.zoneWarn && info.zoneVisible){
-      radarNx = info.zoneNx; radarNy = info.zoneNy;
-      radarActive = true; radarColor = zoneCol;
-    } else if(info.hasRadar){
-      radarNx = info.nx; radarNy = info.ny;
-      radarActive = true; radarColor = radarCol;
-    }
+    if(info.zoneWarn && info.zoneVisible){ radarNx = info.zoneNx; radarNy = info.zoneNy; radarActive = true; radarColor = zoneCol; }
+    else if(info.hasRadar){ radarNx = info.nx; radarNy = info.ny; radarActive = true; radarColor = radarCol; }
   }
-
   var armTop   = radarActive && radarNy >  radarThresh;
   var armBot   = radarActive && radarNy < -radarThresh;
   var armLeft  = radarActive && radarNx < -radarThresh;
   var armRight = radarActive && radarNx >  radarThresh;
-
   var tS=5, tE=9;
   for(var i=tS;i<=tE;i++){
     plotPx(cx, cy-i, armTop   ? radarColor : mainCol);
@@ -3603,13 +3459,11 @@ function drawCrosshair(){
   }
   plotPx(cx,cy-tE-1,subCol); plotPx(cx,cy+tE+1,subCol);
   plotPx(cx-tE-1,cy,subCol); plotPx(cx+tE+1,cy,subCol);
-
   var bd=13, bl=4;
   var tlCol = (!locked && armTop && armLeft ) ? radarColor : cornerCol;
   var trCol = (!locked && armTop && armRight) ? radarColor : cornerCol;
   var blCol = (!locked && armBot && armLeft ) ? radarColor : cornerCol;
   var brCol = (!locked && armBot && armRight) ? radarColor : cornerCol;
-
   for(var i=0;i<bl;i++){
     plotPx(cx-bd, cy-bd+i, tlCol);  plotPx(cx-bd+i, cy-bd, tlCol);
     plotPx(cx+bd, cy-bd+i, trCol);  plotPx(cx+bd-i, cy-bd, trCol);
@@ -3657,7 +3511,6 @@ function findHideSpot(ship, threat){
   var shipToThreatX=threat.x-ship.x, shipToThreatY=threat.y-ship.y, shipToThreatZ=threat.z-ship.z;
   var stLen=Math.sqrt(shipToThreatX*shipToThreatX+shipToThreatY*shipToThreatY+shipToThreatZ*shipToThreatZ)||1;
   shipToThreatX/=stLen; shipToThreatY/=stLen; shipToThreatZ/=stLen;
-
   for(var i=0;i<asteroids.length;i++){
     var a=asteroids[i];
     var dx=a.x-ship.x, dy=a.y-ship.y, dz=a.z-ship.z;
@@ -3684,6 +3537,9 @@ function findHideSpot(ship, threat){
   return best;
 }
 
+// ============================================================
+// AI BOT — legge aiMods e role dal director LLM
+// ============================================================
 function updateAI(ship,dt){
   if(!ship.alive)return;
   ship.fireCd=Math.max(0,ship.fireCd-dt);
@@ -3695,29 +3551,35 @@ function updateAI(ship,dt){
   updateShipPowerups(ship,dt);
 
   var ai=ship.ai;
-  var mods = ship.aiMods || DEFAULT_MODS;
-  var role = ship.role || 'attacco';
+  var mods = ship.aiMods || AI_DIRECTOR.defaultMods;
 
-  // Override per ruolo
-  var roleAggro = 1, roleEvas = 1, roleDist = 1, roleStraf = 1;
-  if(role === 'attacco'){ roleAggro = 1.5; roleEvas = 0.7; roleStraf = 0.5; }
-  else if(role === 'supporto'){ roleDist = 1.4; roleAggro = 0.9; roleStraf = 1.3; }
-  else if(role === 'flank'){ roleDist = 0.8; roleAggro = 1.2; roleStraf = 1.8; }
-  else if(role === 'ritirata'){ roleEvas = 2.2; roleAggro = 0.3; }
+  // Applica modificatori di ruolo
+  var modAggr = mods.aggressione;
+  var modPrec = mods.precisione;
+  var modEva  = mods.evasione;
+  var modDist = mods.distanza;
+  var modPrio = mods.priorita;
 
-  // Target con priorità al giocatore
+  if(ship.role === 'attacco'){
+    modAggr *= 1.5; modEva *= 0.7;
+  } else if(ship.role === 'supporto'){
+    modDist *= 1.4; modPrec *= 1.2;
+  } else if(ship.role === 'flank'){
+    modDist *= 0.85;
+  }
+
+  // Target selection con priorità
   var best=null, bestD=1e24, bestScore=-1e24;
   for(var i=0;i<SHIPS.length;i++){
     var o=SHIPS[i];
     if(o===ship||!o.alive)continue;
-    var dx0=o.x-ship.x, dy0=o.y-ship.y, dz0=o.z-ship.z;
-    var d0=Math.sqrt(dx0*dx0+dy0*dy0+dz0*dz0);
-    var score = 1e12 / (d0 + 1);
-    if(o.isHuman) score *= mods.priorita;
-    if(ship.roleTarget && o === ship.roleTarget) score *= 2.0;
-    if(score > bestScore){ bestScore = score; best = o; bestD = d0; }
+    var dx=o.x-ship.x, dy=o.y-ship.y, dz=o.z-ship.z;
+    var d=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    var score = 1e12 / (d + 1);
+    if(o.isHuman) score *= modPrio;
+    if(ship.roleTarget && o === ship.roleTarget) score *= 3;
+    if(score > bestScore){bestScore = score; best = o; bestD = d;}
   }
-
   if(!best){
     ship.speed=computeSpeed(ship)*ship.speedMul;
     var cp=Math.cos(ship.pitch), sp=Math.sin(ship.pitch);
@@ -3729,8 +3591,8 @@ function updateAI(ship,dt){
   var dx=best.x-ship.x, dy=best.y-ship.y, dz=best.z-ship.z;
   var dist=bestD;
   var hpFrac=ship.hp/ship.maxHp;
-  var evadeThreshold = ai.evadeThreshold * mods.evasione * roleEvas;
-  var wantEvade = (hpFrac < evadeThreshold) || ship.forceRetreat;
+  var forceRetreat = (ship.role === 'ritirata');
+  var wantEvade = forceRetreat || hpFrac < (ai.evadeThreshold * modEva);
 
   if(wantEvade){
     if(ship.hideTargetTimer<=0 || !ship.hideTarget){
@@ -3758,8 +3620,13 @@ function updateAI(ship,dt){
       desPitch+=(Math.random()-0.5)*0.4;
     }
   } else {
-    var prefDist = ai.prefDist * mods.distanza * roleDist;
-    var offset = dist<prefDist*0.6 ? ship.strafeDir*0.30*roleStraf : dist>prefDist*1.4 ? 0 : ship.strafeDir*0.15*roleStraf;
+    var prefD = ai.prefDist * modDist;
+    var baseOff = dist < prefD*0.6 ? ship.strafeDir*0.30 : dist > prefD*1.4 ? 0 : ship.strafeDir*0.15;
+    var flankOff = 0;
+    if(ship.role === 'flank'){
+      flankOff = (ship.index % 2 === 0 ? 1 : -1) * Math.PI * 0.35;
+    }
+    var offset = baseOff + flankOff;
     desYaw=Math.atan2(dy,dx)+offset;
     desPitch=Math.asin(Math.max(-1,Math.min(1,dz/dist)));
     var nearestPU=null, nearestPUD=1e24;
@@ -3797,19 +3664,23 @@ function updateAI(ship,dt){
   var fx=cp*cy, fy=cp*sy, fz=sp;
   ship.x+=fx*ship.speed*dt; ship.y+=fy*ship.speed*dt; ship.z+=fz*ship.speed*dt;
 
-  var engageRange = ENGAGE_RANGE * mods.aggressione * roleAggro;
+  var engageRange = ENGAGE_RANGE * modAggr;
   if(!wantEvade && dist<engageRange && dist>MIN_ENGAGE_RANGE){
     var hasRapid=!!getActivePowerup(ship,'rapid');
     var cross = getCrosshairData(ship);
     if(cross.locked && (hasRapid || ship.fireCd<=0)){
-      if(fireFrom(ship)) ship.fireCd = hasRapid ? FIRE_CD*0.4 : FIRE_CD*ai.fireRateMul*(0.9+Math.random()*0.3) / mods.precisione;
+      if(fireFrom(ship)){
+        var rate = hasRapid ? FIRE_CD*0.4 : FIRE_CD * (ai.fireRateMul / modPrec) * (0.9+Math.random()*0.3);
+        ship.fireCd = rate;
+      }
     }
-    if(cross.locked && ship.missileCd<=0 && dist<2e8 * mods.aggressione){
+    if(cross.locked && ship.missileCd<=0 && dist<2e8){
       fireMissile(ship);
     }
   }
   applyCollisions(ship);
 }
+
 function computeSpeed(ship){
   var nearest=1e24;
   for(var i=0;i<BODIES.length;i++){
@@ -3904,9 +3775,7 @@ function updatePlayer(dt){
 
   if(human.turboActive){
     human.turboTimer-=dt;
-    if(human.turboTimer<=0){
-      human.turboTimer=0; human.turboActive=false; human.turboCooldown=TURBO_COOLDOWN;
-    }
+    if(human.turboTimer<=0){ human.turboTimer=0; human.turboActive=false; human.turboCooldown=TURBO_COOLDOWN; }
   } else if(human.turboCooldown>0){
     human.turboCooldown-=dt;
     if(human.turboCooldown<0) human.turboCooldown=0;
@@ -3935,7 +3804,6 @@ function updatePlayer(dt){
   var speedMul = 1.0;
   if(human.turboActive) speedMul = TURBO_MULT;
   if(brakeBtnHeld) speedMul = BRAKE_MULT;
-
   speedMul *= human.speedMul;
   if(getActivePowerup(human,'speed')) speedMul*=1.6;
   human.speed=computeSpeed(human)*speedMul;
@@ -3945,11 +3813,8 @@ function updatePlayer(dt){
   human.x+=fx*human.speed*dt; human.y+=fy*human.speed*dt; human.z+=fz*human.speed*dt;
   applyCollisions(human);
 
-  if(brakeBtnHeld && human.alive){
-    brakeVignetteEl.style.opacity='0.85';
-  } else {
-    brakeVignetteEl.style.opacity='0';
-  }
+  if(brakeBtnHeld && human.alive) brakeVignetteEl.style.opacity='0.85';
+  else brakeVignetteEl.style.opacity='0';
 
   var hasRapid=!!getActivePowerup(human,'rapid');
   if(fireBtnHeld && (hasRapid || (human.fireCd<=0 && human.reloadT<=0 && human.ammo>0))){
@@ -4041,11 +3906,7 @@ function updateMissiles(dt){
         var curdx=m.vx/vlen, curdy=m.vy/vlen, curdz=m.vz/vlen;
         var maxTurn=MISSILE_TURN_RATE*dt;
         var dot=curdx*ndx+curdy*ndy+curdz*ndz;
-        var cross = [
-          curdy*ndz-curdz*ndy,
-          curdz*ndx-curdx*ndz,
-          curdx*ndy-curdy*ndx
-        ];
+        var cross = [ curdy*ndz-curdz*ndy, curdz*ndx-curdx*ndz, curdx*ndy-curdy*ndx ];
         var crossLen=Math.sqrt(cross[0]*cross[0]+cross[1]*cross[1]+cross[2]*cross[2]);
         if(crossLen>1e-6 && dot<0.9999){
           var rotAng=Math.min(maxTurn, Math.acos(Math.max(-1,Math.min(1,dot))));
@@ -4055,30 +3916,22 @@ function updateMissiles(dt){
           var ky=curdy*cosA + (axisZ*curdx-axisX*curdz)*sinA + axisY*(axisX*curdx+axisY*curdy+axisZ*curdz)*(1-cosA);
           var kz=curdz*cosA + (axisX*curdy-axisY*curdx)*sinA + axisZ*(axisX*curdx+axisY*curdy+axisZ*curdz)*(1-cosA);
           var kl=Math.sqrt(kx*kx+ky*ky+kz*kz)||1;
-          m.vx=kx/kl*MISSILE_SPEED;
-          m.vy=ky/kl*MISSILE_SPEED;
-          m.vz=kz/kl*MISSILE_SPEED;
+          m.vx=kx/kl*MISSILE_SPEED; m.vy=ky/kl*MISSILE_SPEED; m.vz=kz/kl*MISSILE_SPEED;
         }
       }
       m.trackT-=dt;
     }
     m.x+=m.vx*dt; m.y+=m.vy*dt; m.z+=m.vz*dt; m.life-=dt;
     if(m.life<=0){missiles.splice(i,1);continue;}
-
     var hit=false;
     for(var si=0;si<SHIPS.length;si++){
       var s=SHIPS[si];
       if(s===m.owner||!s.alive)continue;
       var dx=s.x-m.x, dy=s.y-m.y, dz=s.z-m.z;
       var d2=dx*dx+dy*dy+dz*dz;
-      if(d2<8e5*8e5){
-        damageShip(s, MISSILE_DMG, m.owner);
-        spawnExplosion(m.x,m.y,m.z,5e5);
-        hit=true; break;
-      }
+      if(d2<8e5*8e5){ damageShip(s, MISSILE_DMG, m.owner); spawnExplosion(m.x,m.y,m.z,5e5); hit=true; break; }
     }
     if(hit){missiles.splice(i,1);continue;}
-
     for(var ai2=0;ai2<asteroids.length;ai2++){
       var a=asteroids[ai2];
       var dx=m.x-a.x, dy=m.y-a.y, dz=m.z-a.z;
@@ -4088,9 +3941,7 @@ function updateMissiles(dt){
     if(hit){missiles.splice(i,1);continue;}
   }
 }
-function spawnHitSpark(x,y,z){
-  explosions.push({x:x,y:y,z:z,t:0,dur:0.28,type:'flash',rad:3e5});
-}
+function spawnHitSpark(x,y,z){ explosions.push({x:x,y:y,z:z,t:0,dur:0.28,type:'flash',rad:3e5}); }
 function updateExplosions(dt){
   for(var i=explosions.length-1;i>=0;i--){
     explosions[i].t+=dt;
@@ -4282,16 +4133,14 @@ function resetStickState(){
   canvasActive=false; stickActive=false; stickPointerId=null;
   input.ax=0; input.ay=0;
   stickEl.classList.remove('active');
-  stickEl.style.left='';
-  stickEl.style.top='';
+  stickEl.style.left=''; stickEl.style.top='';
   knobEl.style.transform='translate(0px, 0px)';
 }
 function resetStick2State(){
   stick2Active=false; stick2PointerId=null;
   input2.ax=0; input2.ay=0;
   stick2El.classList.remove('active');
-  stick2El.style.left='';
-  stick2El.style.top='';
+  stick2El.style.left=''; stick2El.style.top='';
   knob2El.style.transform='translate(0px, 0px)';
 }
 
@@ -4315,8 +4164,8 @@ stick2El.addEventListener('pointermove', function(e){
   var mag=Math.sqrt(dx*dx+dy*dy);
   if(mag>STICK_RADIUS){cdx=dx/mag*STICK_RADIUS; cdy=dy/mag*STICK_RADIUS;}
   knob2El.style.transform='translate('+cdx.toFixed(1)+'px, '+cdy.toFixed(1)+'px)';
-  input2.ax=cdx/STtranslateICK_RADIUS;
-  input2('.ay=-cdy/STICK_RADIUS;
+  input2.ax=cdx/STICK_RADIUS;
+  input2.ay=-cdy/STICK_RADIUS;
 });
 function releaseStick2(e){
   if(!stick2Active||e.pointerId!==stick2PointerId)return;
@@ -4348,7 +4197,7 @@ canvas.addEventListener('pointermove',function(e){
   var cdx=dx, cdy=dy;
   var mag=Math.sqrt(dx*dx+dy*dy);
   if(mag>STICK_RADIUS){cdx=dx/mag*STICK_RADIUS; cdy=dy/mag*STICK_RADIUS;}
-  knobEl.style.transform='+cdx.toFixed(1)+'px, '+cdy.toFixed(1)+'px)';
+  knobEl.style.transform='translate('+cdx.toFixed(1)+'px, '+cdy.toFixed(1)+'px)';
   input.ax=cdx/STICK_RADIUS;
   input.ay=-cdy/STICK_RADIUS;
 });
@@ -4435,8 +4284,7 @@ function buildAmmoDisplay(){
   ammoBulletsEl.innerHTML='';
   for(var i=0;i<MAX_AMMO;i++){
     var el=document.createElement('div');
-    el.className='b';
-    el.dataset.idx=i;
+    el.className='b'; el.dataset.idx=i;
     ammoBulletsEl.appendChild(el);
   }
 }
@@ -4470,11 +4318,7 @@ brakeBtn.addEventListener('pointerdown', function(e){
   brakeBtnHeld = true;
   brakeBtn.classList.add('active');
 });
-function brakeRelease(e){
-  e.preventDefault(); e.stopPropagation();
-  brakeBtnHeld = false;
-  brakeBtn.classList.remove('active');
-}
+function brakeRelease(e){ e.preventDefault(); e.stopPropagation(); brakeBtnHeld = false; brakeBtn.classList.remove('active'); }
 brakeBtn.addEventListener('pointerup', brakeRelease);
 brakeBtn.addEventListener('pointercancel', brakeRelease);
 brakeBtn.addEventListener('lostpointercapture', function(){ brakeBtnHeld=false; brakeBtn.classList.remove('active'); });
@@ -4485,8 +4329,7 @@ turboBtn.addEventListener('pointerdown', function(e){
   if(!human.alive)return;
   if(human.turboActive)return;
   if(human.turboCooldown>0)return;
-  human.turboActive=true;
-  human.turboTimer=TURBO_DURATION;
+  human.turboActive=true; human.turboTimer=TURBO_DURATION;
   shakeMag=Math.min(1.5,shakeMag+0.8);
 });
 turboBtn.addEventListener('pointerup', function(e){e.preventDefault();e.stopPropagation();});
@@ -4571,15 +4414,12 @@ function updateHUD(){
   var elapsed=Math.max(0,gameTime);
   var mins=Math.floor(elapsed/60), secs=Math.floor(elapsed%60);
   hudTime.textContent=String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0');
-
   hudKills.textContent='KILL '+matchStats.kills;
-
   var aliveCount=0;
   for(var i=0;i<SHIPS.length;i++) if(SHIPS[i].alive) aliveCount++;
   hudAliveCount.textContent = aliveCount;
   var aliveColor = aliveCount > 5 ? '#80ff80' : aliveCount > 2 ? '#ffd76a' : '#ff8080';
   hudAliveEl.style.color = aliveColor;
-
   if(human.alive&&currentScreen==='match'){
     var frac=human.hp/human.maxHp;
     hpRingEl.style.strokeDashoffset=String(STATS_RING_CIRC*(1-frac));
@@ -4598,35 +4438,7 @@ function updateHUD(){
       el.querySelector('.hp').textContent=s.alive?Math.ceil(s.hp):'KIA';
     }
   }
-  if(statsPageVisible){
-    buildStatsPage();
-  }
-}
-
-// Tracking metriche giocatore (per LLM)
-function updatePlayerMetrics(dt){
-  if(!matchActive) return;
-  playerMetrics.metricsTimer += dt;
-  if(playerMetrics.metricsTimer < 1.0) return;
-  playerMetrics.metricsTimer = 0;
-  if(human.alive){
-    playerMetrics.hpSum += human.hp;
-    playerMetrics.hpSamples++;
-    // Distanza engagement (nemico più vicino entro 3e8)
-    var nearestDist = 1e24;
-    for(var i=1;i<SHIPS.length;i++){
-      if(!SHIPS[i].alive) continue;
-      var dx=SHIPS[i].x-human.x, dy=SHIPS[i].y-human.y, dz=SHIPS[i].z-human.z;
-      var d=Math.sqrt(dx*dx+dy*dy+dz*dz);
-      if(d<nearestDist) nearestDist = d;
-    }
-    if(nearestDist < 3e8){
-      playerMetrics.engagementDistSum += nearestDist;
-      playerMetrics.engagementDistCount++;
-    }
-    // Flee: HP basso + freno attivo
-    if(human.hp < 30 && brakeBtnHeld) playerMetrics.fleeTime += 1;
-  }
+  if(statsPageVisible) buildStatsPage();
 }
 
 document.getElementById('findMatch').addEventListener('click',function(e){e.preventDefault(); startMatchmaking();});
@@ -4649,7 +4461,6 @@ function tryLockOrientation(){
     }
   }catch(_){}
 }
-
 document.addEventListener('visibilitychange', function(){
   if(!document.hidden) tryLockOrientation();
 });
@@ -4685,19 +4496,21 @@ function loop(now){
       updateDynamicEvents(dt);
       updateSatellites(dt);
       updatePois(dt);
-      updatePlayerMetrics(dt);
 
-      // === Direttore tattico WebLLM (ogni 8s) ===
-      aiDirectorTimer += dt;
-      if(aiDirectorTimer >= 8 && llmReady && !directorBusy){
-        aiDirectorTimer = 0;
-        tacticalDirector().catch(function(){});
-      }
-      // === Coordinatore ruoli WebLLM (ogni 15s) ===
-      aiCoordinatorTimer += dt;
-      if(aiCoordinatorTimer >= 15 && llmReady && !coordinatorBusy){
-        aiCoordinatorTimer = 0;
-        coordinateBots().catch(function(){});
+      // ============ AI DIRECTOR (WebLLM) ============
+      if(AI_DIRECTOR.ready){
+        AI_DIRECTOR.directorTimer += dt;
+        if(AI_DIRECTOR.directorTimer > 8 && !AI_DIRECTOR.busyDirector){
+          AI_DIRECTOR.directorTimer = 0;
+          runTacticalDirector();
+        }
+        AI_DIRECTOR.coordinatorTimer += dt;
+        var aliveBotsNow = 0;
+        for(var bi2=1;bi2<SHIPS.length;bi2++) if(SHIPS[bi2].alive) aliveBotsNow++;
+        if(AI_DIRECTOR.coordinatorTimer > 15 && aliveBotsNow >= 3 && !AI_DIRECTOR.busyCoord){
+          AI_DIRECTOR.coordinatorTimer = 0;
+          runBotCoordinator();
+        }
       }
     }
     updateExplosions(dt);
