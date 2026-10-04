@@ -92,9 +92,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .splash-dots span:nth-child(3){animation-delay:.4s}
 @keyframes splashDot{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.5);opacity:1}}
 
-/* ============================================================
-   LLM SETUP SCREEN (obbligatoria al primo avvio)
-   ============================================================ */
 #llmSetup{z-index:400;background:radial-gradient(ellipse at center,#0a1a30 0%,#000006 80%)}
 .llm-content{width:100%;max-width:400px;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center;animation:slideUp .6s cubic-bezier(.2,.9,.3,1.2)}
 .llm-icon{font-size:56px;color:#6ec0ff;text-shadow:0 0 30px rgba(110,192,255,0.75);animation:llmPulse 2s ease-in-out infinite}
@@ -770,7 +767,7 @@ async function initLLM(progressCb){
 }
 
 function initLLMInBackground(){
-  initLLM(function(){ /* silenzioso */ }).catch(function(e){
+  initLLM(function(){ }).catch(function(e){
     console.warn('[AI] background load failed:', e);
   });
 }
@@ -825,7 +822,6 @@ async function runTacticalDirector(){
       if (SHIPS[i].alive) SHIPS[i].aiMods = mods;
     }
   } catch(e){
-    // fallback silenzioso — i bot continuano con i mod attuali
   } finally {
     AI_DIRECTOR.busyDirector = false;
   }
@@ -885,7 +881,6 @@ async function runBotCoordinator(){
       }
     }
   } catch(e){
-    // fallback silenzioso
   } finally {
     AI_DIRECTOR.busyCoord = false;
   }
@@ -940,39 +935,73 @@ function noise3(x,y,z){
   return y0+(y1-y0)*uz-0.5;
 }
 
-var STAR_W=512,STAR_H=256;
+// ============================================================
+// STARFIELD — pixel art con stelle a croce e nebulose
+// ============================================================
+var STAR_W=1024,STAR_H=512;
 var starTex=new Uint8Array(STAR_W*STAR_H*3);
 var starPhase=new Uint8Array(STAR_W*STAR_H);
 var starTwinkleAmp=new Uint8Array(STAR_W*STAR_H);
+var starCross=new Uint8Array(STAR_W*STAR_H);
 (function(){
   for(var y=0;y<STAR_H;y++){
     var phi=(y+0.5)/STAR_H*PI-PI/2,cp=Math.cos(phi),sp=Math.sin(phi);
     for(var x=0;x<STAR_W;x++){
       var th=(x+0.5)/STAR_W*TAU;
       var dx=cp*Math.cos(th),dy=cp*Math.sin(th),dz=sp;
-      var n=noise3(dx*3.2+13.1,dy*3.2+7.7,dz*3.2+3.3);
-      n+=noise3(dx*8.4+41.7,dy*8.4+23.9,dz*8.4+9.1)*0.6;
-      n+=noise3(dx*18.1+91.3,dy*18.1+61.7,dz*18.1+33.1)*0.3;
+      var n1=noise3(dx*2.1+13.1,dy*2.1+7.7,dz*2.1+3.3);
+      var n2=noise3(dx*5.4+41.7,dy*5.4+23.9,dz*5.4+9.1);
+      var n3=noise3(dx*11.8+91.3,dy*11.8+61.7,dz*11.8+33.1);
+      var n=n1*0.7+n2*0.5+n3*0.3;
       var r=1,g=2,b=6;
-      if(n>0.05){var nn=(n-0.05)*0.6;r+=nn*20;g+=nn*12;b+=nn*42;}
-      var mw=noise3(dx*1.4+7,dy*1.4+13,dz*1.4+23);
-      var band=1-Math.abs(dz*1.6+mw*0.5)/0.5;
-      if(band>0){var bb=band*band*0.28;r+=bb*22;g+=bb*24;b+=bb*38;}
+      var mw=noise3(dx*1.2+7,dy*1.2+13,dz*1.2+23);
+      var band=1-Math.abs(dz*1.7+mw*0.45)/0.55;
+      if(band>0){
+        var bb=band*band*0.35;
+        var mwFine=noise3(dx*7.5+3,dy*7.5+9,dz*7.5+17);
+        var mwClumps=mwFine>0.15?1:0.55;
+        r+=bb*22*mwClumps; g+=bb*24*mwClumps; b+=bb*40*mwClumps;
+      }
+      if(n>0.12){
+        var nn=Math.min(1,(n-0.12)*0.75);
+        var q=Math.round(nn*5)/5;
+        var hue=noise3(dx*0.6+11,dy*0.6+5,dz*0.6+2);
+        var rr,gg,bb2;
+        if(hue<-0.15){rr=180;gg=90;bb2=200;}
+        else if(hue<0.1){rr=100;gg=150;bb2=230;}
+        else{rr=230;gg=130;bb2=180;}
+        r+=q*rr*0.16; g+=q*gg*0.16; b+=q*bb2*0.20;
+      }
       var h=hash3(x*7+11,y*7+3,91);
-      if(h>0.9945){
-        var st=(h-0.9945)/0.0055;
-        var hue=hash3(x*5,y*3,7);var sr,sg,sb;
-        if(hue<0.1){sr=255;sg=170;sb=120;}else if(hue<0.35){sr=255;sg=225;sb=180;}
-        else if(hue<0.65){sr=255;sg=250;sb=235;}else if(hue<0.87){sr=235;sg=240;sb=255;}
-        else{sr=180;sg=210;sb=255;}
-        var sa=0.2+0.8*st;r+=sr*sa;g+=sg*sa;b+=sb*sa;
+      if(h>0.9930){
+        var st=(h-0.9930)/0.0070;
+        var hue2=hash3(x*5,y*3,7);
+        var sr,sg,sb;
+        if(hue2<0.08){sr=255;sg=150;sb=100;}
+        else if(hue2<0.28){sr=255;sg=210;sb=155;}
+        else if(hue2<0.55){sr=255;sg=252;sb=240;}
+        else if(hue2<0.80){sr=230;sg=240;sb=255;}
+        else{sr=170;sg=200;sb=255;}
+        var sa=0.25+0.75*st;
+        r+=sr*sa; g+=sg*sa; b+=sb*sa;
         starPhase[y*STAR_W+x]=1+(hash3(x*11,y*17,5)*100|0);
         starTwinkleAmp[y*STAR_W+x]=Math.min(255,(st*255)|0);
+        if(st>0.55){ starCross[y*STAR_W+x]=Math.min(255,(st*255)|0); }
       }
       var h2=hash3(x+91,y+53,33);
-      if(h2>0.9995){var st2=(h2-0.9995)/0.0005;r=r+(255-r)*st2;g=g+(250-g)*st2;b=b+(255-b)*st2;}
+      if(h2>0.9990){var st2=(h2-0.9990)/0.0010;r=r+(255-r)*st2;g=g+(250-g)*st2;b=b+(255-b)*st2;}
+      var h3=hash3(x+31,y+77,53);
+      if(h3>0.99985){
+        var st3=(h3-0.99985)/0.00015;
+        r=255;g=240+st3*15;b=200+st3*55;
+        starCross[y*STAR_W+x]=255;
+        starPhase[y*STAR_W+x]=1+(hash3(x*3,y*5,9)*100|0);
+        starTwinkleAmp[y*STAR_W+x]=255;
+      }
       var i3=(y*STAR_W+x)*3;
-      starTex[i3]=r>255?255:(r|0);starTex[i3+1]=g>255?255:(g|0);starTex[i3+2]=b>255?255:(b|0);
+      starTex[i3]=r>255?255:(r|0);
+      starTex[i3+1]=g>255?255:(g|0);
+      starTex[i3+2]=b>255?255:(b|0);
     }
   }
 })();
@@ -1489,14 +1518,11 @@ function dismissSplash(){
   splashDismissed=true;
   splashEl.classList.remove('active');
   tryLockOrientation();
-  // Controlla stato LLM
   var flag = false;
   try { flag = localStorage.getItem(LLM_FLAG_KEY) === '1'; } catch(_){}
   if (flag) {
-    // Già scaricato: carica in background silenzioso
     initLLMInBackground();
   } else {
-    // Primo avvio: setup obbligatorio
     llmSetupEl.classList.add('active');
   }
 }
@@ -1709,7 +1735,6 @@ function beginMatch(){
 
   initPois();
 
-  // Reset AI Director
   AI_DIRECTOR.directorTimer = 0;
   AI_DIRECTOR.coordinatorTimer = 6;
   AI_DIRECTOR.busyDirector = false;
@@ -2237,9 +2262,12 @@ function sampleStars(dx,dy,dz){
   var ph=starPhase[idx];
   if(ph>0){
     var amp=starTwinkleAmp[idx]/255;
-    var tw=1+Math.sin(gameTime*4+ph*0.6)*amp*0.45;
+    var tw=1+Math.sin(gameTime*4+ph*0.6)*amp*0.5;
     r*=tw; g*=tw; b*=tw;
-    if(amp>0.7){var flash=Math.sin(gameTime*0.8+ph*0.1);if(flash>0.985){r+=80;g+=80;b+=90;}}
+    if(amp>0.75){
+      var flash=Math.sin(gameTime*0.8+ph*0.1);
+      if(flash>0.97){var f=(flash-0.97)/0.03; r+=100*f; g+=100*f; b+=110*f;}
+    }
   }
   if(r>255)r=255; if(g>255)g=255; if(b>255)b=255;
   return [r,g,b];
@@ -2252,19 +2280,39 @@ function shadeSun(hx,hy,hz,dtc,pa){
   var vdl=1/Math.sqrt(vdx*vdx+vdy*vdy+vdz*vdz);
   var cosLimb=Math.max(0,(vdx*nX+vdy*nY+vdz*nZ)*vdl);
   var pixSize=dtc*pa, t=gameTime*0.08;
-  var gran=0, sc=5e5, amp=1;
-  for(var k=0;k<6;k++){if(sc<pixSize*1.5)break;gran+=amp*noise3((lx+t*sc*0.5)/sc,(ly+t*sc*0.3)/sc,(lz+t*sc*0.4)/sc);sc*=0.45;amp*=0.72;}
-  var spot=noise3(lx/1.2e7+100,ly/1.2e7+50,lz/1.2e7+25);
-  var temp=1+gran*0.55; temp*=0.52+0.58*Math.pow(cosLimb,0.42);
-  if(spot>0.22) temp*=1-Math.min(1,(spot-0.22)*3.5)*0.55;
-  if(solarFlareActive) temp*=1.35;
+  var gran=0, sc=6e5, amp=1;
+  for(var k=0;k<5;k++){if(sc<pixSize*2.0)break;gran+=amp*noise3((lx+t*sc*0.5)/sc,(ly+t*sc*0.3)/sc,(lz+t*sc*0.4)/sc);sc*=0.42;amp*=0.75;}
+  var granFine=noise3((lx+t*4e5)/3e5,(ly+t*3e5)/3e5,(lz+t*4e5)/3e5);
+  var spot1=noise3(lx/1.4e7+100,ly/1.4e7+50,lz/1.4e7+25);
+  var spot2=noise3(lx/7e6+200,ly/7e6+80,lz/7e6+40);
+  var spotMask = spot1*0.6 + spot2*0.4;
+  var spot=spotMask>0.28 ? Math.min(1,(spotMask-0.28)*3.2) : 0;
+  var bx=((hx*1e-7)|0)&7, by=((hz*1e-7)|0)&7;
+  var dth=BAYER[(by<<3)|bx];
+  var temp=0.55+gran*0.55;
+  if(granFine>0.15) temp+=0.18*dth;
+  temp*=0.42+0.68*Math.pow(cosLimb,0.42);
+  if(spot>0.02){
+    if(spot>0.55){temp*=1-spot*0.62;}
+    else {temp*=1-spot*0.30;}
+  }
+  if(solarFlareActive) temp*=1.42;
   var R,G,B;
-  if(temp<0.5){var u=temp/0.5;R=140+90*u;G=45+80*u;B=12+30*u;}
-  else if(temp<1){var u=(temp-0.5)/0.5;R=230+25*u;G=125+100*u;B=42+78*u;}
-  else if(temp<1.5){var u=(temp-1)/0.5;R=255;G=225+30*u;B=120+90*u;}
-  else{R=255;G=255;B=210+Math.min(45,(temp-1.5)*200);}
-  return [Math.min(255,R),Math.min(255,G),Math.min(255,B)];
+  var lvl=Math.floor(temp*6+dth);
+  if(lvl<=1){R=118;G=32;B=8;}
+  else if(lvl===2){R=180;G=70;B=18;}
+  else if(lvl===3){R=235;G=135;B=45;}
+  else if(lvl===4){R=255;G=190;B=80;}
+  else if(lvl===5){R=255;G=225;B=140;}
+  else{R=255;G=252;B=225;}
+  if(cosLimb<0.25){
+    var u=(0.25-cosLimb)/0.25;
+    R=R*(1-u*0.35); G=G*(1-u*0.4); B=B*(1-u*0.45);
+  }
+  return [R,G,B];
 }
+function ditherPick(t,bx,by){var d=BAYER[((by&7)<<3)|(bx&7)];return t>d?1:0;}
+
 function shadePlanet(hx,hy,hz,p,dtc,pa){
   var lx=hx-p.x, ly=hy-p.y, lz=hz-p.z;
   var nl=1/Math.sqrt(lx*lx+ly*ly+lz*lz);
@@ -2275,121 +2323,225 @@ function shadePlanet(hx,hy,hz,p,dtc,pa){
   var pixSize=dtc*pa, nz=p.noise;
   var e=0, sc=nz.scale, amp=1;
   for(var k=0;k<nz.octaves;k++){if(sc<pixSize*1.2)break;e+=amp*noise3(lx/sc,ly/sc,lz/sc);sc*=0.5;amp*=0.58;}
-  var r,g,b; var C=p.colors; var isLand=false, cityDensity=0;
+  var bx=((hx*1e-7)|0)&7, by=((hz*1e-7)|0)&7;
+  var dth=BAYER[(by<<3)|bx];
+  var r,g,b,C=p.colors;
+  var isLand=false, cityDensity=0, cloudAlpha=0;
+
   if(p.type==='rocky'){
-    var crater=noise3(lx/(nz.scale*0.4),ly/(nz.scale*0.4),lz/(nz.scale*0.4));
-    var t=0.5+e*1.2; t=Math.max(0,Math.min(1,t));
-    if(t<0.35){var u=t/0.35;r=C.dark[0]*(1-u)+C.mid[0]*u;g=C.dark[1]*(1-u)+C.mid[1]*u;b=C.dark[2]*(1-u)+C.mid[2]*u;}
-    else if(t<0.7){var u=(t-0.35)/0.35;r=C.mid[0]*(1-u)+C.light[0]*u;g=C.mid[1]*(1-u)+C.light[1]*u;b=C.mid[2]*(1-u)+C.light[2]*u;}
-    else{var u=(t-0.7)/0.3;r=C.light[0]*(1-u)+C.hi[0]*u;g=C.light[1]*(1-u)+C.hi[1]*u;b=C.light[2]*(1-u)+C.hi[2]*u;}
-    if(crater>0.18){var cd=Math.min(1,(crater-0.18)/0.4)*0.35;r*=1-cd;g*=1-cd;b*=1-cd;}
-    var ice=Math.max(0,Math.min(1,(Math.abs(nZ)-0.86)/0.12));
-    if(ice>0){r=r*(1-ice)+C.ice[0]*ice;g=g*(1-ice)+C.ice[1]*ice;b=b*(1-ice)+C.ice[2]*ice;}
-  } else if(p.type==='cloudy'){
-    var tw=gameTime*0.02;
-    var t=Math.max(0,Math.min(1,0.5+e*1.4+noise3(lx/(nz.scale*0.3)+tw,ly/(nz.scale*0.3),lz/(nz.scale*0.3))*0.2));
-    if(t<0.4){var u=t/0.4;r=C.dark[0]*(1-u)+C.mid[0]*u;g=C.dark[1]*(1-u)+C.mid[1]*u;b=C.dark[2]*(1-u)+C.mid[2]*u;}
-    else if(t<0.75){var u=(t-0.4)/0.35;r=C.mid[0]*(1-u)+C.light[0]*u;g=C.mid[1]*(1-u)+C.light[1]*u;b=C.mid[2]*(1-u)+C.light[2]*u;}
-    else{var u=(t-0.75)/0.25;r=C.light[0]*(1-u)+C.hi[0]*u;g=C.light[1]*(1-u)+C.hi[1]*u;b=C.light[2]*(1-u)+C.hi[2]*u;}
-    var cl=noise3(lx/(nz.scale*0.15)+tw*3,ly/(nz.scale*0.15),lz/(nz.scale*0.15));
-    if(cl>0.2){var cd=Math.min(1,(cl-0.2)/0.35)*0.6;r=r*(1-cd)+C.cloud[0]*cd;g=g*(1-cd)+C.cloud[1]*cd;b=b*(1-cd)+C.cloud[2]*cd;}
-  } else if(p.type==='terra'){
-    var hgt=e, aLat=Math.abs(nZ); var cloudAlpha=0;
+    var crater=noise3(lx/(nz.scale*0.30),ly/(nz.scale*0.30),lz/(nz.scale*0.30));
+    var t=0.5+e*1.15; t=Math.max(0,Math.min(1,t));
+    var lvl=Math.floor(t*5+dth);
+    if(lvl===0){r=C.dark[0];g=C.dark[1];b=C.dark[2];}
+    else if(lvl===1){r=(C.dark[0]+C.mid[0])*0.5|0;g=(C.dark[1]+C.mid[1])*0.5|0;b=(C.dark[2]+C.mid[2])*0.5|0;}
+    else if(lvl===2){r=C.mid[0];g=C.mid[1];b=C.mid[2];}
+    else if(lvl===3){r=(C.mid[0]+C.light[0])*0.5|0;g=(C.mid[1]+C.light[1])*0.5|0;b=(C.mid[2]+C.light[2])*0.5|0;}
+    else{r=C.light[0];g=C.light[1];b=C.light[2];}
+    if(crater>0.24){
+      var cd=Math.min(1,(crater-0.24)/0.35);
+      if(ditherPick(cd*1.3,bx,by)){
+        r=r*(1-cd*0.55)+C.hi[0]*cd*0.55;
+        g=g*(1-cd*0.55)+C.hi[1]*cd*0.55;
+        b=b*(1-cd*0.55)+C.hi[2]*cd*0.55;
+      } else {
+        r*=1-cd*0.35; g*=1-cd*0.35; b*=1-cd*0.35;
+      }
+    }
+    var spot=noise3(lx/(nz.scale*0.18)+500,ly/(nz.scale*0.18),lz/(nz.scale*0.18));
+    if(spot>0.32){var sd=Math.min(1,(spot-0.32)/0.4)*0.45;r*=1-sd;g*=1-sd;b*=1-sd;}
+    var ice=Math.max(0,Math.min(1,(Math.abs(nZ)-0.82)/0.14));
+    if(ice>0){
+      var useIce=ditherPick(ice*1.25,bx+3,by+5);
+      if(useIce){r=C.ice[0];g=C.ice[1];b=C.ice[2];}
+      else{r=r*(1-ice*0.6)+C.ice[0]*ice*0.6;g=g*(1-ice*0.6)+C.ice[1]*ice*0.6;b=b*(1-ice*0.6)+C.ice[2]*ice*0.6;}
+    }
+  }
+  else if(p.type==='cloudy'){
+    var tw=gameTime*0.03;
+    var band1=noise3(lx/(nz.scale*0.5)+tw,ly/(nz.scale*0.5)-tw*0.5,lz/(nz.scale*0.5)+tw*0.3);
+    var band2=noise3(lx/(nz.scale*0.25)+tw*1.8,ly/(nz.scale*0.25)+tw*0.9,lz/(nz.scale*0.25));
+    var swirl=band1*0.6+band2*0.4+e*0.5;
+    var t=Math.max(0,Math.min(1,0.5+swirl*0.85));
+    var lvl=Math.floor(t*4+dth);
+    if(lvl===0){r=C.dark[0];g=C.dark[1];b=C.dark[2];}
+    else if(lvl===1){r=C.mid[0];g=C.mid[1];b=C.mid[2];}
+    else if(lvl===2){r=C.light[0];g=C.light[1];b=C.light[2];}
+    else{r=C.hi[0];g=C.hi[1];b=C.hi[2];}
+    var cl=noise3(lx/(nz.scale*0.12)+tw*3,ly/(nz.scale*0.12),lz/(nz.scale*0.12));
+    if(cl>0.18 && ditherPick(Math.min(1,(cl-0.18)*3),bx+1,by+2)){
+      r=r*0.35+C.cloud[0]*0.65; g=g*0.35+C.cloud[1]*0.65; b=b*0.35+C.cloud[2]*0.65;
+    }
+    if(nZ>0.65){
+      var pol=(nZ-0.65)/0.35;
+      var pd=pol*pol*0.35;
+      r*=1-pd; g*=1-pd*0.9; b*=1-pd*0.8;
+    }
+  }
+  else if(p.type==='terra'){
+    var hgt=e, aLat=Math.abs(nZ);
     if(hgt<0.02){
       isLand=false;
       var dp=Math.max(0,Math.min(1,(0.02-hgt)/0.9));
-      if(dp<0.3){var u=dp/0.3;r=C.coast[0]*(1-u)+C.shallow[0]*u;g=C.coast[1]*(1-u)+C.shallow[1]*u;b=C.coast[2]*(1-u)+C.shallow[2]*u;}
-      else if(dp<0.7){var u=(dp-0.3)/0.4;r=C.shallow[0]*(1-u)+C.ocean[0]*u;g=C.shallow[1]*(1-u)+C.ocean[1]*u;b=C.shallow[2]*(1-u)+C.ocean[2]*u;}
-      else{var u=(dp-0.7)/0.3;r=C.ocean[0]*(1-u)+C.deep[0]*u;g=C.ocean[1]*(1-u)+C.deep[1]*u;b=C.ocean[2]*(1-u)+C.deep[2]*u;}
-      var wave=noise3(lx/(nz.scale*0.08)+gameTime*0.3,ly/(nz.scale*0.08),lz/(nz.scale*0.08));
-      r+=wave*6;g+=wave*6;b+=wave*10;
+      var lvl=Math.floor(dp*4+dth);
+      if(lvl===0){r=C.coast[0];g=C.coast[1];b=C.coast[2];}
+      else if(lvl===1){r=C.shallow[0];g=C.shallow[1];b=C.shallow[2];}
+      else if(lvl===2){r=C.ocean[0];g=C.ocean[1];b=C.ocean[2];}
+      else{r=C.deep[0];g=C.deep[1];b=C.deep[2];}
+      var wave=noise3(lx/(nz.scale*0.06)+gameTime*0.35,ly/(nz.scale*0.06),lz/(nz.scale*0.06));
+      if(wave>0.28 && dp<0.5 && ditherPick(0.6,bx+2,by+1)){
+        r+=40; g+=50; b+=55;
+      }
     } else {
       isLand=true;
       var dryness=noise3(lx/(nz.scale*0.3)+200,ly/(nz.scale*0.3)+100,lz/(nz.scale*0.3));
       var latF=1-Math.abs(aLat-0.3)/0.4, humid=dryness-latF*0.4;
       if(hgt<0.15){
-        if(humid>0.1){r=C.desert[0];g=C.desert[1];b=C.desert[2];cityDensity=0.35;}
-        else if(humid>-0.1){r=C.grass[0];g=C.grass[1];b=C.grass[2];cityDensity=0.6;}
-        else{r=C.forest[0];g=C.forest[1];b=C.forest[2];cityDensity=0.4;}
-        if(hgt<0.05){var u=(0.05-hgt)/0.03;r=r*(1-u)+C.sand[0]*u;g=g*(1-u)+C.sand[1]*u;b=b*(1-u)+C.sand[2]*u;}
+        if(hgt<0.05){
+          if(ditherPick(0.55,bx,by)){r=C.sand[0];g=C.sand[1];b=C.sand[2];}
+          else if(humid>0.1){r=C.desert[0];g=C.desert[1];b=C.desert[2];cityDensity=0.35;}
+          else if(humid>-0.1){r=C.grass[0];g=C.grass[1];b=C.grass[2];cityDensity=0.6;}
+          else{r=C.forest[0];g=C.forest[1];b=C.forest[2];cityDensity=0.4;}
+        } else {
+          if(humid>0.1){r=C.desert[0];g=C.desert[1];b=C.desert[2];cityDensity=0.35;}
+          else if(humid>-0.1){r=C.grass[0];g=C.grass[1];b=C.grass[2];cityDensity=0.6;}
+          else{r=C.forest[0];g=C.forest[1];b=C.forest[2];cityDensity=0.4;}
+        }
       } else if(hgt<0.5){
-        var u=(hgt-0.15)/0.35, base=humid>0?C.desert:C.forest;
-        r=base[0]*(1-u)+C.mount[0]*u;g=base[1]*(1-u)+C.mount[1]*u;b=base[2]*(1-u)+C.mount[2]*u;
+        var u=(hgt-0.15)/0.35;
+        var base=humid>0?C.desert:C.forest;
+        var mid=[(base[0]+C.mount[0])*0.5|0,(base[1]+C.mount[1])*0.5|0,(base[2]+C.mount[2])*0.5|0];
+        var lvl2=Math.floor(u*3+dth);
+        if(lvl2===0){r=base[0];g=base[1];b=base[2];}
+        else if(lvl2===1){r=mid[0];g=mid[1];b=mid[2];}
+        else{r=C.mount[0];g=C.mount[1];b=C.mount[2];}
         cityDensity=0.15;
       } else {
         var u=Math.min(1,(hgt-0.5)/0.5);
-        r=C.mount[0]*(1-u)+C.snow[0]*u;g=C.mount[1]*(1-u)+C.snow[1]*u;b=C.mount[2]*(1-u)+C.snow[2]*u;
+        var lvl3=Math.floor(u*3+dth);
+        if(lvl3===0){r=C.mount[0];g=C.mount[1];b=C.mount[2];}
+        else if(lvl3===1){r=(C.mount[0]+C.snow[0])*0.5|0;g=(C.mount[1]+C.snow[1])*0.5|0;b=(C.mount[2]+C.snow[2])*0.5|0;}
+        else{r=C.snow[0];g=C.snow[1];b=C.snow[2];}
         cityDensity=0;
       }
     }
-    var ice=Math.max(0,Math.min(1,(aLat-0.82)/0.12));
-    if(ice>0){r=r*(1-ice)+C.snow[0]*ice;g=g*(1-ice)+C.snow[1]*ice;b=b*(1-ice)+C.snow[2]*ice;cityDensity=0;}
-    var tw=gameTime*0.015;
-    var c1=noise3(lx/(nz.scale*0.2)+tw,ly/(nz.scale*0.2),lz/(nz.scale*0.2));
-    var c2=noise3(lx/(nz.scale*0.08)+tw*2.5+50,ly/(nz.scale*0.08),lz/(nz.scale*0.08));
-    var cl=c1*0.6+c2*0.4; cl=cl*1.6+0.28;
-    if(cl>0){
-      cloudAlpha=Math.min(1,cl); cloudAlpha=cloudAlpha*cloudAlpha*(3-2*cloudAlpha);
-      r=r*(1-cloudAlpha)+C.cloud[0]*cloudAlpha;g=g*(1-cloudAlpha)+C.cloud[1]*cloudAlpha;b=b*(1-cloudAlpha)+C.cloud[2]*cloudAlpha;
+    var ice=Math.max(0,Math.min(1,(aLat-0.80)/0.14));
+    if(ice>0 && ditherPick(ice*1.3,bx+2,by+4)){
+      r=C.snow[0];g=C.snow[1];b=C.snow[2];cityDensity=0;
+    }
+    var tw=gameTime*0.02;
+    var c1=noise3(lx/(nz.scale*0.22)+tw,ly/(nz.scale*0.22),lz/(nz.scale*0.22));
+    var c2=noise3(lx/(nz.scale*0.09)+tw*2.5+50,ly/(nz.scale*0.09),lz/(nz.scale*0.09));
+    var cl=c1*0.55+c2*0.45;
+    if(cl>0.02){
+      cloudAlpha=Math.min(1,(cl-0.02)*1.8);
+      if(ditherPick(cloudAlpha,bx+5,by+3)){
+        r=r*0.28+C.cloud[0]*0.72; g=g*0.28+C.cloud[1]*0.72; b=b*0.28+C.cloud[2]*0.72;
+      } else {
+        var ca=cloudAlpha*0.5;
+        r=r*(1-ca)+C.cloud[0]*ca; g=g*(1-ca)+C.cloud[1]*ca; b=b*(1-ca)+C.cloud[2]*ca;
+      }
     }
     if(ndl<0.05 && isLand && cityDensity>0){
       var night=Math.min(1,(0.05-ndl)/0.35);
       var cloudMask=1-cloudAlpha;
-      var cityNoise=noise3(lx/8e4,ly/8e4,lz/8e4);
-      if(cityNoise>0.35 && cloudMask>0.5){
-        var cd=Math.min(1,(cityNoise-0.35)/0.25)*night*cityDensity*cloudMask;
-        r+=cd*220;g+=cd*160;b+=cd*60;
+      var cityNoise=noise3(lx/6e4,ly/6e4,lz/6e4);
+      if(cityNoise>0.38 && cloudMask>0.6){
+        var cd=Math.min(1,(cityNoise-0.38)/0.22)*night*cityDensity;
+        if(ditherPick(cd*1.5,bx+7,by+6)){
+          r+=255*cd*0.9; g+=185*cd*0.9; b+=75*cd*0.9;
+        }
       }
     }
-    if(aLat>0.75 && ndl<0.15){
-      var auroraFade=Math.min(1,(aLat-0.75)/0.15);
+    if(aLat>0.72 && ndl<0.15){
+      var auroraFade=Math.min(1,(aLat-0.72)/0.18);
       var night=Math.min(1,(0.15-ndl)/0.35);
-      var auroraNoise=noise3(lx/4e5+gameTime*0.5,ly/4e5,lz/4e5);
+      var auroraNoise=noise3(lx/3.5e5+gameTime*0.6,ly/3.5e5,lz/3.5e5);
       var auroraIntensity=Math.max(0,auroraNoise)*auroraFade*night;
-      if(auroraIntensity>0){var ai=auroraIntensity*0.6;r+=ai*30;g+=ai*180;b+=ai*140;}
-    }
-  } else if(p.type==='gas'){
-    var lat=Math.asin(Math.max(-1,Math.min(1,nZ)));
-    var bc=p.bands||10, tw=gameTime*0.01;
-    var turb=noise3(lx/(nz.scale*0.5)+tw,ly/(nz.scale*0.5),lz/(nz.scale*0.5));
-    var turb2=noise3(lx/(nz.scale*0.2)+tw*2+30,ly/(nz.scale*0.2),lz/(nz.scale*0.2));
-    var latEff=lat+turb*0.08+turb2*0.04;
-    var bandVal=Math.sin(latEff*bc)*0.5+0.5;
-    var c1,c2;
-    if(bandVal<0.5){c1=C.belt1;c2=C.belt2;}else{c1=C.zone1;c2=C.zone2;}
-    var edge=Math.abs(bandVal-0.5)*2;
-    r=c1[0]*(1-edge*0.5)+c2[0]*(edge*0.5);
-    g=c1[1]*(1-edge*0.5)+c2[1]*(edge*0.5);
-    b=c1[2]*(1-edge*0.5)+c2[2]*(edge*0.5);
-    var mod=1+e*0.35; r*=mod; g*=mod; b*=mod;
-    var polar=Math.max(0,(Math.abs(lat)-0.7)/0.3);
-    if(polar>0){r=r*(1-polar*0.4)+C.polar[0]*(polar*0.4);g=g*(1-polar*0.4)+C.polar[1]*(polar*0.4);b=b*(1-polar*0.4)+C.polar[2]*(polar*0.4);}
-    if(p.storm){
-      var curLon=Math.atan2(nY,nX);
-      var sLat=p.name==='Giove'?-0.34:-0.28, sLon=p.name==='Giove'?2.1:1.3, sSize=p.name==='Giove'?0.36:0.30;
-      var dLat=lat-sLat, dLon=curLon-sLon;
-      while(dLon>PI)dLon-=TAU; while(dLon<-PI)dLon+=TAU;
-      var sd=Math.sqrt(dLat*dLat*3+dLon*dLon);
-      if(sd<sSize){var s=1-sd/sSize, sc2=s*s*(3-2*s);
-        r+=(C.storm[0]-r)*sc2*0.9; g+=(C.storm[1]-g)*sc2*0.9; b+=(C.storm[2]-b)*sc2*0.9;}
-    }
-    if(p.name==='Nettuno'){
-      var ch=noise3(lx/(nz.scale*0.12)+tw*3,ly/(nz.scale*0.12),lz/(nz.scale*0.12));
-      if(ch>0.25){var ca=Math.min(1,(ch-0.25)/0.3)*0.7;r+=(220-r)*ca;g+=(235-g)*ca;b+=(245-b)*ca;}
+      if(auroraIntensity>0){
+        var ai=auroraIntensity*0.85;
+        var aR=ai*40, aG=ai*200, aB=ai*160;
+        r+=aR; g+=aG; b+=aB;
+      }
     }
   }
-  var lt=(ndl+0.1)/0.42; lt=Math.max(0,Math.min(1,lt));
-  var dth=BAYER[(((hx*1e-8)|0)&7)*8+(((hz*1e-8)|0)&7)]||0;
-  var dlt=Math.min(1,Math.max(0,Math.floor(lt*8+dth)/7));
-  r*=0.06+dlt*0.98; g*=0.08+dlt*0.93; b*=0.18+dlt*0.82;
+  else if(p.type==='gas'){
+    var lat=Math.asin(Math.max(-1,Math.min(1,nZ)));
+    var bc=p.bands||10, tw=gameTime*0.015;
+    var turb1=noise3(lx/(nz.scale*0.55)+tw,ly/(nz.scale*0.55),lz/(nz.scale*0.55));
+    var turb2=noise3(lx/(nz.scale*0.22)+tw*2+30,ly/(nz.scale*0.22),lz/(nz.scale*0.22));
+    var turb3=noise3(lx/(nz.scale*0.08)+tw*3+70,ly/(nz.scale*0.08),lz/(nz.scale*0.08));
+    var latEff=lat+turb1*0.11+turb2*0.055+turb3*0.028;
+    var bandVal=Math.sin(latEff*bc)*0.5+0.5;
+    var lvl=Math.floor(bandVal*5+dth);
+    var c1,c2;
+    if(lvl<2){c1=C.belt1;c2=C.belt2;}else{c1=C.zone1;c2=C.zone2;}
+    var subT=(lvl%2===0)?0.25:0.75;
+    r=c1[0]*(1-subT)+c2[0]*subT;
+    g=c1[1]*(1-subT)+c2[1]*subT;
+    b=c1[2]*(1-subT)+c2[2]*subT;
+    var mod=1+e*0.42; r*=mod; g*=mod; b*=mod;
+    if(turb3>0.35 && ditherPick(0.6,bx+1,by+3)){
+      r*=0.82; g*=0.82; b*=0.82;
+    }
+    var polar=Math.max(0,(Math.abs(lat)-0.68)/0.32);
+    if(polar>0){
+      var usePolar=ditherPick(polar*1.3,bx+4,by+1);
+      var pf=usePolar?0.65:polar*0.35;
+      r=r*(1-pf)+C.polar[0]*pf; g=g*(1-pf)+C.polar[1]*pf; b=b*(1-pf)+C.polar[2]*pf;
+    }
+    if(p.storm){
+      var curLon=Math.atan2(nY,nX);
+      var sLat=p.name==='Giove'?-0.34:-0.26;
+      var sLon=p.name==='Giove'?2.1:1.3;
+      var sSize=p.name==='Giove'?0.42:0.34;
+      var dLat=lat-sLat, dLon=curLon-sLon;
+      while(dLon>PI)dLon-=TAU; while(dLon<-PI)dLon+=TAU;
+      var sd=Math.sqrt(dLat*dLat*2.5+dLon*dLon);
+      if(sd<sSize){
+        var s=1-sd/sSize;
+        var ringLvl=Math.floor(s*4+dth);
+        var scr,scg,scb;
+        if(ringLvl===0){scr=C.storm[0]*0.7;scg=C.storm[1]*0.7;scb=C.storm[2]*0.7;}
+        else if(ringLvl===1){scr=C.storm[0];scg=C.storm[1];scb=C.storm[2];}
+        else if(ringLvl===2){scr=C.spot[0];scg=C.spot[1];scb=C.spot[2];}
+        else{scr=Math.min(255,C.storm[0]+30);scg=Math.min(255,C.storm[1]+20);scb=Math.min(255,C.storm[2]+15);}
+        var m=s*s*(3-2*s)*0.92;
+        r+=(scr-r)*m; g+=(scg-g)*m; b+=(scb-b)*m;
+      }
+    }
+    if(p.name==='Nettuno'){
+      var ch=noise3(lx/(nz.scale*0.14)+tw*3,ly/(nz.scale*0.14),lz/(nz.scale*0.14));
+      if(ch>0.28){
+        var ca=Math.min(1,(ch-0.28)/0.3)*0.75;
+        if(ditherPick(ca,bx+3,by+7)){r+=(230-r)*ca; g+=(240-g)*ca; b+=(250-b)*ca;}
+      }
+    }
+    if(p.name==='Saturno' && lat>1.35){
+      var hexAmt=(lat-1.35)/0.2;
+      var ang=Math.atan2(nY,nX);
+      var hex=Math.abs(Math.cos(ang*3));
+      if(hex>0.7 && ditherPick(hexAmt,bx,by)){
+        r*=0.85; g*=0.88; b*=0.9;
+      }
+    }
+  }
+
+  var lt=(ndl+0.10)/0.42; lt=Math.max(0,Math.min(1,lt));
+  var dlt=Math.floor(lt*7+dth)/7;
+  r*=0.04+dlt*1.00; g*=0.06+dlt*0.95; b*=0.16+dlt*0.84;
+
   if(p.atmo){
     var vdx=camX-hx, vdy=camY-hy, vdz=camZ-hz;
     var vdl=1/Math.sqrt(vdx*vdx+vdy*vdy+vdz*vdz);
     var ndv=(vdx*nX+vdy*nY+vdz*nZ)*vdl;
-    var rim=Math.pow(1-Math.abs(ndv),2.5);
-    var atm=rim*(Math.max(0,ndl)+0.25)*p.atmo[3];
-    r+=p.atmo[0]*atm; g+=p.atmo[1]*atm; b+=p.atmo[2]*atm;
-    if(ndl>0){var ray=ndl*ndl*0.08*(1-Math.abs(1-Math.abs(ndv)));r+=60*ray;g+=110*ray;b+=200*ray;}
+    var rim=Math.pow(1-Math.abs(ndv),2.6);
+    var atm=rim*(Math.max(0,ndl)+0.28)*p.atmo[3];
+    if(ditherPick(Math.min(1,atm*2.5),bx+6,by+2)){
+      r+=p.atmo[0]*atm*1.1; g+=p.atmo[1]*atm*1.1; b+=p.atmo[2]*atm*1.1;
+    } else {
+      r+=p.atmo[0]*atm*0.55; g+=p.atmo[1]*atm*0.55; b+=p.atmo[2]*atm*0.55;
+    }
+    if(ndl>0){var ray=ndl*ndl*0.10*(1-Math.abs(1-Math.abs(ndv)));r+=55*ray;g+=110*ray;b+=210*ray;}
   }
   return [r,g,b];
 }
@@ -2406,20 +2558,29 @@ function shadeRings(dx,dy,dz,ri){
   var b=ri.body, rt=ri.rt;
   if(b.name==='Saturno'){
     var op, base;
-    if(rt<0.15){op=0.35+rt*1.5;base=[180,165,130];}
-    else if(rt<0.55){op=0.85+Math.sin(rt*40)*0.06;base=[225,205,165];}
-    else if(rt<0.62){op=0.10;base=[120,110,90];}
-    else if(rt<0.90){op=0.72+Math.sin(rt*50)*0.08;base=[210,192,155];}
-    else{op=0.35;base=[195,175,140];}
-    var fine=noise3(ri.rr*1e-7,rt*30,0);
-    op*=0.85+fine*0.3;
-    base=[base[0]*(0.92+fine*0.12),base[1]*(0.92+fine*0.12),base[2]*(0.92+fine*0.12)];
-    return {op:Math.max(0,Math.min(1,op)),color:base};
+    if(rt<0.12){op=0.22+rt*1.2;base=[165,150,120];}
+    else if(rt<0.16){op=0.08;base=[100,90,75];}
+    else if(rt<0.48){op=0.90+Math.sin(rt*48)*0.05;base=[228,208,168];}
+    else if(rt<0.56){op=0.08;base=[115,105,85];}
+    else if(rt<0.88){op=0.78+Math.sin(rt*62)*0.07;base=[214,194,155];}
+    else if(rt<0.90){op=0.14;base=[140,125,100];}
+    else if(rt<0.94){op=0.55;base=[210,190,155];}
+    else{op=0.18;base=[180,160,130];}
+    var fine=noise3(ri.rr*1e-7,rt*48,0);
+    var fine2=noise3(ri.rr*2e-7,rt*120,7);
+    var tex=0.85+fine*0.28+fine2*0.15;
+    op*=tex;
+    var rb=base[0]*(0.88+fine*0.16+fine2*0.08);
+    var gb=base[1]*(0.88+fine*0.16+fine2*0.08);
+    var bb=base[2]*(0.88+fine*0.16+fine2*0.08);
+    return {op:Math.max(0,Math.min(1,op)),color:[rb,gb,bb]};
   }
   if(b.name==='Urano'){
-    var op=0.25+0.15*Math.sin(rt*30);
-    if(rt>0.4&&rt<0.5)op*=0.4;
-    return {op:op,color:[140,195,220]};
+    var op=0.20+0.12*Math.sin(rt*38);
+    if(rt>0.88 && rt<0.97) op=0.55;
+    if(rt>0.40 && rt<0.46) op*=0.35;
+    if(rt>0.60 && rt<0.65) op*=0.45;
+    return {op:op,color:[150,205,225]};
   }
   return {op:0.4,color:[200,190,170]};
 }
@@ -3537,9 +3698,6 @@ function findHideSpot(ship, threat){
   return best;
 }
 
-// ============================================================
-// AI BOT — legge aiMods e role dal director LLM
-// ============================================================
 function updateAI(ship,dt){
   if(!ship.alive)return;
   ship.fireCd=Math.max(0,ship.fireCd-dt);
@@ -3553,7 +3711,6 @@ function updateAI(ship,dt){
   var ai=ship.ai;
   var mods = ship.aiMods || AI_DIRECTOR.defaultMods;
 
-  // Applica modificatori di ruolo
   var modAggr = mods.aggressione;
   var modPrec = mods.precisione;
   var modEva  = mods.evasione;
@@ -3568,7 +3725,6 @@ function updateAI(ship,dt){
     modDist *= 0.85;
   }
 
-  // Target selection con priorità
   var best=null, bestD=1e24, bestScore=-1e24;
   for(var i=0;i<SHIPS.length;i++){
     var o=SHIPS[i];
@@ -4497,7 +4653,6 @@ function loop(now){
       updateSatellites(dt);
       updatePois(dt);
 
-      // ============ AI DIRECTOR (WebLLM) ============
       if(AI_DIRECTOR.ready){
         AI_DIRECTOR.directorTimer += dt;
         if(AI_DIRECTOR.directorTimer > 8 && !AI_DIRECTOR.busyDirector){
