@@ -611,7 +611,7 @@ var HP_REGEN_RATE  = 1.0;
 var MISSILE_CD = 8.0;
 var MISSILE_DMG = 35;
 var MISSILE_LIFE = 4.0;
-var MISSILE_TRACK_TIME = 2.0;
+var MISSILE_TRACK_TIME = 2.5;
 var MISSILE_TURN_RATE = 2.6;
 var MISSILE_SPEED = 2.2e8;
 var SUN_RADIUS_REAL = 6.9634e8;
@@ -820,15 +820,11 @@ var POWERUP_MAX_ON_MAP = 14;
 var POWERUP_SPAWN_INTERVAL = 6.0;
 var POWERUP_PICKUP_RANGE = 5.5e6;
 
-// ============================================================
-// BAYER + PALETTE PIXEL ART
-// ============================================================
 var BAYER=new Float32Array(64);
 (function(){
   var m=[[0,32,8,40,2,34,10,42],[48,16,56,24,50,18,58,26],[12,44,4,36,14,46,6,38],[60,28,52,20,62,30,54,22],[3,35,11,43,1,33,9,41],[51,19,59,27,49,17,57,25],[15,47,7,39,13,45,5,37],[63,31,55,23,61,29,53,21]];
   for(var y=0;y<8;y++) for(var x=0;x<8;x++) BAYER[(y<<3)|x]=m[y][x]/64;
 })();
-
 function bayerAt(yy,xx){ return BAYER[((yy&7)<<3)|(xx&7)]; }
 
 var PALETTES = {
@@ -846,7 +842,6 @@ var PALETTES = {
   uranus:   [[30,68,82],[52,98,115],[80,130,148],[108,160,178],[138,188,205],[168,212,225],[195,230,240],[216,242,248],[236,250,253],[250,254,255]],
   neptune:  [[12,28,72],[28,48,110],[45,75,155],[68,105,192],[98,138,220],[130,172,238],[165,200,246],[195,222,250],[222,238,254],[242,248,255]]
 };
-
 function pickIdx(value, bx, by){
   var d = bayerAt(by, bx);
   var v = value * 9 + (d - 0.5) * 0.9;
@@ -854,9 +849,7 @@ function pickIdx(value, bx, by){
   if(idx < 0) idx = 0; else if(idx > 9) idx = 9;
   return idx;
 }
-function pick(pal, value, bx, by){
-  return pal[pickIdx(value, bx, by)];
-}
+function pick(pal, value, bx, by){ return pal[pickIdx(value, bx, by)]; }
 
 function hash3(x,y,z){
   var h=Math.imul(x,0x27d4eb2d)^Math.imul(y,0x165667b1)^Math.imul(z,0x9e3779b1);
@@ -877,14 +870,10 @@ function noise3(x,y,z){
   return y0+(y1-y0)*uz-0.5;
 }
 
-// ============================================================
-// STARFIELD con stelle a croce
-// ============================================================
 var STAR_W=1024,STAR_H=512;
 var starTex=new Uint8Array(STAR_W*STAR_H*3);
 var starPhase=new Uint8Array(STAR_W*STAR_H);
 var nebulaTex=new Uint8Array(STAR_W*STAR_H*4);
-
 (function initStars(){
   var dirsCross = [[1,0],[-1,0],[0,1],[0,-1]];
   for(var y=0;y<STAR_H;y++){
@@ -938,29 +927,28 @@ var nebulaTex=new Uint8Array(STAR_W*STAR_H*4);
       starTex[i3+2] = Math.min(255, starTex[i3+2] + b);
     }
   }
-  // Nebulose
-  for(var y=0;y<STAR_H;y++){
-    var phi2=(y+0.5)/STAR_H*PI-PI/2, cp2=Math.cos(phi2), sp2=Math.sin(phi2);
-    for(var x=0;x<STAR_W;x++){
-      var th2=(x+0.5)/STAR_W*TAU;
+  for(var y2=0;y2<STAR_H;y2++){
+    var phi2=(y2+0.5)/STAR_H*PI-PI/2, cp2=Math.cos(phi2), sp2=Math.sin(phi2);
+    for(var x2=0;x2<STAR_W;x2++){
+      var th2=(x2+0.5)/STAR_W*TAU;
       var ndx=cp2*Math.cos(th2), ndy=cp2*Math.sin(th2), ndz=sp2;
-      var r=0,g=0,b=0,a=0;
+      var rr=0,gg=0,bb=0,aa=0;
       var mw=noise3(ndx*1.1+7,ndy*1.1+13,ndz*1.1+23);
       var band=1-Math.abs(ndz*1.65+mw*0.42)/0.58;
       if(band>0){
-        var bb=band*band;
+        var bnd=band*band;
         var mw1=noise3(ndx*3.4+1,ndy*3.4+5,ndz*3.4+9);
         var mw2=noise3(ndx*8.5+3,ndy*8.5+9,ndz*8.5+17);
         var mw3=noise3(ndx*18+11,ndy*18+19,ndz*18+23);
         var clump=0.55+mw1*0.3+mw2*0.15;
         if(clump<0)clump=0;
-        var lum=bb*clump;
-        r+=180*lum; g+=175*lum; b+=195*lum;
-        a+=bb*0.42*clump;
+        var lum=bnd*clump;
+        rr+=180*lum; gg+=175*lum; bb+=195*lum;
+        aa+=bnd*0.42*clump;
         if(mw3<-0.15){
           var dark=Math.min(1,(-mw3-0.15)*3);
-          a*=1-dark*0.55;
-          r*=1-dark*0.7; g*=1-dark*0.7; b*=1-dark*0.65;
+          aa*=1-dark*0.55;
+          rr*=1-dark*0.7; gg*=1-dark*0.7; bb*=1-dark*0.65;
         }
       }
       var n1=noise3(ndx*2.4+13,ndy*2.4+7,ndz*2.4+3);
@@ -968,19 +956,19 @@ var nebulaTex=new Uint8Array(STAR_W*STAR_H*4);
         var nn=Math.min(1,(n1-0.22)*1.6);
         var q=Math.floor(nn*4)/4;
         var hue=noise3(ndx*0.7+11,ndy*0.7+5,ndz*0.7+2);
-        var rr,gg,bb;
-        if(hue<-0.18){rr=190;gg=85;bb=200;}
-        else if(hue<0.10){rr=90;gg=145;bb=230;}
-        else if(hue<0.32){rr=90;gg=200;bb=180;}
-        else{rr=235;gg=130;bb=175;}
-        r+=rr*q*0.20; g+=gg*q*0.20; b+=bb*q*0.20;
-        a+=q*0.22;
+        var ra,ga,ba;
+        if(hue<-0.18){ra=190;ga=85;ba=200;}
+        else if(hue<0.10){ra=90;ga=145;ba=230;}
+        else if(hue<0.32){ra=90;ga=200;ba=180;}
+        else{ra=235;ga=130;ba=175;}
+        rr+=ra*q*0.20; gg+=ga*q*0.20; bb+=ba*q*0.20;
+        aa+=q*0.22;
       }
-      var idx2=(y*STAR_W+x)*4;
-      nebulaTex[idx2]   = r>255?255:(r|0);
-      nebulaTex[idx2+1] = g>255?255:(g|0);
-      nebulaTex[idx2+2] = b>255?255:(b|0);
-      nebulaTex[idx2+3] = a>1?255:((a*255)|0);
+      var idx2=(y2*STAR_W+x2)*4;
+      nebulaTex[idx2]   = rr>255?255:(rr|0);
+      nebulaTex[idx2+1] = gg>255?255:(gg|0);
+      nebulaTex[idx2+2] = bb>255?255:(bb|0);
+      nebulaTex[idx2+3] = aa>1?255:((aa*255)|0);
     }
   }
 })();
@@ -1006,14 +994,14 @@ var MOON={
   x:0, y:0, z:0
 };
 (function initMoon(){
-  var earth = PLANETS[2];
-  MOON.orbitParent = earth;
-  MOON.orbitR = earth.r * 60;
+  var e = PLANETS[2];
+  MOON.orbitParent = e;
+  MOON.orbitR = e.r * 60;
   MOON.orbitAng = 2.4;
   MOON.orbitEl = 0.10;
-  MOON.x = earth.x + MOON.orbitR*Math.cos(MOON.orbitAng)*Math.cos(MOON.orbitEl);
-  MOON.y = earth.y + MOON.orbitR*Math.sin(MOON.orbitAng)*Math.cos(MOON.orbitEl);
-  MOON.z = earth.z + MOON.orbitR*Math.sin(MOON.orbitEl);
+  MOON.x = e.x + MOON.orbitR*Math.cos(MOON.orbitAng)*Math.cos(MOON.orbitEl);
+  MOON.y = e.y + MOON.orbitR*Math.sin(MOON.orbitAng)*Math.cos(MOON.orbitEl);
+  MOON.z = e.z + MOON.orbitR*Math.sin(MOON.orbitEl);
 })();
 function updateMoon(dt){
   if(!MOON.orbitParent) return;
@@ -1806,7 +1794,6 @@ function updatePowerupsDOM(){
     el.querySelector('.pbar').style.width=(frac*100)+'%';
   }
 }
-
 function updateDynamicEvents(dt){
   if(!solarFlareActive){
     solarFlareTimer-=dt;
@@ -1881,7 +1868,6 @@ function updateDynamicEvents(dt){
     }
   }
 }
-
 function updateZone(dt){
   if(zonePhaseIndex < ZONE_PHASES.length){
     zonePhaseT += dt;
@@ -1980,7 +1966,6 @@ function computeAimAssist(ship, fx, fy, fz){
   var nl=1/Math.sqrt(nx*nx+ny*ny+nz*nz);
   return [nx*nl, ny*nl, nz*nl];
 }
-
 function getCrosshairData(ship){
   var cp=Math.cos(ship.pitch), sp=Math.sin(ship.pitch);
   var cy=Math.cos(ship.yaw), sy=Math.sin(ship.yaw);
@@ -2140,7 +2125,7 @@ var dmgVig=document.getElementById('dmgVignette'), hitMark=document.getElementBy
 var hpRingEl=document.getElementById('hpRing'), hpNum=document.getElementById('hpNum');
 var ammoBulletsEl=document.getElementById('ammoBullets');
 var reloadStateEl=document.getElementById('reloadState');
-var W=0,H=0,pixScale=3,imgData=null,buf32=null,dynScale=1.0, depthBuf=null;
+var W=0,H=0,pixScale=3,imgData=null,buf32=null, depthBuf=null;
 
 function updateOrientationOverlay(){
   var isPortrait = window.innerHeight > window.innerWidth;
@@ -2150,12 +2135,14 @@ function updateOrientationOverlay(){
   if(isPortrait && isMobileish) overlay.classList.add('show');
   else overlay.classList.remove('show');
 }
+
+// FIX: pixScale fisso, nessun dynScale — risolve UI che cambia dimensione
 function resize(){
   updateOrientationOverlay();
   var cw=window.innerWidth, ch=window.innerHeight;
   if(window.visualViewport){ cw=window.visualViewport.width; ch=window.visualViewport.height; }
   var base=Math.max(2,Math.round(cw/280));
-  pixScale=Math.max(2,Math.round(base*dynScale));
+  pixScale=Math.max(2,base);
   W=Math.max(80,Math.round(cw/pixScale));
   H=Math.max(110,Math.round(ch/pixScale));
   canvas.width=W; canvas.height=H;
@@ -2205,7 +2192,6 @@ function computeCamera(){
   camRz=camDx*camUy-camDy*camUx;
   camTanV=TAN_V; camTanH=TAN_V*W/H;
 }
-
 function sampleStars(dx,dy,dz){
   var u=(Math.atan2(dy,dx)/TAU+0.5)*STAR_W;
   var v=(Math.asin(Math.max(-1,Math.min(1,dz)))/PI+0.5)*STAR_H;
@@ -2231,10 +2217,6 @@ function sampleStars(dx,dy,dz){
   if(r>255)r=255; if(g>255)g=255; if(b>255)b=255;
   return [r,g,b];
 }
-
-// ============================================================
-// SUN — palette quantizzata
-// ============================================================
 var SUN_PAL = [[120,28,6],[160,55,12],[205,95,22],[235,135,45],[252,180,85],[255,215,135],[255,238,190],[255,252,235]];
 function shadeSun(hx,hy,hz,dtc,pa){
   var lx=hx-SUN.x, ly=hy-SUN.y, lz=hz-SUN.z;
@@ -2273,10 +2255,6 @@ function shadeSun(hx,hy,hz,dtc,pa){
   }
   return [R,G,B];
 }
-
-// ============================================================
-// PLANETS — palette pixel art
-// ============================================================
 function shadePlanet(hx,hy,hz,p,dtc,pa){
   var lx=hx-p.x, ly=hy-p.y, lz=hz-p.z;
   var nl=1/Math.sqrt(lx*lx+ly*ly+lz*lz);
@@ -2378,15 +2356,15 @@ function shadePlanet(hx,hy,hz,p,dtc,pa){
         b=b*0.55 + PALETTES.earthSea[3][2]*0.45;
       }
     }
-    var ice=Math.max(0,Math.min(1,(aLat-0.78)/0.16));
-    if(ice>0 && ice > bayerAt(pyc+4,pxc+2)){
-      var ic = pick(PALETTES.earthSnow, 0.6+ice*0.35, pxc, pyc);
-      r=ic[0];g=ic[1];b=ic[2];
+    var ice2=Math.max(0,Math.min(1,(aLat-0.78)/0.16));
+    if(ice2>0 && ice2 > bayerAt(pyc+4,pxc+2)){
+      var ic2 = pick(PALETTES.earthSnow, 0.6+ice2*0.35, pxc, pyc);
+      r=ic2[0];g=ic2[1];b=ic2[2];
     }
-    var tw=gameTime*0.02;
-    var c1=noise3(lx/(nz.scale*0.22)+tw,ly/(nz.scale*0.22),lz/(nz.scale*0.22));
-    var c2=noise3(lx/(nz.scale*0.09)+tw*2.5+50,ly/(nz.scale*0.09),lz/(nz.scale*0.09));
-    var c3=noise3(lx/(nz.scale*0.04)+tw*4+150,ly/(nz.scale*0.04),lz/(nz.scale*0.04));
+    var tw2=gameTime*0.02;
+    var c1=noise3(lx/(nz.scale*0.22)+tw2,ly/(nz.scale*0.22),lz/(nz.scale*0.22));
+    var c2=noise3(lx/(nz.scale*0.09)+tw2*2.5+50,ly/(nz.scale*0.09),lz/(nz.scale*0.09));
+    var c3=noise3(lx/(nz.scale*0.04)+tw2*4+150,ly/(nz.scale*0.04),lz/(nz.scale*0.04));
     var cl2 = c1*0.5 + c2*0.35 + c3*0.15;
     if(cl2>0){
       cloudA = Math.min(1, cl2*1.8);
@@ -2429,10 +2407,10 @@ function shadePlanet(hx,hy,hz,p,dtc,pa){
   }
   else if(p.type==='gas'){
     var lat=Math.asin(Math.max(-1,Math.min(1,nZ)));
-    var bc=p.bands||10, tw=gameTime*0.02;
-    var turb1=noise3(lx/(nz.scale*0.5)+tw,ly/(nz.scale*0.5),lz/(nz.scale*0.5));
-    var turb2=noise3(lx/(nz.scale*0.2)+tw*2+30,ly/(nz.scale*0.2),lz/(nz.scale*0.2));
-    var turb3=noise3(lx/(nz.scale*0.06)+tw*3+70,ly/(nz.scale*0.06),lz/(nz.scale*0.06));
+    var bc=p.bands||10, tw3=gameTime*0.02;
+    var turb1=noise3(lx/(nz.scale*0.5)+tw3,ly/(nz.scale*0.5),lz/(nz.scale*0.5));
+    var turb2=noise3(lx/(nz.scale*0.2)+tw3*2+30,ly/(nz.scale*0.2),lz/(nz.scale*0.2));
+    var turb3=noise3(lx/(nz.scale*0.06)+tw3*3+70,ly/(nz.scale*0.06),lz/(nz.scale*0.06));
     var latEff = lat + turb1*0.10 + turb2*0.05 + turb3*0.025;
     var bandVal = Math.sin(latEff * bc) * 0.5 + 0.5;
     var palGas;
@@ -2457,10 +2435,10 @@ function shadePlanet(hx,hy,hz,p,dtc,pa){
         var s = 1 - sd/sSize;
         var ringLevel = Math.floor(s * 3 + bayerAt(pyc,pxc));
         if(ringLevel >= 2){
-          var c2 = p.name==='Giove' ? [235,145,95] : [140,200,235];
-          r = c2[0]*(0.6+lightAmt*0.5);
-          g = c2[1]*(0.6+lightAmt*0.5);
-          b = c2[2]*(0.6+lightAmt*0.5);
+          var c2b = p.name==='Giove' ? [235,145,95] : [140,200,235];
+          r = c2b[0]*(0.6+lightAmt*0.5);
+          g = c2b[1]*(0.6+lightAmt*0.5);
+          b = c2b[2]*(0.6+lightAmt*0.5);
         } else if(ringLevel === 1){
           var c3b = p.name==='Giove' ? [210,105,60] : [90,140,200];
           r = r*0.4 + c3b[0]*0.6;
@@ -2472,7 +2450,7 @@ function shadePlanet(hx,hy,hz,p,dtc,pa){
       }
     }
     if(p.name==='Nettuno'){
-      var ch2=noise3(lx/(nz.scale*0.14)+tw*3,ly/(nz.scale*0.14),lz/(nz.scale*0.14));
+      var ch2=noise3(lx/(nz.scale*0.14)+tw3*3,ly/(nz.scale*0.14),lz/(nz.scale*0.14));
       if(ch2>0.30){
         var ca=Math.min(1,(ch2-0.30)/0.28);
         if(ca > bayerAt(pyc+7,pxc+3)){
@@ -2492,7 +2470,6 @@ function shadePlanet(hx,hy,hz,p,dtc,pa){
     }
   }
 
-  // Saturn ring shadow
   if(p.name==='Saturno' && p.rings){
     var ringIn=p.rings.inner*p.r, ringOut=p.rings.outer*p.r;
     var sdx2=SUN.x-hx, sdy2=SUN.y-hy, sdz2=SUN.z-hz;
@@ -2522,7 +2499,6 @@ function shadePlanet(hx,hy,hz,p,dtc,pa){
     }
   }
 
-  // Illumination quantization
   var dlt = lightAmt*9 + (bayerAt(pyc,pxc)-0.5)*0.9;
   var ltIdx = Math.floor(dlt);
   if(ltIdx<0)ltIdx=0; else if(ltIdx>9)ltIdx=9;
@@ -2532,8 +2508,6 @@ function shadePlanet(hx,hy,hz,p,dtc,pa){
     var nt = (3-ltIdx)/3 * 0.3;
     b = Math.min(255, b * (1+nt*0.5));
   }
-
-  // Atmosphere
   if(p.atmo){
     var vdx2=camX-hx, vdy2=camY-hy, vdz2=camZ-hz;
     var vdl2=1/Math.sqrt(vdx2*vdx2+vdy2*vdy2+vdz2*vdz2);
@@ -2544,12 +2518,10 @@ function shadePlanet(hx,hy,hz,p,dtc,pa){
     g += p.atmo[1]*atm;
     b += p.atmo[2]*atm;
   }
-
   if(r>255)r=255; if(g>255)g=255; if(b>255)b=255;
   if(r<0)r=0; if(g<0)g=0; if(b<0)b=0;
   return [r,g,b];
 }
-
 function intersectRings(dx,dy,dz,b){
   if(Math.abs(dz)<1e-12)return null;
   var t=(b.z-camZ)/dz; if(t<0.01)return null;
@@ -2609,9 +2581,6 @@ function shadeRings(dx,dy,dz,ri){
   return {op:0.4,color:[200*shadow,190*shadow,170*shadow]};
 }
 
-// ============================================================
-// SPRITES
-// ============================================================
 var AST_SPR=32;
 var astSprites=[];
 (function(){
@@ -2861,6 +2830,7 @@ for(var kk=0;kk<POWERUP_KEYS.length;kk++){
   puSprites[key]=buildPowerupSprite(POWERUP_DEFS[key].color);
 }
 
+// Missile sprite — più compatto rispetto a prima
 var MISSILE_SPR=16;
 var missileSprite=(function(){
   var spr=new Uint32Array(MISSILE_SPR*MISSILE_SPR);
@@ -3554,26 +3524,59 @@ function drawBeams(){
   }
 }
 
+// ============================================================
+// MISSILE RENDERING — scala con distanza + alone luminoso + scia più visibile
+// ============================================================
+function missileScale(zd){
+  // Scala come le navi ma ~55% più piccola (missile è più piccolo)
+  var s = distanceScale(zd) * 0.55;
+  if(s < 0.30) s = 0.30;   // floor per far vedere sempre qualcosa
+  if(s > 1.10) s = 1.10;   // cap: non più grande di una nave
+  return s;
+}
+
 function drawMissiles(){
   for(var i=0;i<missiles.length;i++){
     var m=missiles[i];
     var pr=projectToScreen(m.x,m.y,m.z);
     if(!pr)continue;
-    if(Math.abs(pr.sxn)>1.3||Math.abs(pr.syn)>1.3)continue;
+    if(Math.abs(pr.sxn)>1.4||Math.abs(pr.syn)>1.4)continue;
+    // Angolo di volo: proietto un punto poco avanti lungo la traiettoria
     var angle=0;
     var vlen=Math.sqrt(m.vx*m.vx+m.vy*m.vy+m.vz*m.vz);
     if(vlen>1){
-      var hpx=m.x+m.vx*(5e6/vlen);
-      var hpy=m.y+m.vy*(5e6/vlen);
-      var hpz=m.z+m.vz*(5e6/vlen);
+      var ahead = 3e6;
+      var hpx=m.x+m.vx*(ahead/vlen);
+      var hpy=m.y+m.vy*(ahead/vlen);
+      var hpz=m.z+m.vz*(ahead/vlen);
       var headPr=projectToScreen(hpx,hpy,hpz);
       if(headPr){
         var adx=headPr.scrX-pr.scrX;
         var ady=headPr.scrY-pr.scrY;
-        angle=Math.atan2(ady,adx)+Math.PI/2;
+        var alen=Math.sqrt(adx*adx+ady*ady);
+        if(alen > 1.5){
+          angle=Math.atan2(ady,adx)+Math.PI/2;
+        }
       }
     }
-    var sc=1.3;
+
+    // ALONE / GLOW luminoso: rende il missile ben visibile contro qualsiasi sfondo
+    var glowR = Math.max(2, Math.round(4.5 * Math.max(0.5, missileScale(pr.zd))));
+    var gxI = pr.scrX|0, gyI = pr.scrY|0;
+    for(var gy=-glowR; gy<=glowR; gy++){
+      for(var gx=-glowR; gx<=glowR; gx++){
+        var gd2 = gx*gx + gy*gy;
+        if(gd2 > glowR*glowR) continue;
+        var gpX = gxI + gx, gpY = gyI + gy;
+        if(gpX<0||gpY<0||gpX>=W||gpY>=H) continue;
+        if(depthBuf[gpY*W+gpX] < pr.dist) continue;
+        var ga = (1 - Math.sqrt(gd2)/glowR) * 0.60;
+        blendPx(gpX, gpY, 255, 165, 70, ga);
+      }
+    }
+
+    // Sprite missile scalato con distanza
+    var sc = missileScale(pr.zd);
     var cosA=Math.cos(-angle), sinA=Math.sin(-angle);
     var scxI=MISSILE_SPR/2, scyI=MISSILE_SPR/2;
     var halfW=MISSILE_SPR*sc*0.5, halfH=MISSILE_SPR*sc*0.5;
@@ -3598,15 +3601,6 @@ function drawMissiles(){
         if((v&0xFF000000)===0)continue;
         buf32[rowOff+px]=v;
       }
-    }
-    var mdx=m.x-m.prevX, mdy=m.y-m.prevY, mdz=m.z-m.prevZ;
-    var mdist=Math.sqrt(mdx*mdx+mdy*mdy+mdz*mdz);
-    if(mdist>1e3){
-      trails.push({x:m.x, y:m.y, z:m.z,
-        vx:-mdx/mdist*5e7+(Math.random()-0.5)*1e7,
-        vy:-mdy/mdist*5e7+(Math.random()-0.5)*1e7,
-        vz:-mdz/mdist*5e7+(Math.random()-0.5)*1e7,
-        life:0.6, maxLife:0.6, r:255, g:180, b:100, size:2});
     }
   }
 }
@@ -3722,8 +3716,8 @@ function findHideSpot(ship, threat){
     var nx=dx/d, ny=dy/d, nz=dz/d;
     var dot=nx*shipToThreatX+ny*shipToThreatY+nz*shipToThreatZ;
     if(dot<0.3)continue;
-    var score=b.r/d*10 + dot*2 - d/2e9;
-    if(score>bestScore){bestScore=score; best=b;}
+    var score2=b.r/d*10 + dot*2 - d/2e9;
+    if(score2>bestScore){bestScore=score2; best=b;}
   }
   return best;
 }
@@ -3742,10 +3736,10 @@ function updateAI(ship,dt){
   var mods = ship.aiMods || AI_DIRECTOR.defaultMods;
   var modAggr = mods.aggressione;
   var modPrec = mods.precisione;
-  var modEva  = mods.evasione;
-  var modDist = mods.distanza;
-  var modPrio = mods.priorita;
-  if(ship.role === 'attacco'){ modAggr *= 1.5; modEva *= 0.7; }
+  var modEva  = modsSpeed.evasione;
+  var modDist = mod(ss.distanza;
+  var modPrio =hip mods.priorita;
+  if(s)*hip.role === 'attacco'){ modAggrship.s *= 1.5; modEva *= 0.7; }
   else if(ship.role === 'supporto'){ modDist *= 1.4; modPrec *= 1.2; }
   else if(ship.role === 'flank'){ modDist *= 0.85; }
 
@@ -3832,7 +3826,7 @@ function updateAI(ship,dt){
   var targetBank=dYaw*18;
   if(targetBank>0.6)targetBank=0.6; if(targetBank<-0.6)targetBank=-0.6;
   ship.bank+=(targetBank-ship.bank)*Math.min(1,dt*6);
-  ship.speed=computeSpeed(ship)*ship.speedMul;
+  ship.speed=computepeedMul;
   var cp=Math.cos(ship.pitch), sp=Math.sin(ship.pitch);
   var cy=Math.cos(ship.yaw), sy=Math.sin(ship.yaw);
   var fx=cp*cy, fy=cp*sy, fz=sp;
@@ -4104,11 +4098,36 @@ function updateMissiles(dt){
     if(hit){missiles.splice(i,1);continue;}
     for(var ai2=0;ai2<asteroids.length;ai2++){
       var a=asteroids[ai2];
-      var dx=m.x-a.x, dy=m.y-a.y, dz=m.z-a.z;
-      var d2=dx*dx+dy*dy+dz*dz;
-      if(d2<a.r*a.r){spawnExplosion(m.x,m.y,m.z,5e5); hit=true; break;}
+      var dx2=m.x-a.x, dy2=m.y-a.y, dz2=m.z-a.z;
+      var d2b=dx2*dx2+dy2*dy2+dz2*dz2;
+      if(d2b<a.r*a.r){spawnExplosion(m.x,m.y,m.z,5e5); hit=true; break;}
     }
     if(hit){missiles.splice(i,1);continue;}
+
+    // SCIA MIGLIORATA: più particelle per frame con spread per un trail visibile
+    var mdx=m.x-m.prevX, mdy=m.y-m.prevY, mdz=m.z-m.prevZ;
+    var mdist=Math.sqrt(mdx*mdx+mdy*mdy+mdz*mdz);
+    if(mdist>1e3){
+      var spread = 3e5;
+      for(var tk=0; tk<4; tk++){
+        trails.push({
+          x: m.x + (Math.random()-0.5)*spread,
+          y: m.y + (Math.random()-0.5)*spread,
+          z: m.z + (Math.random()-0.5)*spread,
+          vx: -mdx/mdist*2.5e7 + (Math.random()-0.5)*1.5e7,
+          vy: -mdy/mdist*2.5e7 + (Math.random()-0.5)*1.5e7,
+          vz: -mdz/mdist*2.5e7 + (Math.random()-0.5)*1.5e7,
+          life: 1.1, maxLife: 1.1,
+          r: 255, g: 160, b: 60, size: 2
+        });
+      }
+      // nucleo bianco-blu brillante
+      trails.push({
+        x: m.x, y: m.y, z: m.z,
+        vx: -mdx/mdist*1.5e7, vy: -mdy/mdist*1.5e7, vz: -mdz/mdist*1.5e7,
+        life: 0.6, maxLife: 0.6, r: 255, g: 240, b: 180, size: 3
+      });
+    }
   }
 }
 function spawnHitSpark(x,y,z){ explosions.push({x:x,y:y,z:z,t:0,dur:0.28,type:'flash',rad:3e5}); }
@@ -4260,15 +4279,15 @@ function render(){
     }
     blitUfoSprite(cx,cy,playerScale,PAL_PLAYER,0,human.bank,0);
     if(getActivePowerup(human,'shield')||human.shieldPulse>0){
-      var shieldR=26+Math.sin(gameTime*5)*1.5;
-      var alphaS=0.30+(human.shieldPulse>0?0.3:0);
-      var sr=Math.round(shieldR);
-      for(var yy=-sr;yy<=sr;yy++)for(var xx=-sr;xx<=sr;xx++){
+      var shieldR2=26+Math.sin(gameTime*5)*1.5;
+      var alphaS2=0.30+(human.shieldPulse>0?0.3:0);
+      var sr2=Math.round(shieldR2);
+      for(var yy=-sr2;yy<=sr2;yy++)for(var xx=-sr2;xx<=sr2;xx++){
         var d2=xx*xx+yy*yy; var d=Math.sqrt(d2);
-        if(d>sr||d<sr-2.5)continue;
+        if(d>sr2||d<sr2-2.5)continue;
         var px2=(W*0.5|0)+xx, py2=(cy|0)+yy;
         if(px2<0||py2<0||px2>=W||py2>=H)continue;
-        blendPx(px2,py2,100,180,255,alphaS);
+        blendPx(px2,py2,100,180,255,alphaS2);
       }
     }
     if(turboIntensity>0.02) drawTurboSpeedLines(turboIntensity);
@@ -4622,19 +4641,13 @@ function tryLockOrientation(){
 document.addEventListener('visibilitychange', function(){
   if(!document.hidden) tryLockOrientation();
 });
-var lastT=0, frameAcc=0, frameCount=0;
+
+var lastT=0;
 function loop(now){
   requestAnimationFrame(loop);
   if(!lastT)lastT=now;
   var dt=(now-lastT)/1000; lastT=now;
   if(dt>0.1)dt=0.1; if(dt<0.001)dt=0.001;
-  frameAcc+=dt; frameCount++;
-  if(frameAcc>1.0){
-    var fps=frameCount/frameAcc;
-    if(fps<42&&dynScale<1.7){dynScale=Math.min(1.7,dynScale+0.15);resize();}
-    else if(fps>58&&dynScale>1.0){dynScale=Math.max(1.0,dynScale-0.1);resize();}
-    frameAcc=0; frameCount=0;
-  }
   gameTime+=dt;
   updateMoon(dt);
   if(currentScreen==='lobby'||currentScreen==='queue'){
