@@ -673,7 +673,6 @@ var MAX_HP=100, BULLET_DMG=14;
 var FIRE_CD=0.55;
 var MAX_AMMO=5;
 var RELOAD_TIME=1.7;
-// Ridotta: prima 1.5e8 rendeva gli scontri rari in una mappa da 4 AU
 var ENGAGE_RANGE=9e7;
 var MIN_ENGAGE_RANGE=1e5;
 var BULLET_LIFE=4.0;
@@ -745,7 +744,6 @@ function initPois(){
   }
 }
 
-/* ===================== CAP ARRAY (anti-OOM) ===================== */
 var MAX_TRAILS = 900;
 var MAX_DEBRIS = 250;
 var MAX_EXPLOSIONS = 140;
@@ -753,31 +751,61 @@ var MAX_BULLETS = 220;
 var MAX_MISSILES = 24;
 var MAX_SHOOTING_STARS = 12;
 
-/* ===================== AUDIO SINTETICO ===================== */
+/* ===================== AUDIO SINTETICO (v2 - fix no sound) ===================== */
 var AUDIO = {
-  ctx: null, master: null, ready: false, enabled: true,
+  ctx: null, master: null, ready: false, enabled: true, _initLog: false,
   ensure: function(){
-    if(this.ready) return true;
+    if(this.ready){
+      if(this.ctx && this.ctx.state === 'suspended'){ this.resume(); }
+      return true;
+    }
     try{
       var AC = window.AudioContext || window.webkitAudioContext;
-      if(!AC) return false;
+      if(!AC){ if(!this._initLog){ console.warn('[AUDIO] WebAudio API non supportata'); this._initLog=true; } return false; }
       this.ctx = new AC();
       this.master = this.ctx.createGain();
-      this.master.gain.value = 0.28;
+      this.master.gain.value = this.enabled ? 0.7 : 0;
       this.master.connect(this.ctx.destination);
       this.ready = true;
+      if(!this._initLog){ console.log('[AUDIO] initialized, state=' + this.ctx.state); this._initLog=true; }
+      // Unlock trick: suona un brevissimo click inudibile per "sbloccare" il ctx su iOS
+      try{
+        var t0 = this.ctx.currentTime;
+        var osc0 = this.ctx.createOscillator();
+        var g0 = this.ctx.createGain();
+        g0.gain.setValueAtTime(0.0001, t0);
+        osc0.connect(g0); g0.connect(this.master);
+        osc0.start(t0); osc0.stop(t0+0.01);
+      }catch(_){}
+      this.resume();
       return true;
-    }catch(_){ return false; }
+    }catch(e){
+      if(!this._initLog){ console.warn('[AUDIO] init failed', e); this._initLog=true; }
+      return false;
+    }
   },
   resume: function(){
-    if(this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(function(){});
+    if(!this.ctx) return;
+    if(this.ctx.state !== 'running'){
+      try{
+        this.ctx.resume().then(function(){
+          console.log('[AUDIO] resumed, state=' + AUDIO.ctx.state);
+        }).catch(function(e){ console.warn('[AUDIO] resume failed', e); });
+      }catch(_){}
+    }
+  },
+  ensureRunning: function(){
+    if(!this.ready){ this.ensure(); return; }
+    if(this.ctx && this.ctx.state === 'suspended'){ this.resume(); }
   },
   setEnabled: function(v){
     this.enabled = !!v;
-    if(this.master) this.master.gain.value = this.enabled ? 0.28 : 0;
+    if(this.master) this.master.gain.value = this.enabled ? 0.7 : 0;
   },
   beep: function(freq, dur, type, vol, slideTo){
+    if(!this.ready){ this.ensure(); }
     if(!this.ready || !this.enabled) return;
+    this.ensureRunning();
     try{
       var t = this.ctx.currentTime;
       var osc = this.ctx.createOscillator();
@@ -785,15 +813,18 @@ var AUDIO = {
       osc.type = type || 'square';
       osc.frequency.setValueAtTime(freq, t);
       if(slideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t+dur);
+      var attackEnd = Math.min(0.006, dur*0.35);
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.linearRampToValueAtTime(vol || 0.15, t+0.005);
+      g.gain.linearRampToValueAtTime(vol || 0.2, t + attackEnd);
       g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
       osc.connect(g); g.connect(this.master);
       osc.start(t); osc.stop(t+dur+0.02);
-    }catch(_){}
+    }catch(e){ /* silent */ }
   },
   noise: function(dur, vol, filterFreq, sweepTo){
+    if(!this.ready){ this.ensure(); }
     if(!this.ready || !this.enabled) return;
+    this.ensureRunning();
     try{
       var t = this.ctx.currentTime;
       var bufSize = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
@@ -808,22 +839,40 @@ var AUDIO = {
       if(sweepTo) filt.frequency.exponentialRampToValueAtTime(Math.max(40, sweepTo), t+dur);
       filt.Q.value = 0.8;
       var g = this.ctx.createGain();
-      g.gain.setValueAtTime(vol || 0.2, t);
+      g.gain.setValueAtTime(vol || 0.25, t);
       g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
       src.connect(filt); filt.connect(g); g.connect(this.master);
       src.start(t); src.stop(t+dur+0.02);
-    }catch(_){}
+    }catch(e){ /* silent */ }
   },
-  shoot: function(){ this.beep(900, 0.07, 'square', 0.06, 200); },
-  shootBot: function(){ this.beep(620, 0.05, 'sawtooth', 0.035, 180); },
-  hit: function(){ this.beep(170, 0.12, 'triangle', 0.10, 60); },
-  missile: function(){ this.beep(280, 0.35, 'sawtooth', 0.10, 850); this.noise(0.45, 0.09, 400, 1300); },
-  explosion: function(){ this.noise(0.55, 0.30, 250, 55); this.beep(75, 0.42, 'sine', 0.15, 28); },
-  pickup: function(){ var self=this; this.beep(660, 0.09, 'sine', 0.10); setTimeout(function(){ self.beep(990, 0.12, 'sine', 0.10); }, 80); },
-  turbo: function(){ this.noise(0.6, 0.13, 300, 1400); },
-  alarm: function(){ var self=this; this.beep(440, 0.15, 'square', 0.08); setTimeout(function(){ self.beep(330, 0.15, 'square', 0.08); }, 150); },
-  kill: function(){ var self=this; this.beep(1200, 0.08, 'square', 0.10); setTimeout(function(){ self.beep(1600, 0.12, 'square', 0.09); }, 70); }
+  shoot: function(){ this.beep(900, 0.08, 'square', 0.18, 200); },
+  shootBot: function(){ this.beep(620, 0.06, 'sawtooth', 0.12, 180); },
+  hit: function(){ this.beep(170, 0.14, 'triangle', 0.28, 60); },
+  missile: function(){ this.beep(280, 0.35, 'sawtooth', 0.30, 850); this.noise(0.45, 0.25, 400, 1300); },
+  explosion: function(){ this.noise(0.55, 0.55, 250, 55); this.beep(75, 0.45, 'sine', 0.40, 28); },
+  pickup: function(){ var self=this; this.beep(660, 0.10, 'sine', 0.24); setTimeout(function(){ self.beep(990, 0.13, 'sine', 0.24); }, 80); },
+  turbo: function(){ this.noise(0.7, 0.35, 300, 1400); },
+  alarm: function(){ var self=this; this.beep(440, 0.16, 'square', 0.22); setTimeout(function(){ self.beep(330, 0.16, 'square', 0.22); }, 155); },
+  kill: function(){ var self=this; this.beep(1200, 0.09, 'square', 0.28); setTimeout(function(){ self.beep(1600, 0.14, 'square', 0.26); }, 75); },
+  test: function(){ var self=this; this.beep(660, 0.10, 'sine', 0.3); setTimeout(function(){ self.beep(880, 0.14, 'sine', 0.3); }, 110); }
 };
+
+/* ============ AUTO INIT AUDIO su QUALSIASI interazione ============ */
+var audioFullyReady = false;
+function tryInitAudio(){
+  if(audioFullyReady) return;
+  if(AUDIO.ensure() && AUDIO.ctx && AUDIO.ctx.state === 'running'){
+    audioFullyReady = true;
+    AUDIO.setEnabled(settings.audio);
+    // Beep di conferma: l'utente SENTE che l'audio è pronto
+    setTimeout(function(){ AUDIO.test(); }, 120);
+    console.log('[AUDIO] fully ready, playing confirmation beep');
+  }
+}
+document.addEventListener('pointerdown', tryInitAudio, true);
+document.addEventListener('touchstart', tryInitAudio, {passive:true, capture:true});
+document.addEventListener('click', tryInitAudio, true);
+document.addEventListener('keydown', tryInitAudio, true);
 
 var AI_DIRECTOR = {
   engine: null, ready: false, loading: false,
@@ -915,7 +964,6 @@ async function runBotCoordinator(){
       if (!s.alive) continue;
       bots.push({ id: s.index, hp: Math.round(s.hp), x: Math.round(s.x/1e9), y: Math.round(s.y/1e9), z: Math.round(s.z/1e9) });
     }
-    // Soglia abbassata: 3 era troppo tardi a fine partita
     if (bots.length < 2) return;
     var hx = Math.round(human.x/1e9), hy = Math.round(human.y/1e9), hz = Math.round(human.z/1e9);
     var hHp = human.alive ? Math.round(human.hp) : 0;
@@ -1559,6 +1607,8 @@ var settings={sens:1.0, aimAssist:true, killFeed:true, minimap:true, audio:true}
 try{
   var savedS=localStorage.getItem(SETTINGS_KEY);
   if(savedS) settings=Object.assign(settings, JSON.parse(savedS));
+  // Se per qualche motivo audio è undefined, forza true
+  if(settings.audio === undefined) settings.audio = true;
 }catch(_){}
 function saveSettings(){try{localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));}catch(_){}}
 
@@ -1600,6 +1650,7 @@ function syncSettingsUI(){
   var audB=document.getElementById('setAudio');
   if(audB) audB.addEventListener('click', function(){
     settings.audio=!settings.audio; saveSettings(); syncSettingsUI();
+    if(settings.audio){ AUDIO.ensure(); AUDIO.resume(); AUDIO.test(); }
   });
   var aimB=document.getElementById('setAim');
   if(aimB) aimB.addEventListener('click', function(){
@@ -1698,9 +1749,7 @@ function dismissSplash(){
   if(splashDismissed) return;
   splashDismissed=true;
   // Init audio su gesto utente (richiesto da browser mobile)
-  AUDIO.ensure();
-  AUDIO.resume();
-  AUDIO.setEnabled(settings.audio);
+  tryInitAudio();
   splashEl.classList.remove('active');
   tryLockOrientation();
   var flag = false;
@@ -1905,7 +1954,6 @@ function cancelMatchmaking(){queueTimers.forEach(function(t){clearTimeout(t);});
 function pickBots(n){var pool=BOT_POOL.slice();var picked=[];while(picked.length<n&&pool.length){var i=Math.floor(Math.random()*pool.length);picked.push(pool.splice(i,1)[0]);}return picked;}
 
 function spawnNearCenter(ship){
-  // Ridotto da 0.5 AU: scontri più frequenti
   var spawnR = 0.3 * AU;
   var ang = Math.random()*TAU;
   var el = (Math.random()-0.5)*0.4;
@@ -2152,7 +2200,6 @@ function updateZone(dt){
   var hdx = human.x - zoneCx, hdy = human.y - zoneCy, hdz = human.z - zoneCz;
   var hDist = Math.sqrt(hdx*hdx + hdy*hdy + hdz*hdz);
   var outside = (hDist > zoneRadius);
-  // Audio alarm quando si entra/esce dalla zona
   if(currentScreen==='match' && human.alive && outside !== zoneOutsidePrev){
     if(outside) AUDIO.alarm();
     zoneOutsidePrev = outside;
@@ -3663,7 +3710,6 @@ function spawnExplosion(x,y,z,r){
       vz:Math.sin(b)*spd,
       life:1.2+Math.random()*0.6,maxLife:1.8,size:2+Math.random()*2});
   }
-  // Suono esplosione solo per esplosioni "grandi" (non hit spark)
   if(r >= 5e5) AUDIO.explosion();
 }
 function drawExplosions(){
@@ -4306,7 +4352,7 @@ function updateBullets(dt){
           else if(t1<0&&t2>1)tHit=0;
         }
       }
-      // FIX: hitbox reale — il proiettile colpisce anche senza lockedTarget
+      // FIX: hitbox reale - colpisce anche senza lockedTarget
       if(tHit>=0){
         damageShip(s,BULLET_DMG,b.owner);
         hit=true; break;
@@ -5026,7 +5072,6 @@ function loop(now){
           AI_DIRECTOR.coordinatorTimer += dt;
           var aliveBotsNow = 0;
           for(var bi2=1;bi2<SHIPS.length;bi2++) if(SHIPS[bi2].alive) aliveBotsNow++;
-          // Soglia 2 invece di 3 per far funzionare il coordinatore anche a fine partita
           if(AI_DIRECTOR.coordinatorTimer > 15 && aliveBotsNow >= 2 && !AI_DIRECTOR.busyCoord){
             AI_DIRECTOR.coordinatorTimer = 0;
             runBotCoordinator();
