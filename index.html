@@ -28,30 +28,47 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 #minimap.show{opacity:1;pointer-events:auto}
 #minimapCanvas{display:block;width:100%;height:100%;border-radius:50%;image-rendering:pixelated}
 #minimap.fullscreen{top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;z-index:200;background:#000;filter:none;transition:none;border-radius:0}
-#minimap.fullscreen #minimapCanvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90vmin;height:90vmin;border-radius:50%}
+#minimap.fullscreen #minimapCanvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:72vmin;height:72vmin;border-radius:50%}
 #minimap .mm-legend{display:none}
 #minimap.fullscreen .mm-legend{
-  display:flex;flex-direction:column;position:absolute;
-  top:calc(env(safe-area-inset-top, 0px) + 2vmin);
-  left:calc(env(safe-area-inset-left, 0px) + 2vmin);
-  padding:11px 13px;background:rgba(6,12,22,0.88);
-  border:1px solid rgba(90,150,215,0.42);border-radius:12px;
+  display:block;position:absolute;inset:0;
+  pointer-events:none;z-index:201;
+  animation:mmLegendIn .25s ease-out;
+}
+#minimap.fullscreen .mm-legend-left,
+#minimap.fullscreen .mm-legend-right{
+  position:absolute;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:10px;
+  max-height:90dvh;
+  font:700 10px/1.45 ui-monospace,monospace;
+  letter-spacing:.06em;color:#e0eeff;
+}
+#minimap.fullscreen .mm-legend-left{
+  left:calc(env(safe-area-inset-left,0px) + 2vmin);
+  align-items:flex-start;
+}
+#minimap.fullscreen .mm-legend-right{
+  right:calc(env(safe-area-inset-right,0px) + 2vmin);
+  align-items:flex-end;
+}
+.mm-panel{
+  padding:9px 11px;
+  background:rgba(6,12,22,0.90);
+  border:1px solid rgba(90,150,215,0.42);
+  border-radius:12px;
   box-shadow:0 8px 28px rgba(0,0,0,0.6);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  font:700 11px/1.45 ui-monospace,monospace;color:#e0eeff;letter-spacing:.06em;gap:3px;
-  max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 4vmin);
-  overflow-y:auto;z-index:201;pointer-events:none;animation:mmLegendIn .25s ease-out;
+  display:flex;flex-direction:column;gap:3px;
+  min-width:130px;
 }
-@keyframes mmLegendIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-.mm-legend-title{font:900 12px/1 ui-monospace,monospace;letter-spacing:.32em;color:#6ec0ff;text-shadow:0 0 10px rgba(110,200,255,0.55);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(90,150,215,0.4);text-align:center}
-.mm-legend-section{font:800 9px/1 ui-monospace,monospace;letter-spacing:.24em;color:#7aa8d0;margin-top:8px;margin-bottom:3px}
-.mm-legend-section:first-of-type{margin-top:2px}
-.mm-legend-row{display:flex;align-items:center;gap:8px;padding:1px 0;color:#cfe6ff;font-size:11px}
-.mm-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 6px rgba(0,0,0,0.5)}
+@keyframes mmLegendIn{from{opacity:0;transform:translateY(-50%) scale(.96)}to{opacity:1;transform:translateY(-50%) scale(1)}}
+.mm-legend-title{font:900 10px/1 ui-monospace,monospace;letter-spacing:.28em;color:#6ec0ff;text-shadow:0 0 10px rgba(110,200,255,0.55);margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid rgba(90,150,215,0.4);text-align:center}
+.mm-legend-row{display:flex;align-items:center;gap:7px;padding:1px 0;color:#cfe6ff;font-size:10px;white-space:nowrap}
+.mm-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 6px rgba(0,0,0,0.5)}
 .mm-dot-pulse{animation:mmDotPulse 1.6s ease-in-out infinite}
 @keyframes mmDotPulse{0%,100%{transform:scale(1);opacity:0.9}50%{transform:scale(1.25);opacity:1}}
-.mm-tri{width:10px;height:10px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;line-height:1;flex-shrink:0;text-shadow:0 0 6px rgba(120,200,255,0.85)}
-.mm-ring{width:10px;height:10px;border-radius:50%;border:1.5px dashed;background:transparent;flex-shrink:0}
+.mm-tri{width:9px;height:9px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;line-height:1;flex-shrink:0;text-shadow:0 0 6px rgba(120,200,255,0.85)}
+.mm-ring{width:9px;height:9px;border-radius:50%;border:1.5px dashed;background:transparent;flex-shrink:0}
 #vignette{position:fixed;inset:0;pointer-events:none;z-index:5;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,0.42) 100%)}
 #zoneWarning{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(circle at center,transparent 28%,rgba(140,60,255,0.42) 78%,rgba(120,40,240,0.72) 100%)}
 #solarWarning{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(circle at center,transparent 40%,rgba(255,180,60,0.30) 80%,rgba(255,120,20,0.55) 100%);transition:opacity .35s}
@@ -116,13 +133,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .stats-grid>div{padding:8px 4px;border-radius:10px;text-align:center;background:rgba(14,26,48,0.62);border:1px solid rgba(90,150,215,0.22)}
 .stat-val{font:800 16px/1 ui-monospace,monospace;color:#eaf4ff}
 .stat-lbl{font:700 8px/1 monospace;color:#6a94bc;letter-spacing:.18em;margin-top:5px}
-.chassis-label{font:800 9px/1 ui-monospace,monospace;color:#7aa8d0;letter-spacing:.28em;text-align:center;margin-bottom:-4px}
-.chassis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.chassis{padding:10px 6px;border-radius:10px;text-align:center;cursor:pointer;background:rgba(14,26,48,0.5);border:1.5px solid rgba(90,150,215,0.25);transition:all .2s}
-.chassis.active{border-color:rgba(120,220,255,0.9);background:rgba(20,50,90,0.7);box-shadow:0 0 14px rgba(120,220,255,0.4)}
-.chassis:active{transform:scale(0.96)}
-.chassis-name{font:900 11px/1 ui-monospace,monospace;color:#eaf4ff;letter-spacing:.14em}
-.chassis-stat{font:700 8px/1.5 ui-monospace,monospace;color:#7aa8d0;margin-top:4px}
 .btn-primary{appearance:none;border:none;cursor:pointer;padding:14px 20px;border-radius:12px;background:linear-gradient(180deg,#4a90e2,#2560b0);color:#fff;font:800 15px/1.15 sans-serif;letter-spacing:.14em;text-align:center;box-shadow:0 8px 24px rgba(70,140,230,0.4);display:flex;flex-direction:column;gap:4px;align-items:center}
 .btn-primary small{font:600 9px/1 ui-monospace,monospace;color:#c8e0ff;letter-spacing:.18em;opacity:.85}
 .btn-primary:active{transform:scale(0.97)}
@@ -183,7 +193,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .hudNav .hudDist{color:#7aa8d0;font-size:10px;letter-spacing:.06em}
 .hudExpand{font-size:9px;color:#7aa8d0;opacity:0.7;letter-spacing:0;margin-left:-2px}
 #statsWrap{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 8px);width:104px;height:104px;z-index:13;pointer-events:none;opacity:0;transition:opacity .3s;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.65))}
-#statsWrap.show{opacity:1}
+#statsWrap.show{opacity:1;pointer-events:auto;cursor:pointer}
 #statsWrap .statsRing{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #statsWrap .statsCenter{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;height:100%;text-align:center}
 #statsWrap .hpNum{font:900 22px/1 ui-monospace,monospace;color:#eaf4ff;text-shadow:0 0 10px rgba(110,200,255,0.65),0 1px 2px #000;letter-spacing:.02em}
@@ -290,6 +300,37 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .game-hidden #stick,.game-hidden #stick2,.game-hidden #turboBtn,.game-hidden #fireBtn,
 .game-hidden #zoneWarning,.game-hidden #powerups,.game-hidden #missileBtn,
 .game-hidden #solarWarning,.game-hidden #brakeBtn,.game-hidden #brakeVignette{opacity:0;pointer-events:none}
+
+#settingsPanel{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  z-index:220;display:none;pointer-events:auto;
+}
+#settingsPanel.show{display:block}
+.settings-box{
+  width:min(440px,86vw);
+  padding:14px 16px;
+  background:rgba(6,12,22,0.95);
+  border:1px solid rgba(90,150,215,0.45);
+  border-radius:14px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.7);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  display:flex;flex-direction:column;gap:10px;
+  animation:mmLegendIn .22s ease-out;
+}
+.settings-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid rgba(90,150,215,0.32)}
+.settings-title{font:900 12px/1 ui-monospace,monospace;letter-spacing:.30em;color:#eaf4ff;text-shadow:0 0 12px rgba(110,180,255,0.55)}
+.settings-close{appearance:none;background:transparent;border:none;color:#7aa8d0;font:900 16px/1 ui-monospace,monospace;cursor:pointer;padding:2px 8px;border-radius:6px}
+.settings-close:active{color:#fff;background:rgba(80,150,220,0.25)}
+.settings-row{display:flex;align-items:center;gap:12px;padding:3px 0}
+.settings-label{flex:1;font:800 10px/1 ui-monospace,monospace;letter-spacing:.18em;color:#a8d4ff}
+.settings-val{font:800 11px/1 ui-monospace,monospace;color:#eaf4ff;width:30px;text-align:right}
+#setSens{flex:1.2;appearance:none;height:4px;background:rgba(90,150,215,0.35);border-radius:2px;outline:none}
+#setSens::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(180deg,#6ee0ff,#4a90e2);box-shadow:0 0 8px rgba(110,200,255,0.7);cursor:pointer}
+#setSens::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:linear-gradient(180deg,#6ee0ff,#4a90e2);border:none;cursor:pointer}
+.settings-toggle{appearance:none;border:1px solid rgba(90,150,215,0.45);background:rgba(14,26,48,0.65);color:#a8c8e8;font:800 10px/1 ui-monospace,monospace;letter-spacing:.16em;padding:7px 14px;border-radius:8px;cursor:pointer;min-width:60px;transition:all .15s}
+.settings-toggle[data-on="1"]{background:linear-gradient(180deg,#2e78d8,#1a4c9a);color:#fff;border-color:rgba(120,200,255,0.7);box-shadow:0 0 12px rgba(80,180,255,0.4)}
+
 @media (orientation: landscape){
   .hudRow{gap:10px;padding:0 14px;height:26px}
   .hudItem{font-size:10px;letter-spacing:.10em;gap:5px}
@@ -347,9 +388,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   .prof-name{font-size:13px}
   .prof-level{font-size:10px}
   .stat-val{font-size:14px}
-  .chassis{padding:8px 4px}
-  .chassis-name{font-size:10px}
-  .chassis-stat{font-size:7px}
   .btn-primary{padding:11px 18px;font-size:13px}
   .btn-primary small{font-size:8px}
   .queue-content{gap:12px;max-width:560px}
@@ -366,11 +404,11 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   .results-grid>div{padding:8px 10px}
   .results-grid .rv{font-size:13px}
   .splash-tap{margin-top:32px}
-  #minimap.fullscreen .mm-legend{font-size:10px;padding:9px 11px}
-  .mm-legend-title{font-size:11px}
-  .mm-legend-row{font-size:10px;padding:0}
-  .mm-legend-section{font-size:8px;margin-top:6px;margin-bottom:2px}
-  .mm-dot,.mm-ring,.mm-tri{width:9px;height:9px}
+  .mm-panel{padding:7px 9px;min-width:110px;gap:2px}
+  .mm-legend-title{font-size:9px;letter-spacing:.22em;margin-bottom:4px;padding-bottom:4px}
+  .mm-legend-row{font-size:9px;gap:6px}
+  .mm-dot,.mm-ring,.mm-tri{width:8px;height:8px}
+  .mm-tri{font-size:9px}
   .llm-content{max-width:520px;gap:12px}
   .llm-icon{font-size:44px}
   .llm-title{font-size:13px}
@@ -380,6 +418,8 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   .llm-progress-bar{height:8px}
   .llm-progress-text{font-size:10px}
   .llm-note{font-size:9px}
+  .settings-box{width:min(400px,72vw);padding:11px 14px;gap:8px}
+  .settings-row{padding:2px 0}
 }
 @media (orientation: portrait){
   #rotateOverlay.show ~ #hud,#rotateOverlay.show ~ #roster,#rotateOverlay.show ~ #stick,
@@ -394,27 +434,38 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 <div id="minimap">
   <canvas id="minimapCanvas"></canvas>
   <div class="mm-legend">
-    <div class="mm-legend-title">MAPPA</div>
-    <div class="mm-legend-section">CORPI CELESTI</div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#ffdd66"></span><span>Sole</span></div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#a09888"></span><span>Mercurio</span></div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#e8c878"></span><span>Venere</span></div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#4a9eff"></span><span>Terra</span></div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#c8c8d2"></span><span>Luna</span></div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#cc6644"></span><span>Marte</span></div>
-    <div class="mm-legend-section">GIOCATORI</div>
-    <div class="mm-legend-row"><span class="mm-tri" style="color:#88ddff">&#9650;</span><span>Tu</span></div>
-    <div class="mm-legend-row"><span class="mm-dot mm-dot-pulse" style="background:#ff3030"></span><span>Nemico</span></div>
-    <div class="mm-legend-section">OGGETTI</div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#80ffb0"></span><span>Power-up</span></div>
-    <div class="mm-legend-row"><span class="mm-ring" style="border-color:#b478ff"></span><span>Zona</span></div>
-    <div class="mm-legend-section">POI</div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#78c8ff"></span><span>Stazione Aurora</span></div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#b48c5a"></span><span>Relitto Titano</span></div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#a08c78"></span><span>Cintura Hephaestus</span></div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#b4b4ff"></span><span>Array Echo</span></div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#ffa050"></span><span>Deposito Prometeo</span></div>
-    <div class="mm-legend-row"><span class="mm-dot" style="background:#9696aa"></span><span>Campo K</span></div>
+    <div class="mm-legend-left">
+      <div class="mm-panel">
+        <div class="mm-legend-title">CORPI CELESTI</div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#ffdd66"></span><span>Sole</span></div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#a09888"></span><span>Mercurio</span></div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#e8c878"></span><span>Venere</span></div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#4a9eff"></span><span>Terra</span></div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#c8c8d2"></span><span>Luna</span></div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#cc6644"></span><span>Marte</span></div>
+      </div>
+      <div class="mm-panel">
+        <div class="mm-legend-title">GIOCATORI</div>
+        <div class="mm-legend-row"><span class="mm-tri" style="color:#88ddff">&#9650;</span><span>Tu</span></div>
+        <div class="mm-legend-row"><span class="mm-dot mm-dot-pulse" style="background:#ff3030"></span><span>Nemico</span></div>
+      </div>
+    </div>
+    <div class="mm-legend-right">
+      <div class="mm-panel">
+        <div class="mm-legend-title">OGGETTI</div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#80ffb0"></span><span>Power-up</span></div>
+        <div class="mm-legend-row"><span class="mm-ring" style="border-color:#b478ff"></span><span>Zona</span></div>
+      </div>
+      <div class="mm-panel">
+        <div class="mm-legend-title">POI</div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#78c8ff"></span><span>Stazione Aurora</span></div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#b48c5a"></span><span>Relitto Titano</span></div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#a08c78"></span><span>Cintura Hephaestus</span></div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#b4b4ff"></span><span>Array Echo</span></div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#ffa050"></span><span>Deposito Prometeo</span></div>
+        <div class="mm-legend-row"><span class="mm-dot" style="background:#9696aa"></span><span>Campo K</span></div>
+      </div>
+    </div>
   </div>
 </div>
 <div id="vignette"></div>
@@ -545,21 +596,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
       <div><div class="stat-val" id="statKills">0</div><div class="stat-lbl">KILL</div></div>
       <div><div class="stat-val" id="statAvg">&mdash;</div><div class="stat-lbl">MEDIA</div></div>
     </div>
-    <div class="chassis-label">SCEGLI CHASSIS</div>
-    <div class="chassis-grid" id="chassisGrid">
-      <div class="chassis" data-chassis="snappy">
-        <div class="chassis-name">SNAPPY</div>
-        <div class="chassis-stat">HP 80<br>VEL +15%<br>TURN +40%</div>
-      </div>
-      <div class="chassis active" data-chassis="balanced">
-        <div class="chassis-name">BALANCED</div>
-        <div class="chassis-stat">HP 100<br>VEL 100%<br>TURN 100%</div>
-      </div>
-      <div class="chassis" data-chassis="tank">
-        <div class="chassis-name">TANK</div>
-        <div class="chassis-stat">HP 140<br>VEL -15%<br>TURN -25%</div>
-      </div>
-    </div>
     <button class="btn-primary" id="findMatch"><span>TROVA PARTITA</span><small>SISTEMA SOLARE &middot; 10 GIOCATORI</small></button>
   </div>
 </div>
@@ -580,6 +616,31 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
     <div class="xp-bar-wrap"><div class="xp-bar" id="xpBar"></div></div>
     <div class="xp-label" id="xpLabel">+0 XP</div>
     <button class="btn-primary" id="returnLobby"><span>TORNA ALLA LOBBY</span></button>
+  </div>
+</div>
+<div id="settingsPanel">
+  <div class="settings-box">
+    <div class="settings-head">
+      <div class="settings-title">IMPOSTAZIONI</div>
+      <button class="settings-close" id="settingsClose">&#10005;</button>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">SENSIBILITÀ</span>
+      <input type="range" id="setSens" min="0.5" max="2" step="0.1" value="1">
+      <span class="settings-val" id="setSensVal">1.0</span>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">AIM ASSIST</span>
+      <button class="settings-toggle" id="setAim" data-on="1">ON</button>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">KILL FEED</span>
+      <button class="settings-toggle" id="setKf" data-on="1">ON</button>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">MINI-MAPPA</span>
+      <button class="settings-toggle" id="setMm" data-on="1">ON</button>
+    </div>
   </div>
 </div>
 <script>
@@ -1035,7 +1096,7 @@ var minimapFullscreen=false, minimapPointerId=null;
 function openMinimapFullscreen(){
   if(minimapFullscreen) return; if(currentScreen!=='match') return;
   minimapFullscreen=true; minimapEl.classList.add('fullscreen');
-  var fsSize=Math.min(window.innerWidth, window.innerHeight)*0.9;
+  var fsSize=Math.min(window.innerWidth, window.innerHeight)*0.72;
   setMinimapSize(fsSize,1.5);
 }
 function closeMinimapFullscreen(){
@@ -1384,6 +1445,68 @@ function saveProfile(){try{localStorage.setItem('royal_solar_arena_v1',JSON.stri
 function rankForLevel(lv){if(lv>=20)return{cls:'dia',icon:'\u2605',label:'DIAMANTE'};if(lv>=14)return{cls:'plat',icon:'\u2605',label:'PLATINO'};if(lv>=9)return{cls:'gold',icon:'\u2605',label:'ORO'};if(lv>=5)return{cls:'silver',icon:'\u2605',label:'ARGENTO'};return{cls:'bronze',icon:'\u2605',label:'BRONZO'};}
 function xpToNextLevel(lv){return 100+lv*60;}
 
+/* ============ IMPOSTAZIONI ============ */
+var SETTINGS_KEY='royal_solar_arena_settings_v1';
+var settings={sens:1.0, aimAssist:true, killFeed:true, minimap:true};
+try{
+  var savedS=localStorage.getItem(SETTINGS_KEY);
+  if(savedS) settings=Object.assign(settings, JSON.parse(savedS));
+}catch(_){}
+function saveSettings(){try{localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));}catch(_){}}
+
+var settingsPanelEl=document.getElementById('settingsPanel');
+function toggleSettingsPanel(force){
+  if(currentScreen!=='match') return;
+  var willShow = (typeof force==='boolean') ? force : !settingsPanelEl.classList.contains('show');
+  settingsPanelEl.classList.toggle('show', willShow);
+  if(willShow) syncSettingsUI();
+}
+function hideSettingsPanel(){ settingsPanelEl.classList.remove('show'); }
+function syncSettingsUI(){
+  var sv=document.getElementById('setSens');
+  var svv=document.getElementById('setSensVal');
+  if(sv) sv.value=settings.sens;
+  if(svv) svv.textContent=settings.sens.toFixed(1);
+  var aimB=document.getElementById('setAim');
+  if(aimB){ aimB.dataset.on=settings.aimAssist?'1':'0'; aimB.textContent=settings.aimAssist?'ON':'OFF'; }
+  var kfB=document.getElementById('setKf');
+  if(kfB){ kfB.dataset.on=settings.killFeed?'1':'0'; kfB.textContent=settings.killFeed?'ON':'OFF'; }
+  var mmB=document.getElementById('setMm');
+  if(mmB){ mmB.dataset.on=settings.minimap?'1':'0'; mmB.textContent=settings.minimap?'ON':'OFF'; }
+  var kfEl=document.getElementById('killFeed');
+  if(kfEl) kfEl.style.visibility = settings.killFeed ? '' : 'hidden';
+  minimapEl.style.display = settings.minimap ? '' : 'none';
+}
+(function bindSettingsUI(){
+  var sv=document.getElementById('setSens');
+  if(sv){
+    sv.addEventListener('input', function(){
+      settings.sens=parseFloat(sv.value)||1.0;
+      document.getElementById('setSensVal').textContent=settings.sens.toFixed(1);
+      saveSettings();
+    });
+  }
+  var aimB=document.getElementById('setAim');
+  if(aimB) aimB.addEventListener('click', function(){
+    settings.aimAssist=!settings.aimAssist; saveSettings(); syncSettingsUI();
+  });
+  var kfB=document.getElementById('setKf');
+  if(kfB) kfB.addEventListener('click', function(){
+    settings.killFeed=!settings.killFeed; saveSettings(); syncSettingsUI();
+  });
+  var mmB=document.getElementById('setMm');
+  if(mmB) mmB.addEventListener('click', function(){
+    settings.minimap=!settings.minimap; saveSettings(); syncSettingsUI();
+  });
+  var cB=document.getElementById('settingsClose');
+  if(cB) cB.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); hideSettingsPanel(); });
+  if(settingsPanelEl){
+    settingsPanelEl.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+    settingsPanelEl.addEventListener('pointerup', function(e){ e.stopPropagation(); });
+  }
+})();
+/* ============ FINE IMPOSTAZIONI ============ */
+
 var earth=PLANETS[2], mars=PLANETS[3];
 var SHIPS=[];
 var human={isHuman:true,alive:true,hp:MAX_HP,maxHp:MAX_HP,x:0,y:0,z:0,yaw:0,pitch:0,bank:0,speed:0,recoil:0,fireCd:0,flash:0,
@@ -1563,9 +1686,20 @@ document.addEventListener('pointercancel', function(e){
   hideStatsPage();
 });
 
+/* Tap su vita/munizioni (in alto a sinistra) → apre/chiude impostazioni */
+statsWrap.addEventListener('pointerdown', function(e){
+  e.preventDefault(); e.stopPropagation();
+  if(currentScreen !== 'match') return;
+  toggleSettingsPanel();
+});
+statsWrap.addEventListener('pointerup', function(e){
+  e.preventDefault(); e.stopPropagation();
+});
+
 function showScreen(n){
   if(n!=='match'&&minimapFullscreen) closeMinimapFullscreen();
   if(n!=='match') hideStatsPage();
+  if(n!=='match') hideSettingsPanel();
   currentScreen=n;
   lobbyEl.classList.toggle('active',n==='lobby');
   queueEl.classList.toggle('active',n==='queue');
@@ -1585,10 +1719,6 @@ function renderLobby(){
   document.getElementById('statWins').textContent=profile.wins;
   document.getElementById('statKills').textContent=profile.kills;
   document.getElementById('statAvg').textContent=profile.matches>0?(profile.totalPlacement/profile.matches).toFixed(1):'\u2014';
-  var chassisEls=document.querySelectorAll('#chassisGrid .chassis');
-  for(var i=0;i<chassisEls.length;i++){
-    chassisEls[i].classList.toggle('active', chassisEls[i].dataset.chassis===profile.chassis);
-  }
 }
 
 var lobbyAngle=0;
@@ -1729,6 +1859,7 @@ function endMatch(won){
   if(!matchActive) return;
   matchActive=false;
   hideStatsPage();
+  hideSettingsPanel();
   var alive=SHIPS.filter(function(s){return s.alive;}).length;
   placement=won?1:alive+1;
   var t=gameTime-matchStats.startTime;
@@ -1934,6 +2065,7 @@ function updateZone(dt){
 
 function computeAimAssist(ship, fx, fy, fz){
   if(!ship.isHuman) return [fx,fy,fz];
+  if(!settings.aimAssist) return [fx,fy,fz];
   var bestDot=Math.cos(AIM_ASSIST_CONE_DEG*PI/180);
   var best=null, bestDotVal=-1;
   for(var i=0;i<SHIPS.length;i++){
@@ -2130,7 +2262,6 @@ function doResize(){
   resizeScheduled=false;
   updateOrientationOverlay();
   var cw=window.innerWidth, ch=window.innerHeight;
-  // FIX: ignora micro-variazioni (barra URL, zoom, ecc.)
   if(lastCw > 0){
     var sameOrientation = (cw > ch) === (lastCw > lastCh);
     var cwDelta = Math.abs(cw - lastCw) / Math.max(1,lastCw);
@@ -2150,7 +2281,7 @@ function doResize(){
   depthBuf=new Float32Array(W*H);
   ctx.imageSmoothingEnabled=false;
   if(minimapFullscreen){
-    var fsSize=Math.min(window.innerWidth, window.innerHeight)*0.9;
+    var fsSize=Math.min(window.innerWidth, window.innerHeight)*0.72;
     setMinimapSize(fsSize, 1.5);
   } else {
     var mmSize = (window.innerWidth > window.innerHeight) ? 96 : 120;
@@ -2836,23 +2967,17 @@ for(var kk=0;kk<POWERUP_KEYS.length;kk++){
   puSprites[key]=buildPowerupSprite(POWERUP_DEFS[key].color);
 }
 
-// Missile sprite: più compatto, luminoso, distintivo
 var MISSILE_SPR=16;
 var missileSprite=(function(){
   var spr=new Uint32Array(MISSILE_SPR*MISSILE_SPR);
   var setPx=function(x,y,c){if(x<0||y<0||x>=MISSILE_SPR||y>=MISSILE_SPR)return;spr[y*MISSILE_SPR+x]=0xFF000000|((c[2]|0)<<16)|((c[1]|0)<<8)|(c[0]|0);};
   var BODY_L=[255,255,255], BODY_R=[200,210,230], NOSE=[255,120,60], FIN=[220,90,60], STRIPE=[255,220,80];
-  // corpo principale
   for(var y=3;y<=12;y++){ setPx(7,y,BODY_L); setPx(8,y,BODY_R); }
-  // striscia gialla
   setPx(7,6,STRIPE); setPx(8,6,STRIPE);
   setPx(7,9,STRIPE); setPx(8,9,STRIPE);
-  // pinne
   setPx(5,11,FIN); setPx(6,11,BODY_L); setPx(9,11,BODY_R); setPx(10,11,FIN);
-  // punta
   setPx(7,2,NOSE); setPx(8,2,NOSE);
   setPx(7,1,[255,180,140]); setPx(8,1,[255,180,140]);
-  // fiamma posteriore
   setPx(7,13,[255,220,120]); setPx(8,13,[255,220,120]);
   setPx(7,14,[255,160,60]); setPx(8,14,[255,160,60]);
   setPx(7,15,[255,80,40]); setPx(8,15,[255,80,40]);
@@ -3537,9 +3662,6 @@ function drawBeams(){
   }
 }
 
-// ============================================================
-// MISSILE — scala colpisce coerentemente con la distanza
-// ============================================================
 function missileScaleFor(zd){
   if(zd<SCALE_REF_CLOSE)return 0.85;
   if(zd>SCALE_REF_FAR)return 0.35;
@@ -3574,7 +3696,6 @@ function drawMissiles(){
       }
     }
 
-    // GLOW / ALONE ARANCIONE luminoso — rende il missile sempre visibile
     var sc = missileScaleFor(pr.zd);
     var glowR = Math.round(5 * sc) + 2;
     var gxI = pr.scrX|0, gyI = pr.scrY|0;
@@ -3590,7 +3711,6 @@ function drawMissiles(){
       }
     }
 
-    // sprite missile
     var cosA=Math.cos(-angle), sinA=Math.sin(-angle);
     var scxI=MISSILE_SPR/2, scyI=MISSILE_SPR/2;
     var halfW=MISSILE_SPR*sc*0.5, halfH=MISSILE_SPR*sc*0.5;
@@ -3974,8 +4094,8 @@ function updatePlayer(dt){
     if(u>=1)aim.active=false;
     human.bank*=Math.max(0,1-dt*4);
   } else {
-    human.yaw+=ax*2.1*human.turnMul*dt;
-    human.pitch+=ay*1.45*human.turnMul*dt;
+    human.yaw+=ax*2.1*human.turnMul*dt*settings.sens;
+    human.pitch+=ay*1.45*human.turnMul*dt*settings.sens;
     human.pitch=Math.max(-1.4,Math.min(1.4,human.pitch));
     human.bank+=(ax*0.6-human.bank)*Math.min(1,dt*8);
   }
@@ -4118,7 +4238,6 @@ function updateMissiles(dt){
     }
     if(hit){missiles.splice(i,1);continue;}
 
-    // TRAIL missile — più densa per visibilità
     var mdx=m.x-m.prevX, mdy=m.y-m.prevY, mdz=m.z-m.prevZ;
     var mdist=Math.sqrt(mdx*mdx+mdy*mdy+mdz*mdz);
     if(mdist>1e3){
@@ -4502,12 +4621,6 @@ function updateAmmoDisplay(){
     else{reloadStateEl.textContent='READY'; reloadStateEl.classList.remove('reloading');}
   }
 }
-document.getElementById('chassisGrid').addEventListener('click',function(e){
-  var el=e.target.closest('.chassis'); if(!el)return;
-  profile.chassis=el.dataset.chassis; saveProfile();
-  var els=document.querySelectorAll('#chassisGrid .chassis');
-  for(var i=0;i<els.length;i++) els[i].classList.toggle('active', els[i].dataset.chassis===profile.chassis);
-});
 brakeBtn.addEventListener('pointerdown', function(e){
   e.preventDefault(); e.stopPropagation();
   try{ brakeBtn.setPointerCapture(e.pointerId); } catch(_){}
@@ -4702,6 +4815,7 @@ function loop(now){
 }
 
 // Avvio
+syncSettingsUI();
 doResize();
 renderLobby();
 showScreen('lobby');
