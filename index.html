@@ -726,6 +726,14 @@ function initPois(){
   }
 }
 
+/* ===================== CAP ARRAY (anti-OOM) ===================== */
+var MAX_TRAILS = 900;
+var MAX_DEBRIS = 250;
+var MAX_EXPLOSIONS = 140;
+var MAX_BULLETS = 220;
+var MAX_MISSILES = 24;
+var MAX_SHOOTING_STARS = 12;
+
 var AI_DIRECTOR = {
   engine: null, ready: false, loading: false,
   busyDirector: false, busyCoord: false,
@@ -770,9 +778,6 @@ async function initLLM(progressCb){
   } finally {
     AI_DIRECTOR.loading = false;
   }
-}
-function initLLMInBackground(){
-  initLLM(function(){ }).catch(function(e){ console.warn('[AI] background load failed:', e); });
 }
 async function runTacticalDirector(){
   if (!AI_DIRECTOR.engine || AI_DIRECTOR.busyDirector) return;
@@ -1334,8 +1339,12 @@ function spawnPowerupAtRandom(){
 }
 function updatePowerups(dt){
   nextPowerupSpawnT-=dt;
+  // Rimuove i powerup consumati/morti (prima si accumulavano per tutta la partita)
   var aliveCount=0;
-  for(var i=0;i<powerups.length;i++) if(powerups[i].alive) aliveCount++;
+  for(var ci=powerups.length-1; ci>=0; ci--){
+    if(!powerups[ci].alive) powerups.splice(ci,1);
+    else aliveCount++;
+  }
   if(nextPowerupSpawnT<=0 && aliveCount<POWERUP_MAX_ON_MAP){
     nextPowerupSpawnT=POWERUP_SPAWN_INTERVAL*(0.7+Math.random()*0.6);
     spawnPowerupAtRandom();
@@ -1566,6 +1575,7 @@ var spAliveEl=document.getElementById('spAlive');
 var hudRowEl=document.getElementById('hudRow');
 var statsHoldTimer=null;
 var statsPageVisible=false;
+var lastStatsBuild = 0;
 var splashEl=document.getElementById('splash');
 var splashDismissed=false;
 var llmSetupEl=document.getElementById('llmSetup');
@@ -1575,6 +1585,12 @@ var llmProgressFill=document.getElementById('llmProgressFill');
 var llmProgressText=document.getElementById('llmProgressText');
 var llmStatusEl=document.getElementById('llmStatus');
 
+/* =========================================================================
+   PATCH ANTI-CRASH: NON carichiamo più automaticamente il modello WebLLM.
+   Su mobile il modello (~1 GB) satura la RAM e il browser uccide il tab,
+   riportando l'utente alla schermata iniziale. Il download resta
+   disponibile solo se l'utente lo avvia esplicitamente.
+   ========================================================================= */
 function dismissSplash(){
   if(splashDismissed) return;
   splashDismissed=true;
@@ -1582,8 +1598,10 @@ function dismissSplash(){
   tryLockOrientation();
   var flag = false;
   try { flag = localStorage.getItem(LLM_FLAG_KEY) === '1'; } catch(_){}
-  if (flag) { initLLMInBackground(); }
-  else { llmSetupEl.classList.add('active'); }
+  if (!flag) {
+    // Mostra la schermata di download IA, ma NON carica nulla in background.
+    llmSetupEl.classList.add('active');
+  }
 }
 splashEl.addEventListener('pointerdown', function(e){ e.preventDefault(); dismissSplash(); });
 splashEl.addEventListener('touchstart', function(e){ e.preventDefault(); dismissSplash(); }, {passive:false});
@@ -1623,6 +1641,7 @@ llmDownloadBtn.addEventListener('click', async function(){
 function showStatsPage(){
   if(currentScreen!=='match') return;
   statsPageVisible=true;
+  lastStatsBuild = performance.now();
   buildStatsPage();
   statsPageEl.classList.add('show');
 }
@@ -1844,6 +1863,7 @@ function beginMatch(){
   document.getElementById('killFeed').innerHTML='';
   buildPowerupsDOM();
   showKillFeed('\u26A0 ZONA 0 \u00B7 PREPARAZIONE');
+  try{ localStorage.setItem('rsa_in_match','1'); }catch(_){}
 }
 function buildRoster(){
   var r=document.getElementById('roster'); r.innerHTML='';
@@ -1858,6 +1878,7 @@ function buildRoster(){
 function endMatch(won){
   if(!matchActive) return;
   matchActive=false;
+  try{ localStorage.removeItem('rsa_in_match'); }catch(_){}
   hideStatsPage();
   hideSettingsPanel();
   var alive=SHIPS.filter(function(s){return s.alive;}).length;
@@ -2248,6 +2269,7 @@ var reloadStateEl=document.getElementById('reloadState');
 var W=0,H=0,pixScale=3,imgData=null,buf32=null, depthBuf=null;
 var lastCw=0, lastCh=0;
 var resizeScheduled=false;
+var pixScaleOverride = 0;
 
 function updateOrientationOverlay(){
   var isPortrait = window.innerHeight > window.innerWidth;
@@ -2258,11 +2280,11 @@ function updateOrientationOverlay(){
   else overlay.classList.remove('show');
 }
 
-function doResize(){
+function doResize(force){
   resizeScheduled=false;
   updateOrientationOverlay();
   var cw=window.innerWidth, ch=window.innerHeight;
-  if(lastCw > 0){
+  if(!force && lastCw > 0){
     var sameOrientation = (cw > ch) === (lastCw > lastCh);
     var cwDelta = Math.abs(cw - lastCw) / Math.max(1,lastCw);
     var chDelta = Math.abs(ch - lastCh) / Math.max(1,lastCh);
@@ -2271,6 +2293,7 @@ function doResize(){
   lastCw = cw; lastCh = ch;
 
   var base=Math.max(2,Math.round(cw/280));
+  if(pixScaleOverride > base) base = pixScaleOverride;
   pixScale=Math.max(2,base);
   W=Math.max(80,Math.round(cw/pixScale));
   H=Math.max(110,Math.round(ch/pixScale));
@@ -2290,10 +2313,10 @@ function doResize(){
 }
 
 function requestResize(force){
-  if(force){ doResize(); return; }
+  if(force){ doResize(true); return; }
   if(resizeScheduled) return;
   resizeScheduled=true;
-  setTimeout(doResize, 50);
+  setTimeout(function(){ doResize(false); }, 50);
 }
 
 function computeCamera(){
@@ -4743,7 +4766,10 @@ function updateHUD(){
       el.querySelector('.hp').textContent=s.alive?Math.ceil(s.hp):'KIA';
     }
   }
-  if(statsPageVisible) buildStatsPage();
+  if(statsPageVisible && (performance.now() - lastStatsBuild) > 150){
+    lastStatsBuild = performance.now();
+    buildStatsPage();
+  }
 }
 document.getElementById('findMatch').addEventListener('click',function(e){e.preventDefault(); startMatchmaking();});
 document.getElementById('cancelQueue').addEventListener('click',function(e){e.preventDefault(); cancelMatchmaking();});
@@ -4764,59 +4790,124 @@ document.addEventListener('visibilitychange', function(){
   if(!document.hidden) tryLockOrientation();
 });
 
+/* ============ ANTI-OOM: pruneArrays ============ */
+function pruneArrays(){
+  if(trails.length > MAX_TRAILS)         trails.splice(0, trails.length - MAX_TRAILS);
+  if(debris.length > MAX_DEBRIS)         debris.splice(0, debris.length - MAX_DEBRIS);
+  if(explosions.length > MAX_EXPLOSIONS) explosions.splice(0, explosions.length - MAX_EXPLOSIONS);
+  if(bullets.length > MAX_BULLETS)       bullets.splice(0, bullets.length - MAX_BULLETS);
+  if(missiles.length > MAX_MISSILES)     missiles.splice(0, missiles.length - MAX_MISSILES);
+  if(shootingStars.length > MAX_SHOOTING_STARS) shootingStars.splice(0, shootingStars.length - MAX_SHOOTING_STARS);
+  if(swarmAsteroids.length > 60)         swarmAsteroids.splice(0, swarmAsteroids.length - 60);
+}
+
+/* ============ QUALITÀ ADATTIVA ============ */
+var perfAccum = 0, perfFrames = 0, perfCooldown = 0;
+function adaptiveQuality(dt){
+  perfAccum += dt; perfFrames++;
+  if(perfCooldown > 0) perfCooldown -= dt;
+  if(perfFrames >= 60){
+    var avg = perfAccum / perfFrames;
+    if(perfCooldown <= 0){
+      if(avg > 0.034 && pixScaleOverride < 6){
+        pixScaleOverride = Math.max(pixScaleOverride+1, pixScale+1);
+        if(pixScaleOverride > 6) pixScaleOverride = 6;
+        perfCooldown = 6;
+        doResize(true);
+      } else if(avg < 0.019 && pixScaleOverride > 0){
+        pixScaleOverride--;
+        perfCooldown = 6;
+        doResize(true);
+      }
+    }
+    perfAccum = 0; perfFrames = 0;
+  }
+}
+
 var lastT=0;
 function loop(now){
   requestAnimationFrame(loop);
-  if(!lastT)lastT=now;
-  var dt=(now-lastT)/1000; lastT=now;
-  if(dt>0.1)dt=0.1; if(dt<0.001)dt=0.001;
-  gameTime+=dt;
-  updateMoon(dt);
-  if(currentScreen==='lobby'||currentScreen==='queue'){
-    updateLobbyCamera(dt); updateSatellites(dt); updatePois(dt); render();
-  } else if(currentScreen==='match'){
-    if(shakeMag>0){shakeMag-=dt*4; if(shakeMag<0)shakeMag=0;}
-    if(matchActive){
-      readKeyboard();
-      updatePlayer(dt);
-      for(var i=1;i<SHIPS.length;i++)updateAI(SHIPS[i],dt);
-      for(var i2=0;i2<SHIPS.length;i2++)updateShipRegen(SHIPS[i2],dt);
-      updateBullets(dt);
-      updateMissiles(dt);
-      updateZone(dt);
-      updatePowerups(dt);
-      updateDynamicEvents(dt);
-      updateSatellites(dt);
-      updatePois(dt);
-      if(AI_DIRECTOR.ready){
-        AI_DIRECTOR.directorTimer += dt;
-        if(AI_DIRECTOR.directorTimer > 8 && !AI_DIRECTOR.busyDirector){
-          AI_DIRECTOR.directorTimer = 0;
-          runTacticalDirector();
-        }
-        AI_DIRECTOR.coordinatorTimer += dt;
-        var aliveBotsNow = 0;
-        for(var bi2=1;bi2<SHIPS.length;bi2++) if(SHIPS[bi2].alive) aliveBotsNow++;
-        if(AI_DIRECTOR.coordinatorTimer > 15 && aliveBotsNow >= 3 && !AI_DIRECTOR.busyCoord){
-          AI_DIRECTOR.coordinatorTimer = 0;
-          runBotCoordinator();
+  try{
+    if(!lastT)lastT=now;
+    var dt=(now-lastT)/1000; lastT=now;
+    if(dt>0.1)dt=0.1; if(dt<0.001)dt=0.001;
+    gameTime+=dt;
+    updateMoon(dt);
+    pruneArrays();
+    if(currentScreen==='lobby'||currentScreen==='queue'){
+      updateLobbyCamera(dt); updateSatellites(dt); updatePois(dt); render();
+    } else if(currentScreen==='match'){
+      if(shakeMag>0){shakeMag-=dt*4; if(shakeMag<0)shakeMag=0;}
+      if(matchActive){
+        readKeyboard();
+        updatePlayer(dt);
+        for(var i=1;i<SHIPS.length;i++)updateAI(SHIPS[i],dt);
+        for(var i2=0;i2<SHIPS.length;i2++)updateShipRegen(SHIPS[i2],dt);
+        updateBullets(dt);
+        updateMissiles(dt);
+        updateZone(dt);
+        updatePowerups(dt);
+        updateDynamicEvents(dt);
+        updateSatellites(dt);
+        updatePois(dt);
+        if(AI_DIRECTOR.ready){
+          AI_DIRECTOR.directorTimer += dt;
+          if(AI_DIRECTOR.directorTimer > 8 && !AI_DIRECTOR.busyDirector){
+            AI_DIRECTOR.directorTimer = 0;
+            runTacticalDirector();
+          }
+          AI_DIRECTOR.coordinatorTimer += dt;
+          var aliveBotsNow = 0;
+          for(var bi2=1;bi2<SHIPS.length;bi2++) if(SHIPS[bi2].alive) aliveBotsNow++;
+          if(AI_DIRECTOR.coordinatorTimer > 15 && aliveBotsNow >= 3 && !AI_DIRECTOR.busyCoord){
+            AI_DIRECTOR.coordinatorTimer = 0;
+            runBotCoordinator();
+          }
         }
       }
+      updateExplosions(dt);
+      updateTrails(dt);
+      updateShootingStars(dt);
+      updateMapScale(dt);
+      render();
+      updateHUD();
+      adaptiveQuality(dt);
+    } else if(currentScreen==='results'){
+      updateSatellites(dt); updatePois(dt); render();
     }
-    updateExplosions(dt);
-    updateTrails(dt);
-    updateShootingStars(dt);
-    updateMapScale(dt);
-    render();
-    updateHUD();
-  } else if(currentScreen==='results'){
-    updateSatellites(dt); updatePois(dt); render();
+  } catch(err){
+    try{ console.error('[loop]', err); }catch(_){}
+    try{
+      var msg = (err && err.message) ? String(err.message) : '';
+      if(/buffer|array|length|undefined|null/i.test(msg)){
+        bullets.length=0; missiles.length=0;
+        explosions.length=0; trails.length=0; debris.length=0;
+      }
+    }catch(_){}
   }
 }
 
 // Avvio
 syncSettingsUI();
-doResize();
+doResize(false);
+
+/* ============ RILEVAMENTO CRASH PARTITA ============ */
+try{
+  if(localStorage.getItem('rsa_in_match') === '1'){
+    localStorage.removeItem('rsa_in_match');
+    setTimeout(function(){
+      var kf=document.getElementById('killFeed');
+      if(kf){
+        var el=document.createElement('div');
+        el.className='kf';
+        el.textContent='\u26A0 Partita precedente interrotta';
+        kf.appendChild(el);
+        setTimeout(function(){el.remove();},4200);
+      }
+    }, 800);
+  }
+}catch(_){}
+
 renderLobby();
 showScreen('lobby');
 requestAnimationFrame(loop);
