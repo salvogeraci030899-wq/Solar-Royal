@@ -712,7 +712,7 @@ function initPois(){
 }
 
 // ============================================================
-// AI DIRECTOR — WebLLM per nemici intelligenti
+// AI DIRECTOR — WebLLM
 // ============================================================
 var AI_DIRECTOR = {
   engine: null,
@@ -853,11 +853,7 @@ async function runBotCoordinator(){
       'GIOCATORE UMANO: hp ' + hHp + ', posizione [' + hx + ',' + hy + ',' + hz + ']\n\n' +
       'Assegna un ruolo a ogni pilota. Rispondi SOLO con JSON, senza testo attorno:\n' +
       '{"roles":[{"id":1,"role":"attacco"},{"id":2,"role":"supporto"},{"id":3,"role":"flank"},{"id":4,"role":"ritirata"}]}\n\n' +
-      'Ruoli validi: attacco, supporto, flank, ritirata\n' +
-      '- attacco: carica il nemico più vicino\n' +
-      '- supporto: combatte a distanza, copre gli alleati\n' +
-      '- flank: attacca da un lato\n' +
-      '- ritirata: fugge e si cura se ferito';
+      'Ruoli validi: attacco, supporto, flank, ritirata';
 
     var reply = await AI_DIRECTOR.engine.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
@@ -916,6 +912,38 @@ var BAYER=new Float32Array(64);
 (function(){var m=[[0,32,8,40,2,34,10,42],[48,16,56,24,50,18,58,26],[12,44,4,36,14,46,6,38],[60,28,52,20,62,30,54,22],[3,35,11,43,1,33,9,41],[51,19,59,27,49,17,57,25],[15,47,7,39,13,45,5,37],[63,31,55,23,61,29,53,21]];
 for(var y=0;y<8;y++)for(var x=0;x<8;x++)BAYER[(y<<3)|x]=m[y][x]/64;})();
 
+function dth(y,x){ return BAYER[((y&7)<<3)|(x&7)]; }
+
+// ============================================================
+// PALETTE PIXEL ART — 10 colori per corpo celeste
+// ============================================================
+var PALETTES = {
+  mercury:  [[15,12,10],[32,26,22],[52,42,34],[75,62,50],[102,88,74],[130,115,98],[158,142,124],[188,172,152],[215,202,182],[240,230,215]],
+  venus:    [[50,35,15],[88,60,28],[128,92,45],[168,128,68],[205,170,100],[230,200,138],[245,222,172],[252,238,205],[255,248,225],[255,252,240]],
+  venusCloud:[[200,155,80],[220,180,110],[238,205,145],[248,225,175],[252,238,200],[255,245,220],[255,250,235],[255,252,245],[255,253,250],[255,255,255]],
+  mars:     [[38,16,10],[72,34,20],[110,58,36],[150,88,54],[185,124,78],[212,160,108],[230,190,140],[240,212,172],[246,230,200],[250,244,228]],
+  moon:     [[22,22,26],[46,46,54],[78,78,88],[112,112,122],[148,148,158],[182,182,192],[210,210,220],[230,230,240],[244,244,250],[252,252,255]],
+  earthSea: [[6,28,65],[12,46,100],[20,65,132],[32,88,158],[52,112,180],[78,142,198],[108,172,215],[142,198,230],[178,218,242],[215,240,252]],
+  earthLand:[[24,50,26],[40,74,36],[62,98,46],[92,122,60],[128,148,84],[162,172,110],[192,192,140],[216,214,172],[234,230,204],[248,245,235]],
+  earthSand:[[115,86,50],[150,116,72],[180,144,96],[205,172,122],[222,192,145],[235,212,172],[244,226,195],[250,238,215],[253,246,232],[255,252,242]],
+  earthSnow:[[100,112,135],[135,148,170],[168,180,200],[196,206,220],[218,226,238],[236,240,248],[246,250,253],[252,253,255],[254,254,255],[255,255,255]],
+  jupiter:  [[48,30,18],[80,52,32],[115,78,48],[150,108,72],[185,142,100],[215,175,135],[232,198,165],[243,218,195],[250,232,218],[253,242,235]],
+  saturn:   [[62,45,25],[98,72,42],[135,105,65],[168,138,98],[198,172,132],[220,200,165],[236,220,192],[246,234,215],[251,244,232],[254,250,244]],
+  uranus:   [[30,68,82],[52,98,115],[80,130,148],[108,160,178],[138,188,205],[168,212,225],[195,230,240],[216,242,248],[236,250,253],[250,254,255]],
+  neptune:  [[12,28,72],[28,48,110],[45,75,155],[68,105,192],[98,138,220],[130,172,238],[165,200,246],[195,222,250],[222,238,254],[242,248,255]]
+};
+
+function pickPaletteIdx(value, bx, by){
+  var d = BAYER[((by&7)<<3)|(bx&7)];
+  var v = value * 9 + (d - 0.5) * 0.9;
+  var idx = Math.floor(v);
+  if(idx<0) idx=0; else if(idx>9) idx=9;
+  return idx;
+}
+function pickPalette(pal, value, bx, by){
+  return pal[pickPaletteIdx(value, bx, by)];
+}
+
 function hash3(x,y,z){
   var h=Math.imul(x,0x27d4eb2d)^Math.imul(y,0x165667b1)^Math.imul(z,0x9e3779b1);
   h=Math.imul(h^(h>>>15),0x85ebca6b);h=Math.imul(h^(h>>>13),0xc2b2ae35);h^=h>>>16;
@@ -936,72 +964,115 @@ function noise3(x,y,z){
 }
 
 // ============================================================
-// STARFIELD — pixel art con stelle a croce e nebulose
+// STARFIELD V2 — stelle a croce + nebulose
 // ============================================================
 var STAR_W=1024,STAR_H=512;
 var starTex=new Uint8Array(STAR_W*STAR_H*3);
 var starPhase=new Uint8Array(STAR_W*STAR_H);
-var starTwinkleAmp=new Uint8Array(STAR_W*STAR_H);
-var starCross=new Uint8Array(STAR_W*STAR_H);
+var nebulaTex=new Uint8Array(STAR_W*STAR_H*4);
 (function(){
   for(var y=0;y<STAR_H;y++){
-    var phi=(y+0.5)/STAR_H*PI-PI/2,cp=Math.cos(phi),sp=Math.sin(phi);
+    var phi=(y+0.5)/STAR_H*PI-PI/2, cp=Math.cos(phi), sp=Math.sin(phi);
     for(var x=0;x<STAR_W;x++){
       var th=(x+0.5)/STAR_W*TAU;
-      var dx=cp*Math.cos(th),dy=cp*Math.sin(th),dz=sp;
-      var n1=noise3(dx*2.1+13.1,dy*2.1+7.7,dz*2.1+3.3);
-      var n2=noise3(dx*5.4+41.7,dy*5.4+23.9,dz*5.4+9.1);
-      var n3=noise3(dx*11.8+91.3,dy*11.8+61.7,dz*11.8+33.1);
-      var n=n1*0.7+n2*0.5+n3*0.3;
-      var r=1,g=2,b=6;
-      var mw=noise3(dx*1.2+7,dy*1.2+13,dz*1.2+23);
-      var band=1-Math.abs(dz*1.7+mw*0.45)/0.55;
-      if(band>0){
-        var bb=band*band*0.35;
-        var mwFine=noise3(dx*7.5+3,dy*7.5+9,dz*7.5+17);
-        var mwClumps=mwFine>0.15?1:0.55;
-        r+=bb*22*mwClumps; g+=bb*24*mwClumps; b+=bb*40*mwClumps;
-      }
-      if(n>0.12){
-        var nn=Math.min(1,(n-0.12)*0.75);
-        var q=Math.round(nn*5)/5;
-        var hue=noise3(dx*0.6+11,dy*0.6+5,dz*0.6+2);
-        var rr,gg,bb2;
-        if(hue<-0.15){rr=180;gg=90;bb2=200;}
-        else if(hue<0.1){rr=100;gg=150;bb2=230;}
-        else{rr=230;gg=130;bb2=180;}
-        r+=q*rr*0.16; g+=q*gg*0.16; b+=q*bb2*0.20;
-      }
+      var dx=cp*Math.cos(th), dy=cp*Math.sin(th), dz=sp;
       var h=hash3(x*7+11,y*7+3,91);
-      if(h>0.9930){
-        var st=(h-0.9930)/0.0070;
-        var hue2=hash3(x*5,y*3,7);
+      var r=0,g=0,b=0;
+      if(h>0.9905){
+        var st=(h-0.9905)/0.0095;
+        var hue=hash3(x*5,y*3,7);
         var sr,sg,sb;
-        if(hue2<0.08){sr=255;sg=150;sb=100;}
-        else if(hue2<0.28){sr=255;sg=210;sb=155;}
-        else if(hue2<0.55){sr=255;sg=252;sb=240;}
-        else if(hue2<0.80){sr=230;sg=240;sb=255;}
-        else{sr=170;sg=200;sb=255;}
-        var sa=0.25+0.75*st;
-        r+=sr*sa; g+=sg*sa; b+=sb*sa;
+        if(hue<0.10){sr=255;sg=140;sb=90;}
+        else if(hue<0.30){sr=255;sg=205;sb=150;}
+        else if(hue<0.55){sr=255;sg=250;sb=235;}
+        else if(hue<0.82){sr=225;sg=235;sb=255;}
+        else{sr=160;sg=195;sb=255;}
+        var sa=0.35+0.65*st;
+        r=sr*sa; g=sg*sa; b=sb*sa;
+        // croce a seconda della luminosità
+        var crossA = st>0.75 ? 0.90 : st>0.5 ? 0.65 : st>0.3 ? 0.40 : 0;
+        if(crossA>0){
+          var dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+          for(var d=0;d<4;d++){
+            var nx=x+dirs[d][0], ny=y+dirs[d][1];
+            if(nx<0||ny<0||nx>=STAR_W||ny>=STAR_H)continue;
+            var nidx=ny*STAR_W+nx, ni3=nidx*3;
+            var nr=starTex[ni3]+r*crossA;
+            var ng=starTex[ni3+1]+g*crossA;
+            var nb=starTex[ni3+2]+b*crossA;
+            starTex[ni3]=nr>255?255:nr;
+            starTex[ni3+1]=ng>255?255:ng;
+            starTex[ni3+2]=nb>255?255:nb;
+          }
+        }
         starPhase[y*STAR_W+x]=1+(hash3(x*11,y*17,5)*100|0);
-        starTwinkleAmp[y*STAR_W+x]=Math.min(255,(st*255)|0);
-        if(st>0.55){ starCross[y*STAR_W+x]=Math.min(255,(st*255)|0); }
       }
-      var h2=hash3(x+91,y+53,33);
-      if(h2>0.9990){var st2=(h2-0.9990)/0.0010;r=r+(255-r)*st2;g=g+(250-g)*st2;b=b+(255-b)*st2;}
       var h3=hash3(x+31,y+77,53);
-      if(h3>0.99985){
-        var st3=(h3-0.99985)/0.00015;
-        r=255;g=240+st3*15;b=200+st3*55;
-        starCross[y*STAR_W+x]=255;
+      if(h3>0.99988){
+        var st3=(h3-0.99988)/0.00012;
+        r=255; g=245+st3*10; b=210+st3*45;
+        var dirs2=[[1,0],[-1,0],[0,1],[0,-1]];
+        for(var d2=0;d2<4;d2++){
+          var nx2=x+dirs2[d2][0], ny2=y+dirs2[d2][1];
+          if(nx2<0||ny2<0||nx2>=STAR_W||ny2>=STAR_H)continue;
+          var nidx2=ny2*STAR_W+nx2, ni32=nidx2*3;
+          starTex[ni32]=255;
+          starTex[ni32+1]=245;
+          starTex[ni32+2]=215;
+        }
         starPhase[y*STAR_W+x]=1+(hash3(x*3,y*5,9)*100|0);
-        starTwinkleAmp[y*STAR_W+x]=255;
       }
       var i3=(y*STAR_W+x)*3;
-      starTex[i3]=r>255?255:(r|0);
-      starTex[i3+1]=g>255?255:(g|0);
-      starTex[i3+2]=b>255?255:(b|0);
+      starTex[i3]=Math.min(255, starTex[i3]+r);
+      starTex[i3+1]=Math.min(255, starTex[i3+1]+g);
+      starTex[i3+2]=Math.min(255, starTex[i3+2]+b);
+    }
+  }
+  // Nebulose overlay
+  for(var y=0;y<STAR_H;y++){
+    var phi=(y+0.5)/STAR_H*PI-PI/2, cp=Math.cos(phi), sp=Math.sin(phi);
+    for(var x=0;x<STAR_W;x++){
+      var th=(x+0.5)/STAR_W*TAU;
+      var dx=cp*Math.cos(th), dy=cp*Math.sin(th), dz=sp;
+      var mw=noise3(dx*1.1+7,dy*1.1+13,dz*1.1+23);
+      var band=1-Math.abs(dz*1.65+mw*0.42)/0.58;
+      var r=0,g=0,b=0,a=0;
+      if(band>0){
+        var bb=band*band;
+        var mw1=noise3(dx*3.4+1,dy*3.4+5,dz*3.4+9);
+        var mw2=noise3(dx*8.5+3,dy*8.5+9,dz*8.5+17);
+        var mw3=noise3(dx*18+11,dy*18+19,dz*18+23);
+        var clump=0.55+mw1*0.3+mw2*0.15;
+        if(clump<0)clump=0;
+        var dust=mw3;
+        var lum=bb*clump;
+        r+=180*lum; g+=175*lum; b+=195*lum;
+        a+=bb*0.42*clump;
+        if(dust<-0.15){
+          var dark=Math.min(1,(-dust-0.15)*3);
+          a*=1-dark*0.55;
+          r*=1-dark*0.7; g*=1-dark*0.7; b*=1-dark*0.65;
+        }
+      }
+      var n1=noise3(dx*2.4+13,dy*2.4+7,dz*2.4+3);
+      if(n1>0.22){
+        var nn=Math.min(1,(n1-0.22)*1.6);
+        var q=Math.floor(nn*4)/4;
+        var hue=noise3(dx*0.7+11,dy*0.7+5,dz*0.7+2);
+        var rr,gg,bb2;
+        if(hue<-0.18){rr=190;gg=85;bb2=200;}
+        else if(hue<0.10){rr=90;gg=145;bb2=230;}
+        else if(hue<0.32){rr=90;gg=200;bb2=180;}
+        else{rr=235;gg=130;bb2=175;}
+        var aa=q*0.20;
+        r+=rr*aa; g+=gg*aa; b+=bb2*aa;
+        a+=q*0.22;
+      }
+      var idx=(y*STAR_W+x)*4;
+      nebulaTex[idx]  = r>255?255:(r|0);
+      nebulaTex[idx+1]= g>255?255:(g|0);
+      nebulaTex[idx+2]= b>255?255:(b|0);
+      nebulaTex[idx+3]= a>1?255:(a*255)|0;
     }
   }
 })();
@@ -1009,20 +1080,19 @@ var starCross=new Uint8Array(STAR_W*STAR_H);
 function orbitDist(au){return Math.pow(au,0.6)*AU;}
 var SUN={name:'Sole',x:0,y:0,z:0,r:SUN_RADIUS_REAL*SUN_RADIUS_VISUAL_MULT,emissive:true};
 var PLANETS=[
-  {name:'Mercurio',a:orbitDist(0.387),ang:1.3,r:2.4397e6,type:'rocky',colors:{dark:[68,62,58],mid:[122,112,102],light:[172,160,148],hi:[205,195,185],ice:[225,230,240]},noise:{scale:2.5e5,octaves:7},atmo:null},
-  {name:'Venere',a:orbitDist(0.723),ang:3.7,r:6.0518e6,type:'cloudy',colors:{dark:[180,145,78],mid:[222,190,118],light:[248,226,172],hi:[255,242,210],cloud:[252,240,205]},noise:{scale:8e5,octaves:6},atmo:[255,200,120,0.45]},
-  {name:'Terra',a:orbitDist(1.000),ang:0.4,r:6.371e6,type:'terra',colors:{deep:[14,55,128],ocean:[30,90,165],shallow:[60,130,190],coast:[110,175,210],sand:[218,195,140],grass:[90,145,78],forest:[48,100,55],desert:[204,165,100],mount:[130,118,105],snow:[238,244,250],cloud:[248,250,255]},noise:{scale:2.2e6,octaves:9},atmo:[100,160,255,0.55]},
-  {name:'Marte',a:orbitDist(1.524),ang:4.4,r:3.3895e6,type:'rocky',colors:{dark:[95,48,30],mid:[168,92,54],light:[212,138,88],hi:[238,175,120],ice:[235,240,245]},noise:{scale:1.8e6,octaves:8},atmo:[220,150,110,0.18]},
-  {name:'Giove',a:orbitDist(5.203),ang:2.2,r:6.9911e7,type:'gas',colors:{zone1:[235,218,190],zone2:[220,200,175],belt1:[172,122,82],belt2:[140,95,60],polar:[200,175,155],storm:[210,85,55],spot:[230,130,90]},noise:{scale:3e7,octaves:6},atmo:[230,195,155,0.32],bands:14,storm:true},
-  {name:'Saturno',a:orbitDist(9.537),ang:5.9,r:5.8232e7,type:'gas',colors:{zone1:[238,220,182],zone2:[224,205,168],belt1:[190,160,118],belt2:[168,138,100],polar:[210,195,165],storm:[200,165,130],spot:[210,180,140]},noise:{scale:2.5e7,octaves:5},atmo:[235,215,170,0.30],bands:12,rings:{inner:1.24,outer:2.36}},
-  {name:'Urano',a:orbitDist(19.191),ang:0.9,r:2.5362e7,type:'gas',colors:{zone1:[190,232,240],zone2:[172,218,228],belt1:[140,195,210],belt2:[120,178,195],polar:[180,220,232],storm:[220,245,250],spot:[160,210,225]},noise:{scale:8e6,octaves:4},atmo:[180,225,240,0.32],bands:6,rings:{inner:1.55,outer:1.98}},
-  {name:'Nettuno',a:orbitDist(30.069),ang:3.1,r:2.4622e7,type:'gas',colors:{zone1:[92,138,218],zone2:[70,115,200],belt1:[50,88,175],belt2:[38,68,148],polar:[82,122,205],storm:[30,45,95],spot:[140,200,235]},noise:{scale:8e6,octaves:5},atmo:[100,155,240,0.38],bands:8,storm:true}
+  {name:'Mercurio',a:orbitDist(0.387),ang:1.3,r:2.4397e6,type:'rocky',noise:{scale:2.5e5,octaves:7},atmo:null},
+  {name:'Venere',a:orbitDist(0.723),ang:3.7,r:6.0518e6,type:'cloudy',noise:{scale:8e5,octaves:6},atmo:[255,200,120,0.45]},
+  {name:'Terra',a:orbitDist(1.000),ang:0.4,r:6.371e6,type:'terra',noise:{scale:2.2e6,octaves:9},atmo:[100,160,255,0.55]},
+  {name:'Marte',a:orbitDist(1.524),ang:4.4,r:3.3895e6,type:'rocky',noise:{scale:1.8e6,octaves:8},atmo:[220,150,110,0.18]},
+  {name:'Giove',a:orbitDist(5.203),ang:2.2,r:6.9911e7,type:'gas',noise:{scale:3e7,octaves:6},atmo:[230,195,155,0.32],bands:14,storm:true},
+  {name:'Saturno',a:orbitDist(9.537),ang:5.9,r:5.8232e7,type:'gas',noise:{scale:2.5e7,octaves:5},atmo:[235,215,170,0.30],bands:12,rings:{inner:1.24,outer:2.36}},
+  {name:'Urano',a:orbitDist(19.191),ang:0.9,r:2.5362e7,type:'gas',noise:{scale:8e6,octaves:4},atmo:[180,225,240,0.32],bands:6,rings:{inner:1.55,outer:1.98}},
+  {name:'Nettuno',a:orbitDist(30.069),ang:3.1,r:2.4622e7,type:'gas',noise:{scale:8e6,octaves:5},atmo:[100,155,240,0.38],bands:8,storm:true}
 ];
 for(var pi=0;pi<PLANETS.length;pi++){var pp=PLANETS[pi];pp.x=Math.cos(pp.ang)*pp.a;pp.y=Math.sin(pp.ang)*pp.a;pp.z=0;}
 
 var MOON={
   name:'Luna', r:1.7374e6, type:'rocky',
-  colors:{dark:[58,58,64],mid:[112,112,120],light:[160,160,168],hi:[205,205,215],ice:[215,215,225]},
   noise:{scale:3.2e5,octaves:7}, atmo:null,
   orbitParent:null, orbitR:0, orbitAng:0, orbitEl:0, orbitSpeed:0.06,
   x:0, y:0, z:0, isMoon:true
@@ -2257,17 +2327,22 @@ function sampleStars(dx,dy,dz){
   var v=(Math.asin(Math.max(-1,Math.min(1,dz)))/PI+0.5)*STAR_H;
   var ui=u|0; if(ui<0)ui+=STAR_W; else if(ui>=STAR_W)ui-=STAR_W;
   var vi=v|0; if(vi<0)vi=0; else if(vi>=STAR_H)vi=STAR_H-1;
-  var idx=vi*STAR_W+ui; var i3=idx*3;
+  var idx=vi*STAR_W+ui;
+  var i3=idx*3;
   var r=starTex[i3], g=starTex[i3+1], b=starTex[i3+2];
+  var i4=idx*4;
+  var nA=nebulaTex[i4+3];
+  if(nA>0){
+    var a=nA/255;
+    r = r*(1-a) + nebulaTex[i4]*a;
+    g = g*(1-a) + nebulaTex[i4+1]*a;
+    b = b*(1-a) + nebulaTex[i4+2]*a;
+  }
   var ph=starPhase[idx];
   if(ph>0){
-    var amp=starTwinkleAmp[idx]/255;
-    var tw=1+Math.sin(gameTime*4+ph*0.6)*amp*0.5;
+    var tw=1+Math.sin(gameTime*4+ph*0.6)*0.45;
     r*=tw; g*=tw; b*=tw;
-    if(amp>0.75){
-      var flash=Math.sin(gameTime*0.8+ph*0.1);
-      if(flash>0.97){var f=(flash-0.97)/0.03; r+=100*f; g+=100*f; b+=110*f;}
-    }
+    if(tw>1.4){r+=35; g+=35; b+=45;}
   }
   if(r>255)r=255; if(g>255)g=255; if(b>255)b=255;
   return [r,g,b];
@@ -2279,216 +2354,218 @@ function shadeSun(hx,hy,hz,dtc,pa){
   var vdx=camX-hx, vdy=camY-hy, vdz=camZ-hz;
   var vdl=1/Math.sqrt(vdx*vdx+vdy*vdy+vdz*vdz);
   var cosLimb=Math.max(0,(vdx*nX+vdy*nY+vdz*nZ)*vdl);
-  var pixSize=dtc*pa, t=gameTime*0.08;
-  var gran=0, sc=6e5, amp=1;
-  for(var k=0;k<5;k++){if(sc<pixSize*2.0)break;gran+=amp*noise3((lx+t*sc*0.5)/sc,(ly+t*sc*0.3)/sc,(lz+t*sc*0.4)/sc);sc*=0.42;amp*=0.75;}
-  var granFine=noise3((lx+t*4e5)/3e5,(ly+t*3e5)/3e5,(lz+t*4e5)/3e5);
-  var spot1=noise3(lx/1.4e7+100,ly/1.4e7+50,lz/1.4e7+25);
-  var spot2=noise3(lx/7e6+200,ly/7e6+80,lz/7e6+40);
-  var spotMask = spot1*0.6 + spot2*0.4;
-  var spot=spotMask>0.28 ? Math.min(1,(spotMask-0.28)*3.2) : 0;
-  var bx=((hx*1e-7)|0)&7, by=((hz*1e-7)|0)&7;
-  var dth=BAYER[(by<<3)|bx];
-  var temp=0.55+gran*0.55;
-  if(granFine>0.15) temp+=0.18*dth;
-  temp*=0.42+0.68*Math.pow(cosLimb,0.42);
-  if(spot>0.02){
-    if(spot>0.55){temp*=1-spot*0.62;}
-    else {temp*=1-spot*0.30;}
+  var pixSize=dtc*pa, t=gameTime*0.10;
+  var cell=0;
+  var sc=8e5, amp=1;
+  for(var k=0;k<6;k++){
+    if(sc<pixSize*1.8)break;
+    cell += amp * noise3((lx+t*sc*0.5)/sc,(ly+t*sc*0.3)/sc,(lz+t*sc*0.4)/sc);
+    sc*=0.44; amp*=0.74;
   }
-  if(solarFlareActive) temp*=1.42;
-  var R,G,B;
-  var lvl=Math.floor(temp*6+dth);
-  if(lvl<=1){R=118;G=32;B=8;}
-  else if(lvl===2){R=180;G=70;B=18;}
-  else if(lvl===3){R=235;G=135;B=45;}
-  else if(lvl===4){R=255;G=190;B=80;}
-  else if(lvl===5){R=255;G=225;B=140;}
-  else{R=255;G=252;B=225;}
+  var superGran = noise3(lx/2.2e6 + t*0.3, ly/2.2e6, lz/2.2e6);
+  var spot1=noise3(lx/1.2e7+100,ly/1.2e7+50,lz/1.2e7+25);
+  var spot2=noise3(lx/5e6+200,ly/5e6+80,lz/5e6+40);
+  var spotMask = spot1*0.7 + spot2*0.3;
+  var spot=spotMask>0.30 ? Math.min(1,(spotMask-0.30)*3.0) : 0;
+  var facula = (spotMask>0.05 && spotMask<0.30) ? (spotMask-0.05)*3.0 : 0;
+
+  var bx=((hx*1e-7)|0)&7, by=((hz*1e-7)|0)&7;
+  var d = BAYER[(by<<3)|bx];
+  var temp = 0.55 + cell*0.55 + superGran*0.15;
+  temp *= 0.42 + 0.68*Math.pow(cosLimb, 0.42);
+  if(spot>0.02){
+    if(spot>0.55) temp *= 1-spot*0.65;
+    else temp *= 1-spot*0.32;
+  }
+  if(facula>0) temp += facula*0.12;
+  if(solarFlareActive) temp *= 1.45;
+
+  var sunPal = [[120,28,6],[160,55,12],[205,95,22],[235,135,45],[252,180,85],[255,215,135],[255,238,190],[255,252,235]];
+  var v = temp * 7 + (d-0.5)*0.9;
+  var idx = Math.floor(v);
+  if(idx<0) idx=0; else if(idx>7) idx=7;
+  var R=sunPal[idx][0], G=sunPal[idx][1], B=sunPal[idx][2];
   if(cosLimb<0.25){
     var u=(0.25-cosLimb)/0.25;
-    R=R*(1-u*0.35); G=G*(1-u*0.4); B=B*(1-u*0.45);
+    R=R*(1-u*0.40); G=G*(1-u*0.45); B=B*(1-u*0.50);
   }
   return [R,G,B];
 }
-function ditherPick(t,bx,by){var d=BAYER[((by&7)<<3)|(bx&7)];return t>d?1:0;}
-
 function shadePlanet(hx,hy,hz,p,dtc,pa){
   var lx=hx-p.x, ly=hy-p.y, lz=hz-p.z;
   var nl=1/Math.sqrt(lx*lx+ly*ly+lz*lz);
   var nX=lx*nl, nY=ly*nl, nZ=lz*nl;
   var sdx=SUN.x-hx, sdy=SUN.y-hy, sdz=SUN.z-hz;
   var sl=1/Math.sqrt(sdx*sdx+sdy*sdy+sdz*sdz);
-  var ndl=nX*sdx*sl+nY*sdy*sl+nZ*sdz*sl;
+  var ndl = nX*sdx*sl + nY*sdy*sl + nZ*sdz*sl;
+  var lightAmt = Math.max(0, Math.min(1, (ndl + 0.15) / 0.55));
   var pixSize=dtc*pa, nz=p.noise;
   var e=0, sc=nz.scale, amp=1;
-  for(var k=0;k<nz.octaves;k++){if(sc<pixSize*1.2)break;e+=amp*noise3(lx/sc,ly/sc,lz/sc);sc*=0.5;amp*=0.58;}
+  for(var k=0;k<nz.octaves;k++){
+    if(sc<pixSize*1.2)break;
+    e += amp*noise3(lx/sc,ly/sc,lz/sc);
+    sc*=0.5; amp*=0.58;
+  }
   var bx=((hx*1e-7)|0)&7, by=((hz*1e-7)|0)&7;
-  var dth=BAYER[(by<<3)|bx];
-  var r,g,b,C=p.colors;
-  var isLand=false, cityDensity=0, cloudAlpha=0;
+  var r=0,g=0,b=0;
 
   if(p.type==='rocky'){
     var crater=noise3(lx/(nz.scale*0.30),ly/(nz.scale*0.30),lz/(nz.scale*0.30));
-    var t=0.5+e*1.15; t=Math.max(0,Math.min(1,t));
-    var lvl=Math.floor(t*5+dth);
-    if(lvl===0){r=C.dark[0];g=C.dark[1];b=C.dark[2];}
-    else if(lvl===1){r=(C.dark[0]+C.mid[0])*0.5|0;g=(C.dark[1]+C.mid[1])*0.5|0;b=(C.dark[2]+C.mid[2])*0.5|0;}
-    else if(lvl===2){r=C.mid[0];g=C.mid[1];b=C.mid[2];}
-    else if(lvl===3){r=(C.mid[0]+C.light[0])*0.5|0;g=(C.mid[1]+C.light[1])*0.5|0;b=(C.mid[2]+C.light[2])*0.5|0;}
-    else{r=C.light[0];g=C.light[1];b=C.light[2];}
+    var fine=noise3(lx/(nz.scale*0.10),ly/(nz.scale*0.10),lz/(nz.scale*0.10));
+    var v = 0.5 + e*1.0 + fine*0.15;
     if(crater>0.24){
       var cd=Math.min(1,(crater-0.24)/0.35);
-      if(ditherPick(cd*1.3,bx,by)){
-        r=r*(1-cd*0.55)+C.hi[0]*cd*0.55;
-        g=g*(1-cd*0.55)+C.hi[1]*cd*0.55;
-        b=b*(1-cd*0.55)+C.hi[2]*cd*0.55;
-      } else {
-        r*=1-cd*0.35; g*=1-cd*0.35; b*=1-cd*0.35;
-      }
+      v -= cd*0.35;
+      if(crater>0.55) v -= (crater-0.55)*0.5;
     }
-    var spot=noise3(lx/(nz.scale*0.18)+500,ly/(nz.scale*0.18),lz/(nz.scale*0.18));
-    if(spot>0.32){var sd=Math.min(1,(spot-0.32)/0.4)*0.45;r*=1-sd;g*=1-sd;b*=1-sd;}
+    v = v * 0.65 + lightAmt * 0.45;
+    var pal;
+    if(p.name==='Mercurio') pal=PALETTES.mercury;
+    else if(p.isMoon || p.name==='Luna') pal=PALETTES.moon;
+    else pal=PALETTES.mars;
     var ice=Math.max(0,Math.min(1,(Math.abs(nZ)-0.82)/0.14));
-    if(ice>0){
-      var useIce=ditherPick(ice*1.25,bx+3,by+5);
-      if(useIce){r=C.ice[0];g=C.ice[1];b=C.ice[2];}
-      else{r=r*(1-ice*0.6)+C.ice[0]*ice*0.6;g=g*(1-ice*0.6)+C.ice[1]*ice*0.6;b=b*(1-ice*0.6)+C.ice[2]*ice*0.6;}
+    var c0 = pickPalette(pal, v, bx, by);
+    if(ice>0 && pickPaletteIdx(v,bx,by) >= 7){
+      var iceIdx = pickPaletteIdx(ice*0.9, bx+3, by+5);
+      var c1 = PALETTES.earthSnow[iceIdx];
+      if(ice > dth(by,bx)){ r=c1[0];g=c1[1];b=c1[2]; }
+      else { r=c0[0];g=c0[1];b=c0[2]; }
+    } else {
+      r=c0[0];g=c0[1];b=c0[2];
     }
   }
   else if(p.type==='cloudy'){
     var tw=gameTime*0.03;
     var band1=noise3(lx/(nz.scale*0.5)+tw,ly/(nz.scale*0.5)-tw*0.5,lz/(nz.scale*0.5)+tw*0.3);
-    var band2=noise3(lx/(nz.scale*0.25)+tw*1.8,ly/(nz.scale*0.25)+tw*0.9,lz/(nz.scale*0.25));
-    var swirl=band1*0.6+band2*0.4+e*0.5;
-    var t=Math.max(0,Math.min(1,0.5+swirl*0.85));
-    var lvl=Math.floor(t*4+dth);
-    if(lvl===0){r=C.dark[0];g=C.dark[1];b=C.dark[2];}
-    else if(lvl===1){r=C.mid[0];g=C.mid[1];b=C.mid[2];}
-    else if(lvl===2){r=C.light[0];g=C.light[1];b=C.light[2];}
-    else{r=C.hi[0];g=C.hi[1];b=C.hi[2];}
-    var cl=noise3(lx/(nz.scale*0.12)+tw*3,ly/(nz.scale*0.12),lz/(nz.scale*0.12));
-    if(cl>0.18 && ditherPick(Math.min(1,(cl-0.18)*3),bx+1,by+2)){
-      r=r*0.35+C.cloud[0]*0.65; g=g*0.35+C.cloud[1]*0.65; b=b*0.35+C.cloud[2]*0.65;
+    var band2=noise3(lx/(nz.scale*0.22)+tw*1.8,ly/(nz.scale*0.22)+tw*0.9,lz/(nz.scale*0.22));
+    var v = 0.5 + (band1*0.55 + band2*0.45 + e*0.4) * 0.65 + lightAmt*0.35;
+    var cl=noise3(lx/(nz.scale*0.10)+tw*3,ly/(nz.scale*0.10),lz/(nz.scale*0.10));
+    if(cl>0.15 && cl > dth(by,bx)*1.0){
+      var c = pickPalette(PALETTES.venusCloud, 0.55 + cl*0.4, bx+1, by+2);
+      r=c[0];g=c[1];b=c[2];
+    } else {
+      var c = pickPalette(PALETTES.venus, v, bx, by);
+      r=c[0];g=c[1];b=c[2];
     }
-    if(nZ>0.65){
-      var pol=(nZ-0.65)/0.35;
-      var pd=pol*pol*0.35;
+    if(nZ>0.62){
+      var pol=(nZ-0.62)/0.38;
+      var pd=pol*pol*0.45;
       r*=1-pd; g*=1-pd*0.9; b*=1-pd*0.8;
     }
   }
   else if(p.type==='terra'){
     var hgt=e, aLat=Math.abs(nZ);
-    if(hgt<0.02){
-      isLand=false;
-      var dp=Math.max(0,Math.min(1,(0.02-hgt)/0.9));
-      var lvl=Math.floor(dp*4+dth);
-      if(lvl===0){r=C.coast[0];g=C.coast[1];b=C.coast[2];}
-      else if(lvl===1){r=C.shallow[0];g=C.shallow[1];b=C.shallow[2];}
-      else if(lvl===2){r=C.ocean[0];g=C.ocean[1];b=C.ocean[2];}
-      else{r=C.deep[0];g=C.deep[1];b=C.deep[2];}
+    var isLand = hgt >= 0.02;
+    var seaDepth = isLand ? 0 : Math.max(0, Math.min(1, (0.02-hgt)/0.9));
+    var dryness=noise3(lx/(nz.scale*0.3)+200,ly/(nz.scale*0.3)+100,lz/(nz.scale*0.3));
+    var latF=1-Math.abs(aLat-0.3)/0.4, humid=dryness-latF*0.4;
+    var v, pal;
+    var cloudA = 0;
+    if(!isLand){
+      v = seaDepth * 0.75 + lightAmt * 0.30;
+      pal = PALETTES.earthSea;
+      var c = pickPalette(pal, v, bx, by);
+      r=c[0];g=c[1];b=c[2];
       var wave=noise3(lx/(nz.scale*0.06)+gameTime*0.35,ly/(nz.scale*0.06),lz/(nz.scale*0.06));
-      if(wave>0.28 && dp<0.5 && ditherPick(0.6,bx+2,by+1)){
-        r+=40; g+=50; b+=55;
+      if(wave>0.30 && seaDepth<0.45 && dth(by+1,bx+2) < 0.55){
+        r=Math.min(255, r+50); g=Math.min(255, g+50); b=Math.min(255, b+55);
       }
     } else {
-      isLand=true;
-      var dryness=noise3(lx/(nz.scale*0.3)+200,ly/(nz.scale*0.3)+100,lz/(nz.scale*0.3));
-      var latF=1-Math.abs(aLat-0.3)/0.4, humid=dryness-latF*0.4;
-      if(hgt<0.15){
-        if(hgt<0.05){
-          if(ditherPick(0.55,bx,by)){r=C.sand[0];g=C.sand[1];b=C.sand[2];}
-          else if(humid>0.1){r=C.desert[0];g=C.desert[1];b=C.desert[2];cityDensity=0.35;}
-          else if(humid>-0.1){r=C.grass[0];g=C.grass[1];b=C.grass[2];cityDensity=0.6;}
-          else{r=C.forest[0];g=C.forest[1];b=C.forest[2];cityDensity=0.4;}
+      var hgt2 = hgt;
+      if(hgt2 < 0.06){
+        if(hgt2 < 0.035){
+          v = lightAmt * 0.75 + 0.15;
+          pal = PALETTES.earthSand;
         } else {
-          if(humid>0.1){r=C.desert[0];g=C.desert[1];b=C.desert[2];cityDensity=0.35;}
-          else if(humid>-0.1){r=C.grass[0];g=C.grass[1];b=C.grass[2];cityDensity=0.6;}
-          else{r=C.forest[0];g=C.forest[1];b=C.forest[2];cityDensity=0.4;}
+          v = 0.35 + humid*0.4 + lightAmt*0.30;
+          pal = PALETTES.earthSand;
         }
-      } else if(hgt<0.5){
-        var u=(hgt-0.15)/0.35;
-        var base=humid>0?C.desert:C.forest;
-        var mid=[(base[0]+C.mount[0])*0.5|0,(base[1]+C.mount[1])*0.5|0,(base[2]+C.mount[2])*0.5|0];
-        var lvl2=Math.floor(u*3+dth);
-        if(lvl2===0){r=base[0];g=base[1];b=base[2];}
-        else if(lvl2===1){r=mid[0];g=mid[1];b=mid[2];}
-        else{r=C.mount[0];g=C.mount[1];b=C.mount[2];}
-        cityDensity=0.15;
+      } else if(hgt2 < 0.45){
+        v = 0.45 + hgt2*0.7 + lightAmt*0.20;
+        pal = PALETTES.earthLand;
       } else {
-        var u=Math.min(1,(hgt-0.5)/0.5);
-        var lvl3=Math.floor(u*3+dth);
-        if(lvl3===0){r=C.mount[0];g=C.mount[1];b=C.mount[2];}
-        else if(lvl3===1){r=(C.mount[0]+C.snow[0])*0.5|0;g=(C.mount[1]+C.snow[1])*0.5|0;b=(C.mount[2]+C.snow[2])*0.5|0;}
-        else{r=C.snow[0];g=C.snow[1];b=C.snow[2];}
-        cityDensity=0;
+        v = 0.60 + hgt2*0.5 + lightAmt*0.20;
+        pal = (hgt2>0.75) ? PALETTES.earthSnow : PALETTES.earthLand;
+      }
+      var c = pickPalette(pal, v, bx, by);
+      r=c[0];g=c[1];b=c[2];
+      if(hgt2<0.15 && humid<-0.05 && dth(by,bx)<0.35){
+        r=r*0.85; g=g*0.95; b=b*0.80;
+      }
+      var river=noise3(lx/(nz.scale*0.04)+500,ly/(nz.scale*0.04),lz/(nz.scale*0.04));
+      if(river>0.42 && hgt2>0.06 && hgt2<0.3 && dth(by+4,bx)<0.4){
+        r=r*0.55 + PALETTES.earthSea[3][0]*0.45;
+        g=g*0.55 + PALETTES.earthSea[3][1]*0.45;
+        b=b*0.55 + PALETTES.earthSea[3][2]*0.45;
       }
     }
-    var ice=Math.max(0,Math.min(1,(aLat-0.80)/0.14));
-    if(ice>0 && ditherPick(ice*1.3,bx+2,by+4)){
-      r=C.snow[0];g=C.snow[1];b=C.snow[2];cityDensity=0;
+    var ice=Math.max(0,Math.min(1,(aLat-0.78)/0.16));
+    if(ice>0 && ice > dth(by+4,bx+2)){
+      var c = pickPalette(PALETTES.earthSnow, 0.6+ice*0.35, bx, by);
+      r=c[0];g=c[1];b=c[2];
     }
     var tw=gameTime*0.02;
     var c1=noise3(lx/(nz.scale*0.22)+tw,ly/(nz.scale*0.22),lz/(nz.scale*0.22));
     var c2=noise3(lx/(nz.scale*0.09)+tw*2.5+50,ly/(nz.scale*0.09),lz/(nz.scale*0.09));
-    var cl=c1*0.55+c2*0.45;
-    if(cl>0.02){
-      cloudAlpha=Math.min(1,(cl-0.02)*1.8);
-      if(ditherPick(cloudAlpha,bx+5,by+3)){
-        r=r*0.28+C.cloud[0]*0.72; g=g*0.28+C.cloud[1]*0.72; b=b*0.28+C.cloud[2]*0.72;
-      } else {
-        var ca=cloudAlpha*0.5;
-        r=r*(1-ca)+C.cloud[0]*ca; g=g*(1-ca)+C.cloud[1]*ca; b=b*(1-ca)+C.cloud[2]*ca;
+    var c3=noise3(lx/(nz.scale*0.04)+tw*4+150,ly/(nz.scale*0.04),lz/(nz.scale*0.04));
+    var cl = c1*0.5 + c2*0.35 + c3*0.15;
+    if(cl>0){
+      cloudA = Math.min(1, cl*1.8);
+      if(cloudA > dth(by+3,bx+5)){
+        var cv = 0.65 + cl*0.35;
+        var c = pickPalette(PALETTES.earthSnow, cv, bx+5, by+3);
+        var w = 0.72;
+        r = r*(1-w) + c[0]*w;
+        g = g*(1-w) + c[1]*w;
+        b = b*(1-w) + c[2]*w;
       }
     }
-    if(ndl<0.05 && isLand && cityDensity>0){
-      var night=Math.min(1,(0.05-ndl)/0.35);
-      var cloudMask=1-cloudAlpha;
-      var cityNoise=noise3(lx/6e4,ly/6e4,lz/6e4);
-      if(cityNoise>0.38 && cloudMask>0.6){
-        var cd=Math.min(1,(cityNoise-0.38)/0.22)*night*cityDensity;
-        if(ditherPick(cd*1.5,bx+7,by+6)){
-          r+=255*cd*0.9; g+=185*cd*0.9; b+=75*cd*0.9;
+    if(ndl<0.02 && isLand && hgt<0.15){
+      var night=Math.min(1,(0.02-ndl)/0.35);
+      var cityNoise=noise3(lx/5e4,ly/5e4,lz/5e4);
+      var cityNoise2=noise3(lx/1.8e4,ly/1.8e4,lz/1.8e4);
+      if(cityNoise>0.35 && cityNoise2>0.25){
+        var cityA = Math.min(1,(cityNoise-0.35)*4)*night*(1-cloudA);
+        if(cityA > dth(by+6,bx+7)){
+          r = Math.min(255, r + 255*cityA*0.95);
+          g = Math.min(255, g + 185*cityA*0.85);
+          b = Math.min(255, b + 75*cityA*0.75);
         }
       }
     }
-    if(aLat>0.72 && ndl<0.15){
-      var auroraFade=Math.min(1,(aLat-0.72)/0.18);
-      var night=Math.min(1,(0.15-ndl)/0.35);
-      var auroraNoise=noise3(lx/3.5e5+gameTime*0.6,ly/3.5e5,lz/3.5e5);
-      var auroraIntensity=Math.max(0,auroraNoise)*auroraFade*night;
-      if(auroraIntensity>0){
-        var ai=auroraIntensity*0.85;
-        var aR=ai*40, aG=ai*200, aB=ai*160;
-        r+=aR; g+=aG; b+=aB;
+    if(aLat>0.68 && ndl<0.20){
+      var auroraFade=Math.min(1,(aLat-0.68)/0.22);
+      var night=Math.min(1,(0.20-ndl)/0.4);
+      var ang=Math.atan2(nY,nX);
+      var ribbon=Math.sin(ang*3 + gameTime*0.6 + aLat*8)*0.5+0.5;
+      var auroraNoise=noise3(lx/3e5+gameTime*0.7,ly/3e5,lz/3e5+gameTime*0.3);
+      var auroraInt = Math.max(0, auroraNoise + ribbon*0.3 - 0.25)*auroraFade*night;
+      if(auroraInt > dth(by+5,bx+1)*0.9){
+        var ai = Math.min(1, auroraInt*1.8);
+        r = Math.min(255, r + ai*60);
+        g = Math.min(255, g + ai*220);
+        b = Math.min(255, b + ai*170);
       }
     }
   }
   else if(p.type==='gas'){
     var lat=Math.asin(Math.max(-1,Math.min(1,nZ)));
-    var bc=p.bands||10, tw=gameTime*0.015;
-    var turb1=noise3(lx/(nz.scale*0.55)+tw,ly/(nz.scale*0.55),lz/(nz.scale*0.55));
-    var turb2=noise3(lx/(nz.scale*0.22)+tw*2+30,ly/(nz.scale*0.22),lz/(nz.scale*0.22));
-    var turb3=noise3(lx/(nz.scale*0.08)+tw*3+70,ly/(nz.scale*0.08),lz/(nz.scale*0.08));
-    var latEff=lat+turb1*0.11+turb2*0.055+turb3*0.028;
-    var bandVal=Math.sin(latEff*bc)*0.5+0.5;
-    var lvl=Math.floor(bandVal*5+dth);
-    var c1,c2;
-    if(lvl<2){c1=C.belt1;c2=C.belt2;}else{c1=C.zone1;c2=C.zone2;}
-    var subT=(lvl%2===0)?0.25:0.75;
-    r=c1[0]*(1-subT)+c2[0]*subT;
-    g=c1[1]*(1-subT)+c2[1]*subT;
-    b=c1[2]*(1-subT)+c2[2]*subT;
-    var mod=1+e*0.42; r*=mod; g*=mod; b*=mod;
-    if(turb3>0.35 && ditherPick(0.6,bx+1,by+3)){
-      r*=0.82; g*=0.82; b*=0.82;
-    }
+    var bc=p.bands||10, tw=gameTime*0.02;
+    var turb1=noise3(lx/(nz.scale*0.5)+tw,ly/(nz.scale*0.5),lz/(nz.scale*0.5));
+    var turb2=noise3(lx/(nz.scale*0.2)+tw*2+30,ly/(nz.scale*0.2),lz/(nz.scale*0.2));
+    var turb3=noise3(lx/(nz.scale*0.06)+tw*3+70,ly/(nz.scale*0.06),lz/(nz.scale*0.06));
+    var latEff = lat + turb1*0.10 + turb2*0.05 + turb3*0.025;
+    var bandVal = Math.sin(latEff * bc) * 0.5 + 0.5;
+    var pal;
+    if(p.name==='Giove')   pal=PALETTES.jupiter;
+    else if(p.name==='Saturno') pal=PALETTES.saturn;
+    else if(p.name==='Urano')   pal=PALETTES.uranus;
+    else pal=PALETTES.neptune;
+    var v = bandVal * 0.75 + 0.15 + turb2*0.08 + turb3*0.05 + lightAmt*0.15;
     var polar=Math.max(0,(Math.abs(lat)-0.68)/0.32);
-    if(polar>0){
-      var usePolar=ditherPick(polar*1.3,bx+4,by+1);
-      var pf=usePolar?0.65:polar*0.35;
-      r=r*(1-pf)+C.polar[0]*pf; g=g*(1-pf)+C.polar[1]*pf; b=b*(1-pf)+C.polar[2]*pf;
-    }
+    v *= 1 - polar*0.30;
+    var c = pickPalette(pal, v, bx, by);
+    r=c[0];g=c[1];b=c[2];
     if(p.storm){
       var curLon=Math.atan2(nY,nX);
       var sLat=p.name==='Giove'?-0.34:-0.26;
@@ -2496,39 +2573,89 @@ function shadePlanet(hx,hy,hz,p,dtc,pa){
       var sSize=p.name==='Giove'?0.42:0.34;
       var dLat=lat-sLat, dLon=curLon-sLon;
       while(dLon>PI)dLon-=TAU; while(dLon<-PI)dLon+=TAU;
-      var sd=Math.sqrt(dLat*dLat*2.5+dLon*dLon);
-      if(sd<sSize){
-        var s=1-sd/sSize;
-        var ringLvl=Math.floor(s*4+dth);
-        var scr,scg,scb;
-        if(ringLvl===0){scr=C.storm[0]*0.7;scg=C.storm[1]*0.7;scb=C.storm[2]*0.7;}
-        else if(ringLvl===1){scr=C.storm[0];scg=C.storm[1];scb=C.storm[2];}
-        else if(ringLvl===2){scr=C.spot[0];scg=C.spot[1];scb=C.spot[2];}
-        else{scr=Math.min(255,C.storm[0]+30);scg=Math.min(255,C.storm[1]+20);scb=Math.min(255,C.storm[2]+15);}
-        var m=s*s*(3-2*s)*0.92;
-        r+=(scr-r)*m; g+=(scg-g)*m; b+=(scb-b)*m;
+      var sd=Math.sqrt(dLat*dLat*2.5 + dLon*dLon);
+      if(sd < sSize){
+        var s = 1 - sd/sSize;
+        var ringLevel = Math.floor(s * 3 + dth(by,bx));
+        if(ringLevel >= 2){
+          var c2 = p.name==='Giove' ? [235,145,95] : [140,200,235];
+          r = c2[0]*(0.6+lightAmt*0.5);
+          g = c2[1]*(0.6+lightAmt*0.5);
+          b = c2[2]*(0.6+lightAmt*0.5);
+        } else if(ringLevel === 1){
+          var c2 = p.name==='Giove' ? [210,105,60] : [90,140,200];
+          r = r*0.4 + c2[0]*0.6;
+          g = g*0.4 + c2[1]*0.6;
+          b = b*0.4 + c2[2]*0.6;
+        } else {
+          r *= 0.78; g *= 0.78; b *= 0.82;
+        }
       }
     }
     if(p.name==='Nettuno'){
       var ch=noise3(lx/(nz.scale*0.14)+tw*3,ly/(nz.scale*0.14),lz/(nz.scale*0.14));
-      if(ch>0.28){
-        var ca=Math.min(1,(ch-0.28)/0.3)*0.75;
-        if(ditherPick(ca,bx+3,by+7)){r+=(230-r)*ca; g+=(240-g)*ca; b+=(250-b)*ca;}
+      if(ch>0.30){
+        var ca=Math.min(1,(ch-0.30)/0.28);
+        if(ca > dth(by+7,bx+3)){
+          r = Math.min(255, r + (235-r)*ca*0.7);
+          g = Math.min(255, g + (245-g)*ca*0.7);
+          b = Math.min(255, b + (252-b)*ca*0.7);
+        }
       }
     }
-    if(p.name==='Saturno' && lat>1.35){
-      var hexAmt=(lat-1.35)/0.2;
+    if(p.name==='Saturno' && lat>1.30){
+      var hexAmt=(lat-1.30)/0.25;
       var ang=Math.atan2(nY,nX);
-      var hex=Math.abs(Math.cos(ang*3));
-      if(hex>0.7 && ditherPick(hexAmt,bx,by)){
-        r*=0.85; g*=0.88; b*=0.9;
+      var hexEdge=Math.abs(Math.cos(ang*3));
+      if(hexEdge>0.72 && hexAmt > dth(by,bx)*0.7){
+        r*=0.82; g*=0.86; b*=0.90;
       }
     }
   }
 
-  var lt=(ndl+0.10)/0.42; lt=Math.max(0,Math.min(1,lt));
-  var dlt=Math.floor(lt*7+dth)/7;
-  r*=0.04+dlt*1.00; g*=0.06+dlt*0.95; b*=0.16+dlt*0.84;
+  // Ombra degli anelli su Saturno
+  if(p.name==='Saturno' && p.rings){
+    var ringIn=p.rings.inner*p.r, ringOut=p.rings.outer*p.r;
+    var sdx2=SUN.x-hx, sdy2=SUN.y-hy, sdz2=SUN.z-hz;
+    var sl2=Math.sqrt(sdx2*sdx2+sdy2*sdy2+sdz2*sdz2);
+    sdx2/=sl2; sdy2/=sl2; sdz2/=sl2;
+    var tilt = 0.471;
+    var cosTilt=Math.cos(tilt), sinTilt=Math.sin(tilt);
+    var sunLocalY = sdy2*cosTilt - sdz2*sinTilt;
+    if(Math.abs(sunLocalY) > 0.05){
+      var localY = nZ*p.r;
+      var tInt = -localY / sunLocalY;
+      if(tInt > 0){
+        var px2 = hx + sdx2*tInt;
+        var py2 = hy + sdy2*tInt;
+        var pz2 = hz + sdz2*tInt;
+        var rdx = px2-p.x, rdy=py2-p.y, rdz=pz2-p.z;
+        var rdLocalX = rdx;
+        var rdLocalZ = rdy*sinTilt + rdz*cosTilt;
+        var rDist = Math.sqrt(rdLocalX*rdLocalX + rdLocalZ*rdLocalZ);
+        if(rDist > ringIn && rDist < ringOut){
+          var shadow = 0.45;
+          var edgeFade = Math.min(1, (rDist-ringIn)/1e6) * Math.min(1, (ringOut-rDist)/1e6);
+          shadow *= edgeFade;
+          r *= 1-shadow; g *= 1-shadow; b *= 1-shadow*0.95;
+        }
+      }
+    }
+  }
+
+  // Illuminazione con quantizzazione Bayer
+  var lt=lightAmt;
+  var dlt = lt*9 + (dth(by,bx)-0.5)*0.9;
+  var ltIdx = Math.floor(dlt);
+  if(ltIdx<0)ltIdx=0; else if(ltIdx>9)ltIdx=9;
+  var shadeFactor = 0.10 + (ltIdx/9)*0.90;
+  r *= shadeFactor; g *= shadeFactor; b *= shadeFactor;
+  // leggero tint blu nelle ombre
+  if(ltIdx<4){
+    var nightTint = (4-ltIdx)/4 * 0.25;
+    b = Math.min(255, b * (1+nightTint*0.4));
+    g = Math.min(255, g * (1+nightTint*0.1));
+  }
 
   if(p.atmo){
     var vdx=camX-hx, vdy=camY-hy, vdz=camZ-hz;
@@ -2536,13 +2663,15 @@ function shadePlanet(hx,hy,hz,p,dtc,pa){
     var ndv=(vdx*nX+vdy*nY+vdz*nZ)*vdl;
     var rim=Math.pow(1-Math.abs(ndv),2.6);
     var atm=rim*(Math.max(0,ndl)+0.28)*p.atmo[3];
-    if(ditherPick(Math.min(1,atm*2.5),bx+6,by+2)){
+    if(dth(by+2,bx+6) < Math.min(1,atm*2.5)){
       r+=p.atmo[0]*atm*1.1; g+=p.atmo[1]*atm*1.1; b+=p.atmo[2]*atm*1.1;
     } else {
       r+=p.atmo[0]*atm*0.55; g+=p.atmo[1]*atm*0.55; b+=p.atmo[2]*atm*0.55;
     }
     if(ndl>0){var ray=ndl*ndl*0.10*(1-Math.abs(1-Math.abs(ndv)));r+=55*ray;g+=110*ray;b+=210*ray;}
   }
+  if(r>255)r=255; if(g>255)g=255; if(b>255)b=255;
+  if(r<0)r=0; if(g<0)g=0; if(b<0)b=0;
   return [r,g,b];
 }
 function intersectRings(dx,dy,dz,b){
@@ -2556,33 +2685,55 @@ function intersectRings(dx,dy,dz,b){
 }
 function shadeRings(dx,dy,dz,ri){
   var b=ri.body, rt=ri.rt;
+  var t=(b.z-camZ)/dz;
+  var px=camX+t*dx, py=camY+t*dy;
+  var px3=px, py3=py, pz3=b.z;
+  var sdx=SUN.x-px3, sdy=SUN.y-py3, sdz=SUN.z-pz3;
+  var sl=Math.sqrt(sdx*sdx+sdy*sdy+sdz*sdz);
+  sdx/=sl; sdy/=sl; sdz/=sl;
+  var pdx=b.x-px3, pdy=b.y-py3, pdz=b.z-pz3;
+  var projT = pdx*sdx + pdy*sdy + pdz*sdz;
+  var shadow = 1.0;
+  if(projT > 0){
+    var cx2 = px3 + sdx*projT;
+    var cy2 = py3 + sdy*projT;
+    var cz2 = pz3 + sdz*projT;
+    var ddx2 = cx2-b.x, ddy2 = cy2-b.y, ddz2 = cz2-b.z;
+    var d2 = ddx2*ddx2 + ddy2*ddy2 + ddz2*ddz2;
+    if(d2 < b.r*b.r){
+      var d = Math.sqrt(d2);
+      var shadowAmt = 1 - d/b.r;
+      shadow = 1 - shadowAmt*0.75;
+    }
+  }
+
   if(b.name==='Saturno'){
     var op, base;
-    if(rt<0.12){op=0.22+rt*1.2;base=[165,150,120];}
-    else if(rt<0.16){op=0.08;base=[100,90,75];}
-    else if(rt<0.48){op=0.90+Math.sin(rt*48)*0.05;base=[228,208,168];}
-    else if(rt<0.56){op=0.08;base=[115,105,85];}
-    else if(rt<0.88){op=0.78+Math.sin(rt*62)*0.07;base=[214,194,155];}
-    else if(rt<0.90){op=0.14;base=[140,125,100];}
-    else if(rt<0.94){op=0.55;base=[210,190,155];}
-    else{op=0.18;base=[180,160,130];}
-    var fine=noise3(ri.rr*1e-7,rt*48,0);
-    var fine2=noise3(ri.rr*2e-7,rt*120,7);
-    var tex=0.85+fine*0.28+fine2*0.15;
-    op*=tex;
-    var rb=base[0]*(0.88+fine*0.16+fine2*0.08);
-    var gb=base[1]*(0.88+fine*0.16+fine2*0.08);
-    var bb=base[2]*(0.88+fine*0.16+fine2*0.08);
-    return {op:Math.max(0,Math.min(1,op)),color:[rb,gb,bb]};
+    if(rt<0.10){op=0.18+rt*1.4;base=[160,148,120];}
+    else if(rt<0.15){op=0.06;base=[95,85,72];}
+    else if(rt<0.45){op=0.88+Math.sin(rt*52)*0.06;base=[228,208,168];}
+    else if(rt<0.53){op=0.06;base=[110,100,82];}
+    else if(rt<0.86){op=0.76+Math.sin(rt*68)*0.07;base=[214,194,155];}
+    else if(rt<0.89){op=0.10;base=[135,120,98];}
+    else if(rt<0.94){op=0.52;base=[208,188,152];}
+    else{op=0.16;base=[175,158,128];}
+    var fine=noise3(ri.rr*1e-7,rt*52,0);
+    var fine2=noise3(ri.rr*2e-7,rt*130,7);
+    var tex=0.85 + fine*0.28 + fine2*0.14;
+    op *= tex;
+    var cr = base[0]*(0.88+fine*0.16+fine2*0.08) * shadow;
+    var cg = base[1]*(0.88+fine*0.16+fine2*0.08) * shadow;
+    var cb = base[2]*(0.88+fine*0.16+fine2*0.08) * shadow;
+    return {op:Math.max(0,Math.min(1,op)),color:[cr,cg,cb]};
   }
   if(b.name==='Urano'){
     var op=0.20+0.12*Math.sin(rt*38);
     if(rt>0.88 && rt<0.97) op=0.55;
     if(rt>0.40 && rt<0.46) op*=0.35;
     if(rt>0.60 && rt<0.65) op*=0.45;
-    return {op:op,color:[150,205,225]};
+    return {op:op,color:[150*shadow,205*shadow,225*shadow]};
   }
-  return {op:0.4,color:[200,190,170]};
+  return {op:0.4,color:[200*shadow,190*shadow,170*shadow]};
 }
 
 var AST_SPR=32;
@@ -3103,15 +3254,40 @@ function drawPois(){
 function drawSunFlare(){
   var pr=projectToScreen(SUN.x,SUN.y,SUN.z); if(!pr)return;
   var spx=pr.scrX|0, spy=pr.scrY|0;
-  if(spx>=0&&spy>=0&&spx<W&&spy<H){ if(depthBuf[spy*W+spx]<pr.dist-SUN.r) return; }
   var dx=SUN.x-camX, dy=SUN.y-camY, dz=SUN.z-camZ;
-  var cosView=(dx*camDx+dy*camDy+dz*camDz)/Math.sqrt(dx*dx+dy*dy+dz*dz);
-  if(cosView<0.2)return;
+  var dist=Math.sqrt(dx*dx+dy*dy+dz*dz);
+  var cosView=(dx*camDx+dy*camDy+dz*camDz)/dist;
+  if(cosView<0.1)return;
+  var intensity=Math.max(0,(cosView-0.1)/0.9)*(solarFlareActive?1.7:1.0);
   var sx=pr.scrX|0, sy=pr.scrY|0;
-  var intensity=Math.max(0,(cosView-0.2)/0.8) * (solarFlareActive?1.6:1.0);
-  var len=Math.min(W,H)*0.5*intensity;
+  var sunRadiusPix = SUN.r/(pr.zd*camTanV)*H*0.5;
+  var seed = (gameTime*0.5)|0;
+  var numRays = 12;
+  for(var k=0;k<numRays;k++){
+    var ang = k * TAU/numRays + hash3(k,seed,3)*0.4;
+    var rayLen = Math.min(W,H)*0.9*intensity;
+    var w = 1.5 + hash3(k,seed,4)*3;
+    var ca=Math.cos(ang), sa=Math.sin(ang);
+    var r0 = sunRadiusPix * 1.05;
+    var steps = (rayLen|0);
+    for(var s=0;s<steps;s+=1){
+      var rr = r0 + s;
+      var px = (sx + ca*rr)|0;
+      var py = (sy + sa*rr)|0;
+      if(px<0||py<0||px>=W||py>=H) continue;
+      var fade = Math.max(0, 1 - s/rayLen);
+      var alpha = fade*fade*0.25*intensity;
+      for(var ww=-w;ww<=w;ww+=1){
+        var wx = (px - sa*ww)|0;
+        var wy = (py + ca*ww)|0;
+        if(wx<0||wy<0||wx>=W||wy>=H) continue;
+        blendPx(wx,wy, 255, 225, 160, alpha/ (1+Math.abs(ww)*0.7));
+      }
+    }
+  }
+  var len=Math.min(W,H)*0.55*intensity;
   for(var k=1;k<len;k++){
-    var alpha=intensity*0.35*(1-k/len);
+    var alpha=intensity*0.38*(1-k/len);
     var cr=255*alpha, cg=210*alpha, cb=140*alpha;
     var px1=sx+k|0, px2=sx-k|0;
     if(px1>=0&&px1<W&&sy>=0&&sy<H){
@@ -3710,20 +3886,15 @@ function updateAI(ship,dt){
 
   var ai=ship.ai;
   var mods = ship.aiMods || AI_DIRECTOR.defaultMods;
-
   var modAggr = mods.aggressione;
   var modPrec = mods.precisione;
   var modEva  = mods.evasione;
   var modDist = mods.distanza;
   var modPrio = mods.priorita;
 
-  if(ship.role === 'attacco'){
-    modAggr *= 1.5; modEva *= 0.7;
-  } else if(ship.role === 'supporto'){
-    modDist *= 1.4; modPrec *= 1.2;
-  } else if(ship.role === 'flank'){
-    modDist *= 0.85;
-  }
+  if(ship.role === 'attacco'){ modAggr *= 1.5; modEva *= 0.7; }
+  else if(ship.role === 'supporto'){ modDist *= 1.4; modPrec *= 1.2; }
+  else if(ship.role === 'flank'){ modDist *= 0.85; }
 
   var best=null, bestD=1e24, bestScore=-1e24;
   for(var i=0;i<SHIPS.length;i++){
@@ -3731,16 +3902,16 @@ function updateAI(ship,dt){
     if(o===ship||!o.alive)continue;
     var dx=o.x-ship.x, dy=o.y-ship.y, dz=o.z-ship.z;
     var d=Math.sqrt(dx*dx+dy*dy+dz*dz);
-    var score = 1e12 / (d + 1);
-    if(o.isHuman) score *= modPrio;
-    if(ship.roleTarget && o === ship.roleTarget) score *= 3;
+    var score = ship1e12 / (d + 1.s);
+    if(o.isHuman) score *= modpeedPrio;
+    if(ship.role*dtTarget && o === ship.roleTarget) score *= 3;
     if(score > bestScore){bestScore = score; best = o; bestD = d;}
   }
   if(!best){
     ship.speed=computeSpeed(ship)*ship.speedMul;
     var cp=Math.cos(ship.pitch), sp=Math.sin(ship.pitch);
     var cy=Math.cos(ship.yaw), sy=Math.sin(ship.yaw);
-    ship.x+=cp*cy*ship.speed*dt; ship.y+=cp*sy*ship.speed*dt; ship.z+=sp*ship.speed*dt;
+    ship.x+=cp*cy*; ship.y+=cp*sy*ship.speed*dt; ship.z+=sp*ship.speed*dt;
     applyCollisions(ship); return;
   }
 
@@ -3779,9 +3950,7 @@ function updateAI(ship,dt){
     var prefD = ai.prefDist * modDist;
     var baseOff = dist < prefD*0.6 ? ship.strafeDir*0.30 : dist > prefD*1.4 ? 0 : ship.strafeDir*0.15;
     var flankOff = 0;
-    if(ship.role === 'flank'){
-      flankOff = (ship.index % 2 === 0 ? 1 : -1) * Math.PI * 0.35;
-    }
+    if(ship.role === 'flank'){ flankOff = (ship.index % 2 === 0 ? 1 : -1) * Math.PI * 0.35; }
     var offset = baseOff + flankOff;
     desYaw=Math.atan2(dy,dx)+offset;
     desPitch=Math.asin(Math.max(-1,Math.min(1,dz/dist)));
