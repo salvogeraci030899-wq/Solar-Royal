@@ -96,28 +96,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .splash-dots span:nth-child(2){animation-delay:.2s}
 .splash-dots span:nth-child(3){animation-delay:.4s}
 @keyframes splashDot{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.5);opacity:1}}
-#llmSetup{z-index:400;background:radial-gradient(ellipse at center,#0a1a30 0%,#000006 80%)}
-.llm-content{width:100%;max-width:400px;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center;animation:slideUp .6s cubic-bezier(.2,.9,.3,1.2)}
-.llm-icon{font-size:56px;color:#6ec0ff;text-shadow:0 0 30px rgba(110,192,255,0.75);animation:llmPulse 2s ease-in-out infinite}
-@keyframes llmPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-.llm-title{font:900 15px/1 ui-monospace,monospace;letter-spacing:.30em;color:#eaf4ff;text-shadow:0 0 14px rgba(110,180,255,0.65)}
-.llm-desc{font:600 12px/1.55 sans-serif;color:#a8c8e8;max-width:340px}
-.llm-info{width:100%;display:flex;flex-direction:column;gap:7px;padding:12px 16px;border-radius:12px;background:rgba(14,26,48,0.65);border:1px solid rgba(90,150,215,0.3)}
-.llm-info-row{display:flex;justify-content:space-between;font:700 11px/1.4 ui-monospace,monospace;color:#cfe6ff;gap:12px}
-.llm-info-row span:first-child{color:#7aa8d0;letter-spacing:.14em;flex-shrink:0}
-.llm-info-row span:last-child{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.llm-progress-wrap{width:100%;display:none;flex-direction:column;gap:7px}
-.llm-progress-wrap.active{display:flex}
-.llm-progress-bar{width:100%;height:10px;border-radius:5px;overflow:hidden;background:rgba(14,26,48,0.9);border:1px solid rgba(90,150,215,0.4)}
-.llm-progress-fill{height:100%;width:0%;border-radius:5px;background:linear-gradient(90deg,#4a90e2,#6ee0ff);transition:width .25s ease-out;box-shadow:0 0 12px rgba(110,200,255,0.55)}
-.llm-progress-text{font:800 11px/1 ui-monospace,monospace;color:#7aa8d0;letter-spacing:.16em;text-align:center;min-height:14px}
-.llm-status{font:600 10px/1.4 ui-monospace,monospace;color:#6a94bc;letter-spacing:.06em;min-height:14px;max-width:340px;text-align:center}
-.llm-status.err{color:#ff8899}
-.llm-status.ok{color:#80ffb0}
-#llmDownloadBtn{width:100%}
-#llmSkipBtn{width:100%;margin-top:2px}
-#llmDownloadBtn:disabled{opacity:0.55;cursor:not-allowed}
-.llm-note{font:600 10px/1.5 ui-monospace,monospace;color:#6a94bc;max-width:320px;letter-spacing:.06em;text-align:center;opacity:0.85}
 .lobby-content{width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px;align-items:stretch;animation:slideUp .6s cubic-bezier(.2,.9,.3,1.2);max-height:100dvh;overflow-y:auto}
 @keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 .brand{font:900 clamp(20px,4.6vw,30px)/1.05 ui-monospace,monospace;text-align:center;letter-spacing:.14em;color:#eaf4ff;text-shadow:0 0 18px rgba(110,180,255,0.55),0 0 40px rgba(60,120,255,0.3)}
@@ -195,14 +173,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .hudNav .hudName{color:#eaf4ff}
 .hudNav .hudDist{color:#7aa8d0;font-size:10px;letter-spacing:.06em}
 .hudExpand{font-size:9px;color:#7aa8d0;opacity:0.7;letter-spacing:0;margin-left:-2px}
-#directorHUD{position:fixed;top:calc(env(safe-area-inset-top,0px) + 40px);left:50%;transform:translateX(-50%);z-index:11;pointer-events:none;opacity:0;transition:opacity .4s;display:flex;gap:5px;flex-wrap:wrap;justify-content:center;max-width:92vw}
-#directorHUD.show{opacity:0.92}
-#directorHUD .dchip{padding:3px 6px;border-radius:5px;background:rgba(6,12,22,0.78);border:1px solid rgba(90,150,215,0.35);font:700 9px/1 ui-monospace,monospace;letter-spacing:.05em;color:#a8d4ff;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.5)}
-#directorHUD .dchip b{color:#6ec0ff;font-weight:900;margin-left:3px}
-#directorHUD .dchip.role{color:#ffb0d0}
-#directorHUD .dchip.role b{color:#ff78a8}
-#directorHUD .dchip.active{animation:dchipPulse 1.8s ease-in-out infinite}
-@keyframes dchipPulse{0%,100%{border-color:rgba(90,150,215,0.35)}50%{border-color:rgba(110,200,255,0.7)}}
 #statsWrap{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 8px);width:104px;height:104px;z-index:13;pointer-events:none;opacity:0;transition:opacity .3s;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.65))}
 #statsWrap.show{opacity:1;pointer-events:auto;cursor:pointer}
 #statsWrap .statsRing{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
@@ -310,8 +280,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
 .game-hidden #dmgVignette,.game-hidden #hitMark,.game-hidden #killFeed,
 .game-hidden #stick,.game-hidden #stick2,.game-hidden #turboBtn,.game-hidden #fireBtn,
 .game-hidden #zoneWarning,.game-hidden #powerups,.game-hidden #missileBtn,
-.game-hidden #solarWarning,.game-hidden #brakeBtn,.game-hidden #brakeVignette,
-.game-hidden #directorHUD{opacity:0;pointer-events:none}
+.game-hidden #solarWarning,.game-hidden #brakeBtn,.game-hidden #brakeVignette{opacity:0;pointer-events:none}
 
 #settingsPanel{
   position:fixed;top:50%;left:50%;
@@ -354,8 +323,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   .hudNav .hudDist{font-size:9px}
   .hudSep{height:12px}
   .hudExpand{font-size:8px}
-  #directorHUD{top:calc(env(safe-area-inset-top,0px) + 36px);gap:4px}
-  #directorHUD .dchip{font-size:8px;padding:2px 5px;letter-spacing:.04em}
   #stick{left:calc(env(safe-area-inset-left,0px) + 22px);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);top:auto;width:130px;height:130px;opacity:0.35}
   #stick.active{opacity:0.60}
   #stick .knob{width:48px;height:48px;margin-left:-24px;margin-top:-24px}
@@ -423,15 +390,6 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   .mm-legend-row{font-size:9px;gap:6px}
   .mm-dot,.mm-ring,.mm-tri{width:8px;height:8px}
   .mm-tri{font-size:9px}
-  .llm-content{max-width:520px;gap:12px}
-  .llm-icon{font-size:44px}
-  .llm-title{font-size:13px}
-  .llm-desc{font-size:11px;max-width:480px}
-  .llm-info{padding:10px 14px;gap:5px}
-  .llm-info-row{font-size:10px}
-  .llm-progress-bar{height:8px}
-  .llm-progress-text{font-size:10px}
-  .llm-note{font-size:9px}
   .settings-box{width:min(400px,72vw);padding:11px 14px;gap:8px}
   .settings-row{padding:2px 0}
 }
@@ -439,7 +397,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   #rotateOverlay.show ~ #hud,#rotateOverlay.show ~ #roster,#rotateOverlay.show ~ #stick,
   #rotateOverlay.show ~ #stick2,#rotateOverlay.show ~ #turboBtn,#rotateOverlay.show ~ #brakeBtn,
   #rotateOverlay.show ~ #fireBtn,#rotateOverlay.show ~ #missileBtn,#rotateOverlay.show ~ #statsWrap,
-  #rotateOverlay.show ~ #powerups,#rotateOverlay.show ~ #minimap,#rotateOverlay.show ~ #directorHUD{opacity:0;pointer-events:none}
+  #rotateOverlay.show ~ #powerups,#rotateOverlay.show ~ #minimap{opacity:0;pointer-events:none}
 }
 
 .ver{font:700 9px/1 ui-monospace,monospace;letter-spacing:.28em;color:#4f7396;text-align:center;opacity:.9}
@@ -521,27 +479,6 @@ body.in-lobby #gearBtn{display:block}
     <div class="ver splash-ver" id="splashVer"></div>
   </div>
 </div>
-<div id="llmSetup" class="overlay">
-  <div class="llm-content">
-    <div class="llm-icon">&#9889;</div>
-    <div class="llm-title">POTENZIAMENTO IA</div>
-    <div class="llm-desc">Royal Solar Arena pu&ograve; usare un modello IA locale per rendere i nemici adattivi, cooperativi e imprevedibili. &Egrave; <b>opzionale</b>: puoi giocare subito anche senza.</div>
-    <div class="llm-info">
-      <div class="llm-info-row"><span>MODELLO</span><span>Qwen2.5 1.5B Instruct</span></div>
-      <div class="llm-info-row"><span>DIMENSIONE</span><span>~1.0 GB</span></div>
-      <div class="llm-info-row"><span>ESECUZIONE</span><span>100% locale, offline</span></div>
-      <div class="llm-info-row"><span>COSTO</span><span>Gratis, nessun server</span></div>
-    </div>
-    <div class="llm-progress-wrap" id="llmProgressWrap">
-      <div class="llm-progress-bar"><div class="llm-progress-fill" id="llmProgressFill"></div></div>
-      <div class="llm-progress-text" id="llmProgressText">0%</div>
-    </div>
-    <button class="btn-primary" id="llmDownloadBtn"><span>SCARICA PACCHETTO IA</span><small>OPZIONALE &middot; POTENZIA L'IA</small></button>
-    <button class="btn-ghost" id="llmSkipBtn">GIOCA SENZA IA AVANZATA</button>
-    <div class="llm-status" id="llmStatus"></div>
-    <div class="llm-note">Il download avviene una sola volta. Le partite successive partiranno istantaneamente dalla cache.</div>
-  </div>
-</div>
 <div id="hud">
   <div class="hudRow" id="hudRow">
     <div class="hudItem" id="hudTime">00:00</div>
@@ -563,7 +500,6 @@ body.in-lobby #gearBtn{display:block}
     <div class="hudExpand">&#9660;</div>
   </div>
 </div>
-<div id="directorHUD"></div>
 <div id="statsPage">
   <div class="spHeader">
     <div class="spTitle">STATISTICHE PARTITA</div>
@@ -717,7 +653,7 @@ window.addEventListener('error', function(ev){
 (function(){
 'use strict';
 
-var VERSION='1.00';
+var VERSION='1.01';
 var AU=1.496e11, TAN_V=Math.tan(30*Math.PI/180), PI=Math.PI, TAU=PI*2;
 var MAX_HP=100, BULLET_DMG=9;
 var FIRE_CD=0.55;
@@ -926,122 +862,7 @@ document.addEventListener('touchstart', tryInitAudio, {passive:true, capture:tru
 document.addEventListener('click', tryInitAudio, true);
 document.addEventListener('keydown', tryInitAudio, true);
 
-var AI_DIRECTOR = {
-  engine: null, ready: false, loading: false,
-  busyDirector: false, busyCoord: false,
-  directorTimer: 0, coordinatorTimer: 0,
-  defaultMods: { aggressione:1, precisione:1, cooperazione:1, evasione:1, distanza:1, priorita:1 },
-  lastMods: { aggressione:1, precisione:1, cooperazione:1, evasione:1, distanza:1, priorita:1 }
-};
-var LLM_MODEL = 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC';
-var LLM_FLAG_KEY = 'royal_solar_arena_llm_ready_v1';
-function clampNum(v, min, max, fallback){
-  var n = parseFloat(v);
-  if (isNaN(n)) return fallback;
-  if (n < min) return min;
-  if (n > max) return max;
-  return n;
-}
-function extractJson(text){
-  if (!text) return null;
-  var m = text.match(/\{[\s\S]*\}/);
-  if (!m) return null;
-  try { return JSON.parse(m[0]); } catch(e){ return null; }
-}
-async function initLLM(progressCb){
-  if (AI_DIRECTOR.engine) return AI_DIRECTOR.engine;
-  if (AI_DIRECTOR.loading) {
-    while (AI_DIRECTOR.loading) await new Promise(r => setTimeout(r, 200));
-    return AI_DIRECTOR.engine;
-  }
-  AI_DIRECTOR.loading = true;
-  try {
-    if (!navigator.gpu) throw new Error('WebGPU non supportato su questo dispositivo');
-    var webllm = await import('https://esm.run/@mlc-ai/web-llm');
-    var engine = await webllm.CreateMLCEngine(
-      LLM_MODEL,
-      { initProgressCallback: function(report){
-          if (progressCb) progressCb(report.progress || 0, report.text || '');
-        }
-      }
-    );
-    AI_DIRECTOR.engine = engine;
-    AI_DIRECTOR.ready = true;
-    return engine;
-  } finally {
-    AI_DIRECTOR.loading = false;
-  }
-}
-async function runTacticalDirector(){
-  if (!AI_DIRECTOR.engine || AI_DIRECTOR.busyDirector) return;
-  AI_DIRECTOR.busyDirector = true;
-  try {
-    var aliveBots = 0;
-    for (var i=1;i<SHIPS.length;i++) if (SHIPS[i].alive) aliveBots++;
-    var playerHp = human.alive ? Math.round(human.hp) : 0;
-    var playerKills = human.kills || 0;
-    var elapsed = Math.round(gameTime);
-    var hpFrac = human.alive ? Math.round(human.hp / human.maxHp * 100) : 0;
-    var prompt = 'Sei il direttore tattico. Rispondi SOLO con JSON: {"aggressione":1.0,"precisione":1.0,"cooperazione":1.0,"evasione":1.0,"distanza":1.0,"priorita":1.0} valori 0.5-2.0. Stats: kill='+playerKills+' hp='+hpFrac+'% t='+elapsed+'s bot='+aliveBots;
-    var reply = await AI_DIRECTOR.engine.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 80
-    });
-    var text = reply.choices && reply.choices[0] && reply.choices[0].message ? reply.choices[0].message.content : '';
-    var obj = extractJson(text);
-    if (!obj) return;
-    var mods = {
-      aggressione: clampNum(obj.aggressione, 0.5, 2.0, 1.0),
-      precisione:  clampNum(obj.precisione,  0.5, 2.0, 1.0),
-      cooperazione:clampNum(obj.cooperazione,0.5, 2.0, 1.0),
-      evasione:    clampNum(obj.evasione,    0.5, 2.0, 1.0),
-      distanza:    clampNum(obj.distanza,    0.5, 2.0, 1.0),
-      priorita:    clampNum(obj.priorita,    0.5, 2.0, 1.0)
-    };
-    AI_DIRECTOR.lastMods = mods;
-    for (var i2=1;i2<SHIPS.length;i2++){
-      if (SHIPS[i2].alive) SHIPS[i2].aiMods = mods;
-    }
-  } catch(e){
-  } finally {
-    AI_DIRECTOR.busyDirector = false;
-  }
-}
-async function runBotCoordinator(){
-  if (!AI_DIRECTOR.engine || AI_DIRECTOR.busyCoord) return;
-  AI_DIRECTOR.busyCoord = true;
-  try {
-    var bots = [];
-    for (var i=1;i<SHIPS.length;i++){
-      var s = SHIPS[i];
-      if (!s.alive) continue;
-      bots.push({ id: s.index, hp: Math.round(s.hp), x: Math.round(s.x/1e9), y: Math.round(s.y/1e9), z: Math.round(s.z/1e9) });
-    }
-    if (bots.length < 2) return;
-    var hx = Math.round(human.x/1e9), hy = Math.round(human.y/1e9), hz = Math.round(human.z/1e9);
-    var hHp = human.alive ? Math.round(human.hp) : 0;
-    var prompt = 'Assegna ruoli. Rispondi SOLO con {"roles":[{"id":1,"role":"attacco"}]}. Ruoli: attacco/supporto/flank/ritirata. Bot:' + JSON.stringify(bots) + ' Player hp=' + hHp + ' pos=[' + hx + ',' + hy + ',' + hz + ']';
-    var reply = await AI_DIRECTOR.engine.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }], temperature: 0.6, max_tokens: 250
-    });
-    var text = reply.choices && reply.choices[0] && reply.choices[0].message ? reply.choices[0].message.content : '';
-    var obj = extractJson(text);
-    if (!obj || !obj.roles || !Array.isArray(obj.roles)) return;
-    var validRoles = { attacco:1, supporto:1, flank:1, ritirata:1 };
-    for (var k=0;k<obj.roles.length;k++){
-      var r = obj.roles[k];
-      if (!r || !validRoles[r.role]) continue;
-      for (var j=1;j<SHIPS.length;j++){
-        if (SHIPS[j].index === r.id && SHIPS[j].alive){
-          SHIPS[j].role = r.role;
-          break;
-        }
-      }
-    }
-  } catch(e){
-  } finally {
-    AI_DIRECTOR.busyCoord = false;
-  }
-}
+var AI_DIRECTOR = { defaultMods: { aggressione:1, precisione:1, cooperazione:1, evasione:1, distanza:1, priorita:1 } };
 
 var AIM_ASSIST_CONE_DEG = 8;
 var AIM_ASSIST_STRENGTH = 0.55;
@@ -1800,19 +1621,11 @@ var statsPageEl=document.getElementById('statsPage');
 var spListEl=document.getElementById('spList');
 var spAliveEl=document.getElementById('spAlive');
 var hudRowEl=document.getElementById('hudRow');
-var directorHUDEl=document.getElementById('directorHUD');
 var statsHoldTimer=null;
 var statsPageVisible=false;
 var lastStatsBuild = 0;
 var splashEl=document.getElementById('splash');
 var splashDismissed=false;
-var llmSetupEl=document.getElementById('llmSetup');
-var llmDownloadBtn=document.getElementById('llmDownloadBtn');
-var llmSkipBtn=document.getElementById('llmSkipBtn');
-var llmProgressWrap=document.getElementById('llmProgressWrap');
-var llmProgressFill=document.getElementById('llmProgressFill');
-var llmProgressText=document.getElementById('llmProgressText');
-var llmStatusEl=document.getElementById('llmStatus');
 
 function dismissSplash(){
   if(splashDismissed) return;
@@ -1821,52 +1634,11 @@ function dismissSplash(){
   tryInitAudio();
   splashEl.classList.remove('active');
   tryLockOrientation();
-  var flag = false;
-  try { flag = localStorage.getItem(LLM_FLAG_KEY) === '1'; } catch(_){}
-  if (!flag) {
-    llmSetupEl.classList.add('active');
-  }
 }
 splashEl.addEventListener('pointerdown', function(e){ e.preventDefault(); dismissSplash(); });
 splashEl.addEventListener('touchstart', function(e){ e.preventDefault(); dismissSplash(); }, {passive:false});
 window.addEventListener('keydown', function(e){ if(!splashDismissed){ dismissSplash(); } });
 
-llmDownloadBtn.addEventListener('click', async function(){
-  if (llmDownloadBtn.disabled) return;
-  llmDownloadBtn.disabled = true;
-  llmDownloadBtn.querySelector('span').textContent = 'DOWNLOAD IN CORSO...';
-  llmDownloadBtn.querySelector('small').textContent = 'NON CHIUDERE L\'APP';
-  llmProgressWrap.classList.add('active');
-  llmStatusEl.className = 'llm-status';
-  llmStatusEl.textContent = 'Connessione al server...';
-  try {
-    await initLLM(function(progress, text){
-      var pct = Math.max(0, Math.min(100, Math.round((progress||0)*100)));
-      llmProgressFill.style.width = pct + '%';
-      llmProgressText.textContent = pct + '%';
-      if (text) llmStatusEl.textContent = text.slice(0, 90);
-    });
-    try { localStorage.setItem(LLM_FLAG_KEY, '1'); } catch(_){}
-    llmProgressFill.style.width = '100%';
-    llmProgressText.textContent = '100%';
-    llmStatusEl.className = 'llm-status ok';
-    llmStatusEl.textContent = 'Pacchetto IA pronto. Buona caccia.';
-    setTimeout(function(){ llmSetupEl.classList.remove('active'); }, 700);
-  } catch(e){
-    console.error(e);
-    llmDownloadBtn.disabled = false;
-    llmDownloadBtn.querySelector('span').textContent = 'RIPROVA';
-    llmDownloadBtn.querySelector('small').textContent = 'CONTROLLA LA CONNESSIONE E RIPROVA';
-    llmStatusEl.className = 'llm-status err';
-    llmStatusEl.textContent = 'ERRORE: ' + (e && e.message ? e.message : 'download fallito');
-  }
-});
-if(llmSkipBtn){
-  llmSkipBtn.addEventListener('click', function(e){
-    e.preventDefault();
-    llmSetupEl.classList.remove('active');
-  });
-}
 
 function showStatsPage(){
   if(currentScreen!=='match') return;
@@ -1957,7 +1729,6 @@ function showScreen(n){
   statsWrap.classList.toggle('show',n==='match');
   minimapEl.classList.toggle('show',n==='match');
   powerupsEl.classList.toggle('show',n==='match');
-  if(n!=='match' && directorHUDEl) directorHUDEl.classList.remove('show');
 }
 
 function renderLobby(){
@@ -2076,11 +1847,6 @@ function beginMatch(){
   swarmTimer=SWARM_INTERVAL; swarmActive=false;
 
   initPois();
-  AI_DIRECTOR.directorTimer = 0;
-  AI_DIRECTOR.coordinatorTimer = 6;
-  AI_DIRECTOR.busyDirector = false;
-  AI_DIRECTOR.busyCoord = false;
-  AI_DIRECTOR.lastMods = { aggressione:1, precisione:1, cooperazione:1, evasione:1, distanza:1, priorita:1 };
 
   renderHangar();
   var ch=CHASSIS[profile.chassis]||CHASSIS.balanced;
@@ -5081,38 +4847,6 @@ function updateMissileButton(){
     missileRing.style.strokeDashoffset='0';
   }
 }
-var lastDirectorHUDHtml = '';
-function updateDirectorHUD(){
-  if(!directorHUDEl) return;
-  if(currentScreen !== 'match' || !AI_DIRECTOR.ready){
-    if(directorHUDEl.classList.contains('show')) directorHUDEl.classList.remove('show');
-    return;
-  }
-  var mods = AI_DIRECTOR.lastMods;
-  var roles = {attacco:0, supporto:0, flank:0, ritirata:0};
-  var botAlive = 0;
-  for(var i=1;i<SHIPS.length;i++){
-    var s = SHIPS[i];
-    if(!s.alive) continue;
-    botAlive++;
-    if(s.role && roles[s.role] !== undefined) roles[s.role]++;
-  }
-  if(botAlive === 0){ directorHUDEl.classList.remove('show'); return; }
-  var html = '';
-  html += '<div class="dchip">AGG<b>'+mods.aggressione.toFixed(1)+'</b></div>';
-  html += '<div class="dchip">PRE<b>'+mods.precisione.toFixed(1)+'</b></div>';
-  html += '<div class="dchip">COO<b>'+mods.cooperazione.toFixed(1)+'</b></div>';
-  html += '<div class="dchip">EVA<b>'+mods.evasione.toFixed(1)+'</b></div>';
-  if(roles.attacco)  html += '<div class="dchip role active">ATT<b>'+roles.attacco+'</b></div>';
-  if(roles.supporto) html += '<div class="dchip role active">SUP<b>'+roles.supporto+'</b></div>';
-  if(roles.flank)    html += '<div class="dchip role active">FLK<b>'+roles.flank+'</b></div>';
-  if(roles.ritirata) html += '<div class="dchip role active">RIT<b>'+roles.ritirata+'</b></div>';
-  if(html !== lastDirectorHUDHtml){
-    directorHUDEl.innerHTML = html;
-    lastDirectorHUDHtml = html;
-  }
-  if(!directorHUDEl.classList.contains('show')) directorHUDEl.classList.add('show');
-}
 function updateHUD(){
   var pfx=Math.cos(human.pitch)*Math.cos(human.yaw);
   var pfy=Math.cos(human.pitch)*Math.sin(human.yaw);
@@ -5163,7 +4897,6 @@ function updateHUD(){
       el.classList.toggle('dead',!s.alive);
       el.querySelector('.hp').textContent=s.alive?Math.ceil(s.hp):'KIA';
     }
-    updateDirectorHUD();
   }
   if(statsPageVisible && (performance.now() - lastStatsBuild) > 150){
     lastStatsBuild = performance.now();
@@ -5293,20 +5026,6 @@ function loop(now){
         updateDynamicEvents(dt);
         updateSatellites(dt);
         updatePois(dt);
-        if(AI_DIRECTOR.ready){
-          AI_DIRECTOR.directorTimer += dt;
-          if(AI_DIRECTOR.directorTimer > 8 && !AI_DIRECTOR.busyDirector){
-            AI_DIRECTOR.directorTimer = 0;
-            runTacticalDirector();
-          }
-          AI_DIRECTOR.coordinatorTimer += dt;
-          var aliveBotsNow = 0;
-          for(var bi2=1;bi2<SHIPS.length;bi2++) if(SHIPS[bi2].alive) aliveBotsNow++;
-          if(AI_DIRECTOR.coordinatorTimer > 15 && aliveBotsNow >= 2 && !AI_DIRECTOR.busyCoord){
-            AI_DIRECTOR.coordinatorTimer = 0;
-            runBotCoordinator();
-          }
-        }
       }
       if(!paused){ updateExplosions(dt);
       updateTrails(dt);
