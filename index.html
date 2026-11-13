@@ -5237,6 +5237,7 @@ function sampleSeries(dt){
   window.__rsa.series.push({t:+gameTime.toFixed(0),alive:al.length,nn:c?sum/c:0,zoneAU:+(zoneRadius/AU).toFixed(2),out:out});
 }
 window.__rsa.state=function(){ return {alive:SHIPS.filter(function(x){return x.alive;}).length, active:matchActive, t:gameTime, ships:SHIPS.map(function(x){return {i:x.index,alive:x.alive,hp:x.hp,kills:x.kills||0,ch:x.chassis,pers:x.personalityLabel,spd:x.speed,r:Math.sqrt(x.x*x.x+x.y*x.y+x.z*x.z)/AU,zr:Math.sqrt((x.x-zoneCx)*(x.x-zoneCx)+(x.y-zoneCy)*(x.y-zoneCy)+(x.z-zoneCz)*(x.z-zoneCz))/AU};}),zoneAU:zoneRadius/AU}; };
+window.__rsa.start=function(){ queueBots=pickBots(TOTAL_PLAYERS-1); beginMatch(); };
 var perfAccum = 0, perfFrames = 0, perfCooldown = 0;
 function adaptiveQuality(dt){
   perfAccum += dt; perfFrames++;
