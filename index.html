@@ -10,7 +10,9 @@
 <meta name="screen-orientation" content="landscape">
 <meta name="x5-orientation" content="landscape">
 <meta name="full-screen" content="yes">
-<link rel="manifest" href='data:application/manifest+json,{"name":"Royal Solar Arena","short_name":"RoyalSolar","display":"fullscreen","orientation":"landscape","background_color":"#000006","theme_color":"#000006","start_url":"."}'>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
 <title>Royal Solar Arena</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -439,6 +441,27 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
   #rotateOverlay.show ~ #fireBtn,#rotateOverlay.show ~ #missileBtn,#rotateOverlay.show ~ #statsWrap,
   #rotateOverlay.show ~ #powerups,#rotateOverlay.show ~ #minimap,#rotateOverlay.show ~ #directorHUD{opacity:0;pointer-events:none}
 }
+
+.ver{font:700 9px/1 ui-monospace,monospace;letter-spacing:.28em;color:#4f7396;text-align:center;opacity:.9}
+.splash-ver{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);left:0;right:0}
+.hangar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ch-card{appearance:none;cursor:pointer;padding:8px 6px;border-radius:12px;background:rgba(10,20,38,0.7);border:1px solid rgba(90,150,215,0.28);color:#a8c8e8;font:700 10px/1.35 ui-monospace,monospace;letter-spacing:.08em;text-align:center;display:flex;flex-direction:column;gap:3px}
+.ch-card b{font:900 11px/1 ui-monospace,monospace;letter-spacing:.18em;color:#eaf4ff}
+.ch-card.sel{border-color:#6ec0ff;background:linear-gradient(180deg,rgba(40,90,150,0.55),rgba(14,30,56,0.7));box-shadow:0 0 14px rgba(90,170,255,0.35)}
+.ch-card.locked{opacity:.45;cursor:not-allowed}
+.opt-row{display:flex;gap:8px}
+.opt-row .btn-ghost{flex:1;padding:10px 8px}
+#gearBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);z-index:150;display:none;width:38px;height:38px;border-radius:10px;background:rgba(10,20,38,0.8);border:1px solid rgba(90,150,215,0.4);color:#9cc4ee;font-size:18px;cursor:pointer;pointer-events:auto}
+body.in-lobby #gearBtn{display:block}
+#tutorial{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;background:rgba(2,4,10,0.72);padding:20px;pointer-events:auto}
+#tutorial.show{display:flex}
+.tut-box{max-width:520px;padding:16px 20px;border-radius:14px;background:rgba(6,12,22,0.95);border:1px solid rgba(90,150,215,0.45);font:600 12px/1.6 ui-monospace,monospace;letter-spacing:.04em;color:#cfe6ff}
+.tut-box h3{font:900 13px/1 ui-monospace,monospace;letter-spacing:.3em;color:#6ec0ff;margin-bottom:10px;text-align:center}
+.tut-box li{list-style:none;margin:4px 0}
+.tut-box li b{color:#fff}
+.tut-box .tap{margin-top:10px;text-align:center;color:#7aa8d0;font-size:10px;letter-spacing:.3em}
+.results-sub{font:600 11px/1.4 ui-monospace,monospace;letter-spacing:.14em;color:#8fb4da;text-align:center;margin-top:-4px}
+.settings-danger{border-color:rgba(255,110,110,0.5);color:#ff9a9a}
 </style>
 </head>
 <body>
@@ -495,6 +518,7 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
     <div class="splash-sub">10 PILOTI &middot; 1 VINCITORE</div>
     <div class="splash-tap">TOCCA PER INIZIARE</div>
     <div class="splash-dots"><span></span><span></span><span></span></div>
+    <div class="ver splash-ver" id="splashVer"></div>
   </div>
 </div>
 <div id="llmSetup" class="overlay">
@@ -610,7 +634,10 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
       <div><div class="stat-val" id="statKills">0</div><div class="stat-lbl">KILL</div></div>
       <div><div class="stat-val" id="statAvg">&mdash;</div><div class="stat-lbl">MEDIA</div></div>
     </div>
+    <div class="hangar" id="hangar"></div>
+    <div class="opt-row"><button class="btn-ghost" id="diffBtn"></button><button class="btn-ghost" id="nameBtn">CAMBIA NOME</button></div>
     <button class="btn-primary" id="findMatch"><span>TROVA PARTITA</span><small>SISTEMA SOLARE &middot; 10 GIOCATORI</small></button>
+    <div class="ver" id="lobbyVer"></div>
   </div>
 </div>
 <div id="queue" class="overlay">
@@ -629,9 +656,19 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
     <div class="results-grid" id="resultsGrid"></div>
     <div class="xp-bar-wrap"><div class="xp-bar" id="xpBar"></div></div>
     <div class="xp-label" id="xpLabel">+0 XP</div>
-    <button class="btn-primary" id="returnLobby"><span>TORNA ALLA LOBBY</span></button>
+    <div class="results-sub" id="resultsSub"></div>
+    <button class="btn-primary" id="rematchBtn"><span>RIGIOCA</span></button>
+    <button class="btn-ghost" id="returnLobby">TORNA ALLA LOBBY</button>
   </div>
 </div>
+<button id="gearBtn" aria-label="Impostazioni">&#9881;</button>
+<div id="tutorial"><div class="tut-box"><h3>COME SI GIOCA</h3><ul>
+<li><b>Stick sinistro</b> &middot; pilota la nave</li>
+<li><b>Stick destro / SPARA</b> &middot; mira e fuoco (5 colpi, poi ricarica)</li>
+<li><b>TURBO</b> &middot; scatto di 5s &nbsp; <b>FRENA</b> &middot; manovra stretta &nbsp; <b>MSL</b> &middot; missile guidato</li>
+<li><b>Resta nella zona viola</b>: si restringe verso il Sole. Evita il Sole e i brillamenti!</li>
+<li><b>Tocca l'anello HP</b> per pausa e impostazioni</li></ul>
+<div class="tap">TOCCA PER INIZIARE</div></div></div>
 <div id="settingsPanel">
   <div class="settings-box">
     <div class="settings-head">
@@ -659,6 +696,18 @@ canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;displa
       <span class="settings-label">MINI-MAPPA</span>
       <button class="settings-toggle" id="setMm" data-on="1">ON</button>
     </div>
+    <div class="settings-row">
+      <span class="settings-label">VIBRAZIONE</span>
+      <button class="settings-toggle" id="setHap" data-on="1">ON</button>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">DIFFICOLT&Agrave;</span>
+      <button class="settings-toggle" id="setDiff" data-on="1">NORMALE</button>
+    </div>
+    <div class="settings-row" id="abandonRow" style="display:none">
+      <button class="btn-ghost settings-danger" id="abandonBtn" style="flex:1">ABBANDONA PARTITA</button>
+    </div>
+    <div class="ver" id="setVer"></div>
   </div>
 </div>
 <script>
@@ -668,6 +717,7 @@ window.addEventListener('error', function(ev){
 (function(){
 'use strict';
 
+var VERSION='1.00';
 var AU=1.496e11, TAN_V=Math.tan(30*Math.PI/180), PI=Math.PI, TAU=PI*2;
 var MAX_HP=100, BULLET_DMG=14;
 var FIRE_CD=0.55;
@@ -1594,7 +1644,7 @@ var BOT_POOL=[
   {name:'LunaWolf',rank:'silver',rankLabel:'ARGENTO',color:'#c0c0c0',personality:'evasive',palette:PAL_PINK}
 ];
 
-var DEFAULT_PROFILE={name:'Pilota',level:1,xp:0,matches:0,wins:0,kills:0,totalPlacement:0,chassis:'balanced'};
+var DEFAULT_PROFILE={name:'Pilota',level:1,xp:0,matches:0,wins:0,kills:0,totalPlacement:0,chassis:'balanced',best:0,tutorialDone:false};
 var profile=loadProfile();
 function loadProfile(){try{var r=localStorage.getItem('royal_solar_arena_v1');if(!r)return Object.assign({},DEFAULT_PROFILE);return Object.assign({},DEFAULT_PROFILE,JSON.parse(r));}catch(e){return Object.assign({},DEFAULT_PROFILE);}}
 function saveProfile(){try{localStorage.setItem('royal_solar_arena_v1',JSON.stringify(profile));}catch(e){}}
@@ -1603,23 +1653,26 @@ function xpToNextLevel(lv){return 100+lv*60;}
 
 /* ============ IMPOSTAZIONI ============ */
 var SETTINGS_KEY='royal_solar_arena_settings_v1';
-var settings={sens:1.0, aimAssist:true, killFeed:true, minimap:true, audio:true};
+var settings={sens:1.0, aimAssist:true, killFeed:true, minimap:true, audio:true, difficulty:1};
+var DIFFS=[{n:'FACILE',dmg:0.7,fire:0.8},{n:'NORMALE',dmg:1,fire:1},{n:'VETERANO',dmg:1.3,fire:1.25}];
 try{
   var savedS=localStorage.getItem(SETTINGS_KEY);
   if(savedS) settings=Object.assign(settings, JSON.parse(savedS));
   // Se per qualche motivo audio è undefined, forza true
   if(settings.audio === undefined) settings.audio = true;
+  if(!(settings.difficulty>=0 && settings.difficulty<=2)) settings.difficulty=1;
 }catch(_){}
 function saveSettings(){try{localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));}catch(_){}}
 
 var settingsPanelEl=document.getElementById('settingsPanel');
 function toggleSettingsPanel(force){
-  if(currentScreen!=='match') return;
+  if(currentScreen!=='match' && currentScreen!=='lobby') return;
   var willShow = (typeof force==='boolean') ? force : !settingsPanelEl.classList.contains('show');
   settingsPanelEl.classList.toggle('show', willShow);
   if(willShow) syncSettingsUI();
 }
 function hideSettingsPanel(){ settingsPanelEl.classList.remove('show'); }
+function isPaused(){ return currentScreen==='match' && settingsPanelEl.classList.contains('show'); }
 function syncSettingsUI(){
   var sv=document.getElementById('setSens');
   var svv=document.getElementById('setSensVal');
@@ -1636,6 +1689,14 @@ function syncSettingsUI(){
   var kfEl=document.getElementById('killFeed');
   if(kfEl) kfEl.style.visibility = settings.killFeed ? '' : 'hidden';
   minimapEl.style.display = settings.minimap ? '' : 'none';
+  var hB=document.getElementById('setHap');
+  if(hB){ var on=settings.haptics!==false; hB.dataset.on=on?'1':'0'; hB.textContent=on?'ON':'OFF'; }
+  var dB=document.getElementById('setDiff');
+  if(dB){ dB.textContent=DIFFS[settings.difficulty].n; }
+  var dl=document.getElementById('diffBtn');
+  if(dl){ dl.textContent='DIFFICOLT\u00C0: '+DIFFS[settings.difficulty].n; }
+  var ar=document.getElementById('abandonRow'); if(ar) ar.style.display=(currentScreen==='match')?'flex':'none';
+  var sv2=document.getElementById('setVer'); if(sv2) sv2.textContent='ROYAL SOLAR ARENA \u00B7 V'+VERSION;
   if(AUDIO.ready) AUDIO.setEnabled(settings.audio);
 }
 (function bindSettingsUI(){
@@ -1664,6 +1725,12 @@ function syncSettingsUI(){
   if(mmB) mmB.addEventListener('click', function(){
     settings.minimap=!settings.minimap; saveSettings(); syncSettingsUI();
   });
+  var hB2=document.getElementById('setHap'); if(hB2) hB2.addEventListener('click',function(){ settings.haptics=(settings.haptics===false); saveSettings(); syncSettingsUI(); buzz(40); });
+  function cycleDiff(){ settings.difficulty=(settings.difficulty+1)%DIFFS.length; saveSettings(); syncSettingsUI(); }
+  var dB=document.getElementById('setDiff'); if(dB) dB.addEventListener('click', cycleDiff);
+  var dB2=document.getElementById('diffBtn'); if(dB2) dB2.addEventListener('click', cycleDiff);
+  var abB=document.getElementById('abandonBtn');
+  if(abB) abB.addEventListener('click', function(e){ e.preventDefault(); hideSettingsPanel(); if(matchActive){ endMatch(false); } });
   var cB=document.getElementById('settingsClose');
   if(cB) cB.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); hideSettingsPanel(); });
   if(settingsPanelEl){
@@ -1879,6 +1946,7 @@ function showScreen(n){
   if(n!=='match'&&minimapFullscreen) closeMinimapFullscreen();
   if(n!=='match') hideStatsPage();
   if(n!=='match') hideSettingsPanel();
+  document.body.classList.toggle('in-lobby',n==='lobby');
   currentScreen=n;
   lobbyEl.classList.toggle('active',n==='lobby');
   queueEl.classList.toggle('active',n==='queue');
@@ -1894,13 +1962,33 @@ function renderLobby(){
   var rk=rankForLevel(profile.level);
   var b=document.getElementById('profRank'); b.className='rank-badge '+rk.cls; b.textContent=rk.icon;
   document.getElementById('profName').textContent=profile.name;
-  document.getElementById('profLevel').textContent='LIVELLO '+profile.level;
+  document.getElementById('profLevel').textContent='LIVELLO '+profile.level+(profile.best?' \u00B7 MIGLIORE #'+profile.best:'');
+  renderHangar();
+  syncSettingsUI();
   document.getElementById('statMatches').textContent=profile.matches;
   document.getElementById('statWins').textContent=profile.wins;
   document.getElementById('statKills').textContent=profile.kills;
   document.getElementById('statAvg').textContent=profile.matches>0?(profile.totalPlacement/profile.matches).toFixed(1):'\u2014';
 }
 
+var CH_INFO=[
+  {id:'balanced',n:'BILANCIATA',lv:1,d:'HP 100 \u00B7 standard'},
+  {id:'snappy',n:'AGILE',lv:3,d:'HP 80 \u00B7 veloce'},
+  {id:'tank',n:'CORAZZATA',lv:5,d:'HP 140 \u00B7 lenta'}];
+function renderHangar(){
+  var h=document.getElementById('hangar'); if(!h) return;
+  var cur=CH_INFO.filter(function(c){return c.id===profile.chassis&&profile.level>=c.lv;})[0];
+  if(!cur){ profile.chassis='balanced'; }
+  h.innerHTML='';
+  CH_INFO.forEach(function(c){
+    var ok=profile.level>=c.lv;
+    var b=document.createElement('button');
+    b.className='ch-card'+(profile.chassis===c.id?' sel':'')+(ok?'':' locked');
+    b.innerHTML='<b>'+c.n+'</b><span>'+(ok?c.d:'\uD83D\uDD12 LIV. '+c.lv)+'</span>';
+    b.addEventListener('click',function(){ if(!ok) return; profile.chassis=c.id; saveProfile(); renderHangar(); });
+    h.appendChild(b);
+  });
+}
 var lobbyAngle=0;
 function setLobbyCamera(){
   lobbyAngle=Math.atan2(human.y-earth.y,human.x-earth.x);
@@ -1984,6 +2072,7 @@ function beginMatch(){
   AI_DIRECTOR.busyCoord = false;
   AI_DIRECTOR.lastMods = { aggressione:1, precisione:1, cooperazione:1, evasione:1, distanza:1, priorita:1 };
 
+  renderHangar();
   var ch=CHASSIS[profile.chassis]||CHASSIS.balanced;
   human.maxHp=ch.hp; human.hp=ch.hp;
   human.speedMul=ch.speedMul; human.turnMul=ch.turnMul; human.fireRateMul=ch.fireRateMul;
@@ -2028,6 +2117,8 @@ function beginMatch(){
   buildPowerupsDOM();
   showKillFeed('\u26A0 ZONA 0 \u00B7 PREPARAZIONE');
   try{ localStorage.setItem('rsa_in_match','1'); }catch(_){}
+  human.killedBy=null;
+  if(!profile.tutorialDone){ var tu=document.getElementById('tutorial'); tu.classList.add('show'); settingsPanelEl.classList.add('show'); settingsPanelEl.style.display='none'; }
 }
 function buildRoster(){
   var r=document.getElementById('roster'); r.innerHTML='';
@@ -2051,10 +2142,11 @@ function endMatch(won){
   hideStatsPage();
   hideSettingsPanel();
   var alive=SHIPS.filter(function(s){return s.alive;}).length;
-  placement=won?1:alive+1;
+  placement=won?1:(human.alive?alive:alive+1);
   var t=gameTime-matchStats.startTime;
   profile.matches++; profile.kills+=matchStats.kills; profile.totalPlacement+=placement;
   if(placement===1) profile.wins++;
+  if(!profile.best||placement<profile.best) profile.best=placement;
   var pb=[0,60,35,25,18,14,10,8,6,4,3][placement]||3;
   var xp=20+matchStats.kills*15+pb;
   profile.xp+=xp; var lvl=false;
@@ -2072,6 +2164,9 @@ function endMatch(won){
     '<div><span class="rk">LIVELLO</span><span class="rv">'+profile.level+'</span></div>';
   var xb=document.getElementById('xpBar'); xb.style.width='0%';
   document.getElementById('xpLabel').textContent='+'+xp+' XP'+(lvl?' - LIVELLO UP!':'');
+  var sub=document.getElementById('resultsSub');
+  var w=SHIPS.filter(function(s){return s.alive&&!s.isHuman;})[0];
+  sub.textContent=human.alive&&!won?'PARTITA ABBANDONATA':won?'ULTIMO SOPRAVVISSUTO':(human.killedBy?'ELIMINATO DA '+human.killedBy:(w?'VINCE '+w.name:'ELIMINATO DALLA ZONA'));
   showScreen('results');
   zoneWarningEl.style.opacity='0';
   solarWarningEl.style.opacity='0';
@@ -2390,13 +2485,14 @@ function damageShip(target,dmg,source){
   var shield=getActivePowerup(target,'shield');
   if(shield){dmg*=0.2; target.shieldPulse=0.4;}
   if(source){ var dmgBuff=getActivePowerup(source,'damage'); if(dmgBuff) dmg*=2.0; }
+  if(target.isHuman && source && !source.isHuman) dmg*=DIFFS[settings.difficulty].dmg;
   target.hp-=dmg; target.flash=0.2; target.regenDelay = HP_REGEN_DELAY;
   if(source===human) matchStats.damage+=dmg;
   if(target===human){
     shakeMag=Math.min(2.5,shakeMag+0.8);
     dmgVig.style.opacity=Math.max(0.35,parseFloat(dmgVig.style.opacity)||0);
     setTimeout(function(){dmgVig.style.opacity=0;},120);
-    AUDIO.hit();
+    AUDIO.hit(); buzz(25);
   }
   for(var i=0;i<6;i++){
     var a=Math.random()*TAU, b=Math.random()*PI-PI/2;
@@ -2407,6 +2503,7 @@ function damageShip(target,dmg,source){
   }
   if(target.hp<=0){
     target.hp=0; target.alive=false;
+    if(target.isHuman) human.killedBy = (source && source!==target) ? source.name : null;
     spawnExplosion(target.x, target.y, target.z, 8e5);
     if(source && source !== target){
       source.kills = (source.kills || 0) + 1;
@@ -2417,9 +2514,9 @@ function damageShip(target,dmg,source){
       showKillFeed('HAI ELIMINATO '+target.name+tag);
       hitMark.style.opacity=1; hitMark.style.transform='translate(-50%,-50%) scale(1.2)';
       setTimeout(function(){hitMark.style.opacity=0; hitMark.style.transform='translate(-50%,-50%) scale(0.5)';},150);
-      AUDIO.kill();
+      AUDIO.kill(); buzz([40,30,40]);
     }
-    if(target.isHuman){playerEliminated=true; scheduleEndMatch(false);}
+    if(target.isHuman){buzz(300);playerEliminated=true; scheduleEndMatch(false);}
     else {
       var al=SHIPS.filter(function(s){return s.alive;});
       if(al.length===1&&al[0]===human) scheduleEndMatch(true);
@@ -4175,7 +4272,7 @@ function updateAI(ship,dt){
     var cross = getCrosshairData(ship);
     if(cross.locked && (hasRapid || ship.fireCd<=0)){
       if(fireFrom(ship)){
-        var rate = hasRapid ? FIRE_CD*0.4 : FIRE_CD * (ai.fireRateMul / modPrec) * (0.9+Math.random()*0.3);
+        var rate = hasRapid ? FIRE_CD*0.4 : FIRE_CD * (ai.fireRateMul / modPrec) * (0.9+Math.random()*0.3) / DIFFS[settings.difficulty].fire;
         ship.fireCd = rate;
       }
     }
@@ -4734,7 +4831,7 @@ canvas.addEventListener('pointerup',releasePointer);
 canvas.addEventListener('pointercancel',releasePointer);
 window.addEventListener('blur',function(){resetStickState(); resetStick2State();});
 document.addEventListener('visibilitychange',function(){
-  if(document.hidden){resetStickState(); resetStick2State(); closeMinimapFullscreen();}
+  if(document.hidden){resetStickState(); resetStick2State(); closeMinimapFullscreen(); if(currentScreen==='match'&&matchActive) toggleSettingsPanel(true);}
 });
 function findTappedTarget(px,py){
   var nx=(px/window.innerWidth)*2-1;
@@ -4989,6 +5086,40 @@ function updateHUD(){
 document.getElementById('findMatch').addEventListener('click',function(e){e.preventDefault(); startMatchmaking();});
 document.getElementById('cancelQueue').addEventListener('click',function(e){e.preventDefault(); cancelMatchmaking();});
 document.getElementById('returnLobby').addEventListener('click',function(){showScreen('lobby'); renderLobby(); setLobbyCamera();});
+document.getElementById('rematchBtn').addEventListener('click',function(){ setLobbyCamera(); startMatchmaking(); });
+document.getElementById('gearBtn').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); toggleSettingsPanel(); });
+document.getElementById('nameBtn').addEventListener('click',function(){
+  var n=null; try{ n=window.prompt('Nome pilota (max 14 caratteri):',profile.name); }catch(_){}
+  if(n===null) return;
+  n=n.replace(/[<>&"']/g,'').trim().slice(0,14); if(!n) return;
+  profile.name=n; saveProfile(); renderLobby();
+});
+document.getElementById('tutorial').addEventListener('pointerdown',function(e){
+  e.preventDefault(); e.stopPropagation();
+  this.classList.remove('show'); settingsPanelEl.classList.remove('show'); settingsPanelEl.style.display='';
+  profile.tutorialDone=true; saveProfile();
+});
+
+/* ===== uso personale: vibrazione, schermo acceso, schermo intero, offline ===== */
+function buzz(p){ try{ if(settings.haptics!==false && navigator.vibrate) navigator.vibrate(p); }catch(_){} }
+var wakeLock=null;
+function updateWakeLock(){
+  try{
+    var need=(currentScreen==='match'||currentScreen==='queue') && !document.hidden;
+    if(need && !wakeLock && navigator.wakeLock){
+      navigator.wakeLock.request('screen').then(function(l){ wakeLock=l; l.addEventListener('release',function(){ wakeLock=null; }); }).catch(function(){});
+    } else if(!need && wakeLock){ wakeLock.release().catch(function(){}); wakeLock=null; }
+  }catch(_){}
+}
+setInterval(updateWakeLock,2000);
+document.addEventListener('visibilitychange',updateWakeLock);
+document.addEventListener('pointerdown',function goFs(){
+  document.removeEventListener('pointerdown',goFs);
+  try{ var el=document.documentElement; if(!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen({navigationUI:'hide'}).catch(function(){}); }catch(_){}
+},{once:true});
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
+document.getElementById('splashVer').textContent='V'+VERSION;
+document.getElementById('lobbyVer').textContent='V'+VERSION;
 window.addEventListener('resize',function(){ requestResize(false); });
 window.addEventListener('orientationchange',function(){ setTimeout(function(){ requestResize(true); },200); });
 if(window.screen && window.screen.orientation && window.screen.orientation.addEventListener){
@@ -5044,14 +5175,15 @@ function loop(now){
     if(!lastT)lastT=now;
     var dt=(now-lastT)/1000; lastT=now;
     if(dt>0.1)dt=0.1; if(dt<0.001)dt=0.001;
-    gameTime+=dt;
+    var paused=isPaused();
+    if(!paused) gameTime+=dt;
     updateMoon(dt);
     pruneArrays();
     if(currentScreen==='lobby'||currentScreen==='queue'){
       updateLobbyCamera(dt); updateSatellites(dt); updatePois(dt); render();
     } else if(currentScreen==='match'){
       if(shakeMag>0){shakeMag-=dt*4; if(shakeMag<0)shakeMag=0;}
-      if(matchActive){
+      if(matchActive && !paused){
         readKeyboard();
         updatePlayer(dt);
         for(var i=1;i<SHIPS.length;i++)updateAI(SHIPS[i],dt);
@@ -5078,9 +5210,9 @@ function loop(now){
           }
         }
       }
-      updateExplosions(dt);
+      if(!paused){ updateExplosions(dt);
       updateTrails(dt);
-      updateShootingStars(dt);
+      updateShootingStars(dt); }
       updateMapScale(dt);
       render();
       updateHUD();
