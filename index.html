@@ -719,7 +719,7 @@ window.addEventListener('error', function(ev){
 
 var VERSION='1.00';
 var AU=1.496e11, TAN_V=Math.tan(30*Math.PI/180), PI=Math.PI, TAU=PI*2;
-var MAX_HP=100, BULLET_DMG=14;
+var MAX_HP=100, BULLET_DMG=9;
 var FIRE_CD=0.55;
 var MAX_AMMO=5;
 var RELOAD_TIME=1.7;
@@ -738,7 +738,7 @@ var BRAKE_MULT=0.30;
 var HP_REGEN_DELAY = 5.0;
 var HP_REGEN_RATE  = 1.0;
 var MISSILE_CD = 8.0;
-var MISSILE_DMG = 35;
+var MISSILE_DMG = 26;
 var MISSILE_LIFE = 4.0;
 var MISSILE_TRACK_TIME = 2.5;
 var MISSILE_TURN_RATE = 2.6;
@@ -746,7 +746,7 @@ var MISSILE_SPEED = 1.4e8;
 var SUN_RADIUS_REAL = 6.9634e8;
 var SUN_RADIUS_VISUAL_MULT = 3;
 var TOTAL_PLAYERS = 10;
-var TUNE={ spawnRmin:1.5, spawnRmax:3.6, spawnSep:0.5, detectBase:1.5e8, detectFrac:0.05, wpRadius:0.65, roamPU:0.5, zoneMargin:0.93, huntTime:150, huntAlive:3, sunKeepout:4e9 };
+var TUNE={ spawnRmin:1.5, spawnRmax:3.6, spawnSep:0.5, detectBase:1.5e8, detectFrac:0.035, wpRadius:0.65, roamPU:0.5, zoneMargin:0.93, huntTime:200, huntAlive:2, sunKeepout:4e9 };
 var ZONE_RADIUS_START_AU = 4.0;
 var ZONE_WARN_DIST_AU    = 1.2;
 var ZONE_PHASES = [
@@ -1050,9 +1050,9 @@ var PLAYER_SCREEN_Y = 0.78;
 var STATS_RING_CIRC = 2 * PI * 42;
 
 var CHASSIS = {
-  snappy:   { hp:80,  speedMul:1.15, turnMul:1.40, fireRateMul:1.15 },
+  snappy:   { hp:100, speedMul:1.15, turnMul:1.35, fireRateMul:1.20 },
   balanced: { hp:100, speedMul:1.00, turnMul:1.00, fireRateMul:1.00 },
-  tank:     { hp:140, speedMul:0.85, turnMul:0.75, fireRateMul:0.90 }
+  tank:     { hp:115, speedMul:0.90, turnMul:0.80, fireRateMul:0.95 }
 };
 
 var POWERUP_DEFS = {
@@ -1617,9 +1617,9 @@ var PAL_YELLOW=mkPal([240,220,80],[255,235,110]);
 var PAL_PINK=mkPal([240,90,180],[255,120,200]);
 
 var PERSONALITIES={
-  hunter:{evadeThreshold:0.30,turnRate:1.7,fireRateMul:1.0,prefDist:2.5e7},
-  aggressive:{evadeThreshold:0.20,turnRate:1.9,fireRateMul:0.9,prefDist:1.5e7},
-  evasive:{evadeThreshold:0.45,turnRate:2.1,fireRateMul:1.1,prefDist:5e7},
+  hunter:{evadeThreshold:0.30,turnRate:1.8,fireRateMul:1.0,prefDist:2.5e7},
+  aggressive:{evadeThreshold:0.25,turnRate:1.8,fireRateMul:0.95,prefDist:1.5e7},
+  evasive:{evadeThreshold:0.35,turnRate:2.2,fireRateMul:1.0,prefDist:4e7},
   opportunistic:{evadeThreshold:0.35,turnRate:1.6,fireRateMul:1.0,prefDist:4e7}
 };
 var PERSONALITY_LABELS = {
