@@ -10,7 +10,9 @@
 <meta name="screen-orientation" content="landscape">
 <meta name="x5-orientation" content="landscape">
 <meta name="full-screen" content="yes">
-<link rel="manifest" href='data:application/manifest+json,{"name":"Royal Solar Arena","short_name":"RoyalSolar","display":"fullscreen","orientation":"landscape","background_color":"#000006","theme_color":"#000006","start_url":"."}'>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
 <title>Royal Solar Arena</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -693,6 +695,10 @@ body.in-lobby #gearBtn{display:block}
     <div class="settings-row">
       <span class="settings-label">MINI-MAPPA</span>
       <button class="settings-toggle" id="setMm" data-on="1">ON</button>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">VIBRAZIONE</span>
+      <button class="settings-toggle" id="setHap" data-on="1">ON</button>
     </div>
     <div class="settings-row">
       <span class="settings-label">DIFFICOLT&Agrave;</span>
@@ -1683,6 +1689,8 @@ function syncSettingsUI(){
   var kfEl=document.getElementById('killFeed');
   if(kfEl) kfEl.style.visibility = settings.killFeed ? '' : 'hidden';
   minimapEl.style.display = settings.minimap ? '' : 'none';
+  var hB=document.getElementById('setHap');
+  if(hB){ var on=settings.haptics!==false; hB.dataset.on=on?'1':'0'; hB.textContent=on?'ON':'OFF'; }
   var dB=document.getElementById('setDiff');
   if(dB){ dB.textContent=DIFFS[settings.difficulty].n; }
   var dl=document.getElementById('diffBtn');
@@ -1717,6 +1725,7 @@ function syncSettingsUI(){
   if(mmB) mmB.addEventListener('click', function(){
     settings.minimap=!settings.minimap; saveSettings(); syncSettingsUI();
   });
+  var hB2=document.getElementById('setHap'); if(hB2) hB2.addEventListener('click',function(){ settings.haptics=(settings.haptics===false); saveSettings(); syncSettingsUI(); buzz(40); });
   function cycleDiff(){ settings.difficulty=(settings.difficulty+1)%DIFFS.length; saveSettings(); syncSettingsUI(); }
   var dB=document.getElementById('setDiff'); if(dB) dB.addEventListener('click', cycleDiff);
   var dB2=document.getElementById('diffBtn'); if(dB2) dB2.addEventListener('click', cycleDiff);
@@ -2483,7 +2492,7 @@ function damageShip(target,dmg,source){
     shakeMag=Math.min(2.5,shakeMag+0.8);
     dmgVig.style.opacity=Math.max(0.35,parseFloat(dmgVig.style.opacity)||0);
     setTimeout(function(){dmgVig.style.opacity=0;},120);
-    AUDIO.hit();
+    AUDIO.hit(); buzz(25);
   }
   for(var i=0;i<6;i++){
     var a=Math.random()*TAU, b=Math.random()*PI-PI/2;
@@ -2505,9 +2514,9 @@ function damageShip(target,dmg,source){
       showKillFeed('HAI ELIMINATO '+target.name+tag);
       hitMark.style.opacity=1; hitMark.style.transform='translate(-50%,-50%) scale(1.2)';
       setTimeout(function(){hitMark.style.opacity=0; hitMark.style.transform='translate(-50%,-50%) scale(0.5)';},150);
-      AUDIO.kill();
+      AUDIO.kill(); buzz([40,30,40]);
     }
-    if(target.isHuman){playerEliminated=true; scheduleEndMatch(false);}
+    if(target.isHuman){buzz(300);playerEliminated=true; scheduleEndMatch(false);}
     else {
       var al=SHIPS.filter(function(s){return s.alive;});
       if(al.length===1&&al[0]===human) scheduleEndMatch(true);
@@ -5090,6 +5099,25 @@ document.getElementById('tutorial').addEventListener('pointerdown',function(e){
   this.classList.remove('show'); settingsPanelEl.classList.remove('show'); settingsPanelEl.style.display='';
   profile.tutorialDone=true; saveProfile();
 });
+
+/* ===== uso personale: vibrazione, schermo acceso, schermo intero, offline ===== */
+function buzz(p){ try{ if(settings.haptics!==false && navigator.vibrate) navigator.vibrate(p); }catch(_){} }
+var wakeLock=null;
+function updateWakeLock(){
+  try{
+    var need=(currentScreen==='match'||currentScreen==='queue') && !document.hidden;
+    if(need && !wakeLock && navigator.wakeLock){
+      navigator.wakeLock.request('screen').then(function(l){ wakeLock=l; l.addEventListener('release',function(){ wakeLock=null; }); }).catch(function(){});
+    } else if(!need && wakeLock){ wakeLock.release().catch(function(){}); wakeLock=null; }
+  }catch(_){}
+}
+setInterval(updateWakeLock,2000);
+document.addEventListener('visibilitychange',updateWakeLock);
+document.addEventListener('pointerdown',function goFs(){
+  document.removeEventListener('pointerdown',goFs);
+  try{ var el=document.documentElement; if(!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen({navigationUI:'hide'}).catch(function(){}); }catch(_){}
+},{once:true});
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
 document.getElementById('splashVer').textContent='V'+VERSION;
 document.getElementById('lobbyVer').textContent='V'+VERSION;
 window.addEventListener('resize',function(){ requestResize(false); });
