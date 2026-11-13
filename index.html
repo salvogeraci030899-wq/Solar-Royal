@@ -746,7 +746,7 @@ var MISSILE_SPEED = 1.4e8;
 var SUN_RADIUS_REAL = 6.9634e8;
 var SUN_RADIUS_VISUAL_MULT = 3;
 var TOTAL_PLAYERS = 10;
-var TUNE={ spawnRmin:1.0, spawnRmax:3.2, spawnSep:0.5, detectBase:3e8, detectFrac:0.10, wpRadius:0.65, roamPU:0.5, zoneMargin:0.93 };
+var TUNE={ spawnRmin:1.5, spawnRmax:3.6, spawnSep:0.5, detectBase:1.5e8, detectFrac:0.05, wpRadius:0.65, roamPU:0.5, zoneMargin:0.93, huntTime:150, huntAlive:3, sunKeepout:4e9 };
 var ZONE_RADIUS_START_AU = 4.0;
 var ZONE_WARN_DIST_AU    = 1.2;
 var ZONE_PHASES = [
@@ -758,7 +758,8 @@ var ZONE_PHASES = [
   { dur:  35, from: 0.80, to: 0.30, dps: 6 },
   { dur:  15, from: 0.30, to: 0.30, dps: 7 },
   { dur:  30, from: 0.30, to: 0.08, dps: 8 },
-  { dur: 999, from: 0.08, to: 0.08, dps: 9 }
+  { dur:  40, from: 0.08, to: 0.03, dps: 10 },
+  { dur: 999, from: 0.03, to: 0.03, dps: 16 }
 ];
 var ZONE_DAMAGE_BASE = 2;
 var zonePhaseIndex = 0;
@@ -4208,7 +4209,9 @@ function updateAI(ship,dt){
   var outsideZ = zd0 > zoneRadius*TUNE.zoneMargin;
   var detectR = (TUNE.detectBase + TUNE.detectFrac*zoneRadius) * modAggr;
   var recentlyHit = ship.regenDelay > HP_REGEN_DELAY-3;
-  var roam = !best || outsideZ || (dist>detectR && !recentlyHit);
+  var aliveN=0; for(var an=0;an<SHIPS.length;an++) if(SHIPS[an].alive) aliveN++;
+  var hunt = (gameTime>TUNE.huntTime) || (aliveN<=TUNE.huntAlive);
+  var roam = !best || outsideZ || (!hunt && dist>detectR && !recentlyHit);
   var wpDist=1e30;
   if(roam){
     ship.wpT=(ship.wpT||0)-dt;
@@ -4229,6 +4232,8 @@ function updateAI(ship,dt){
       if(!ship.wp){
         var wa=Math.random()*TAU, we=(Math.random()-0.5)*0.9, wr=zoneRadius*TUNE.wpRadius*(outsideZ?0.3:Math.sqrt(Math.random()));
         ship.wp={x:zoneCx+wr*Math.cos(wa)*Math.cos(we), y:zoneCy+wr*Math.sin(wa)*Math.cos(we), z:zoneCz+wr*Math.sin(we)};
+        var wsd=Math.sqrt(ship.wp.x*ship.wp.x+ship.wp.y*ship.wp.y+ship.wp.z*ship.wp.z);
+        if(wsd<TUNE.sunKeepout){ var kf=TUNE.sunKeepout/(wsd||1); ship.wp.x*=kf; ship.wp.y*=kf; ship.wp.z*=kf; }
       }
       wdx=ship.wp.x-ship.x; wdy=ship.wp.y-ship.y; wdz=ship.wp.z-ship.z; wpDist=Math.sqrt(wdx*wdx+wdy*wdy+wdz*wdz);
     }
@@ -5237,6 +5242,7 @@ function sampleSeries(dt){
   window.__rsa.series.push({t:+gameTime.toFixed(0),alive:al.length,nn:c?sum/c:0,zoneAU:+(zoneRadius/AU).toFixed(2),out:out});
 }
 window.__rsa.state=function(){ return {alive:SHIPS.filter(function(x){return x.alive;}).length, active:matchActive, t:gameTime, ships:SHIPS.map(function(x){return {i:x.index,alive:x.alive,hp:x.hp,kills:x.kills||0,ch:x.chassis,pers:x.personalityLabel,spd:x.speed,r:Math.sqrt(x.x*x.x+x.y*x.y+x.z*x.z)/AU,zr:Math.sqrt((x.x-zoneCx)*(x.x-zoneCx)+(x.y-zoneCy)*(x.y-zoneCy)+(x.z-zoneCz)*(x.z-zoneCz))/AU};}),zoneAU:zoneRadius/AU}; };
+window.__rsa.apply=function(g){ if(!g) return; if(g.bulletDmg!=null) BULLET_DMG=g.bulletDmg; if(g.missileDmg!=null) MISSILE_DMG=g.missileDmg; if(g.ch){ for(var k in g.ch) Object.assign(CHASSIS[k],g.ch[k]); } if(g.fireCd!=null) FIRE_CD=g.fireCd; if(g.regenDelay!=null) HP_REGEN_DELAY=g.regenDelay; if(g.regenRate!=null) HP_REGEN_RATE=g.regenRate; };
 window.__rsa.start=function(){ queueBots=pickBots(TOTAL_PLAYERS-1); beginMatch(); };
 var perfAccum = 0, perfFrames = 0, perfCooldown = 0;
 function adaptiveQuality(dt){
