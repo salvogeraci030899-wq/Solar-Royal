@@ -719,7 +719,7 @@ window.addEventListener('error', function(ev){
 
 var VERSION='1.00';
 var AU=1.496e11, TAN_V=Math.tan(30*Math.PI/180), PI=Math.PI, TAU=PI*2;
-var MAX_HP=100, BULLET_DMG=14;
+var MAX_HP=100, BULLET_DMG=9;
 var FIRE_CD=0.55;
 var MAX_AMMO=5;
 var RELOAD_TIME=1.7;
@@ -738,7 +738,7 @@ var BRAKE_MULT=0.30;
 var HP_REGEN_DELAY = 5.0;
 var HP_REGEN_RATE  = 1.0;
 var MISSILE_CD = 8.0;
-var MISSILE_DMG = 35;
+var MISSILE_DMG = 26;
 var MISSILE_LIFE = 4.0;
 var MISSILE_TRACK_TIME = 2.5;
 var MISSILE_TURN_RATE = 2.6;
@@ -746,6 +746,7 @@ var MISSILE_SPEED = 1.4e8;
 var SUN_RADIUS_REAL = 6.9634e8;
 var SUN_RADIUS_VISUAL_MULT = 3;
 var TOTAL_PLAYERS = 10;
+var TUNE={ spawnRmin:1.5, spawnRmax:3.6, spawnSep:0.5, detectBase:1.5e8, detectFrac:0.035, wpRadius:0.65, roamPU:0.5, zoneMargin:0.93, huntTime:200, huntAlive:2, sunKeepout:4e9 };
 var ZONE_RADIUS_START_AU = 4.0;
 var ZONE_WARN_DIST_AU    = 1.2;
 var ZONE_PHASES = [
@@ -757,7 +758,8 @@ var ZONE_PHASES = [
   { dur:  35, from: 0.80, to: 0.30, dps: 6 },
   { dur:  15, from: 0.30, to: 0.30, dps: 7 },
   { dur:  30, from: 0.30, to: 0.08, dps: 8 },
-  { dur: 999, from: 0.08, to: 0.08, dps: 9 }
+  { dur:  40, from: 0.08, to: 0.03, dps: 10 },
+  { dur: 999, from: 0.03, to: 0.03, dps: 16 }
 ];
 var ZONE_DAMAGE_BASE = 2;
 var zonePhaseIndex = 0;
@@ -1048,9 +1050,9 @@ var PLAYER_SCREEN_Y = 0.78;
 var STATS_RING_CIRC = 2 * PI * 42;
 
 var CHASSIS = {
-  snappy:   { hp:80,  speedMul:1.15, turnMul:1.40, fireRateMul:1.15 },
+  snappy:   { hp:88,  speedMul:1.15, turnMul:1.35, fireRateMul:1.20 },
   balanced: { hp:100, speedMul:1.00, turnMul:1.00, fireRateMul:1.00 },
-  tank:     { hp:140, speedMul:0.85, turnMul:0.75, fireRateMul:0.90 }
+  tank:     { hp:115, speedMul:0.90, turnMul:0.80, fireRateMul:0.95 }
 };
 
 var POWERUP_DEFS = {
@@ -1615,9 +1617,9 @@ var PAL_YELLOW=mkPal([240,220,80],[255,235,110]);
 var PAL_PINK=mkPal([240,90,180],[255,120,200]);
 
 var PERSONALITIES={
-  hunter:{evadeThreshold:0.30,turnRate:1.7,fireRateMul:1.0,prefDist:2.5e7},
-  aggressive:{evadeThreshold:0.20,turnRate:1.9,fireRateMul:0.9,prefDist:1.5e7},
-  evasive:{evadeThreshold:0.45,turnRate:2.1,fireRateMul:1.1,prefDist:5e7},
+  hunter:{evadeThreshold:0.30,turnRate:1.8,fireRateMul:1.0,prefDist:2.5e7},
+  aggressive:{evadeThreshold:0.25,turnRate:1.8,fireRateMul:0.95,prefDist:1.5e7},
+  evasive:{evadeThreshold:0.35,turnRate:2.2,fireRateMul:1.0,prefDist:4e7},
   opportunistic:{evadeThreshold:0.35,turnRate:1.6,fireRateMul:1.0,prefDist:4e7}
 };
 var PERSONALITY_LABELS = {
@@ -1973,8 +1975,8 @@ function renderLobby(){
 
 var CH_INFO=[
   {id:'balanced',n:'BILANCIATA',lv:1,d:'HP 100 \u00B7 standard'},
-  {id:'snappy',n:'AGILE',lv:3,d:'HP 80 \u00B7 veloce'},
-  {id:'tank',n:'CORAZZATA',lv:5,d:'HP 140 \u00B7 lenta'}];
+  {id:'snappy',n:'AGILE',lv:3,d:'HP 88 \u00B7 veloce'},
+  {id:'tank',n:'CORAZZATA',lv:5,d:'HP 115 \u00B7 lenta'}];
 function renderHangar(){
   var h=document.getElementById('hangar'); if(!h) return;
   var cur=CH_INFO.filter(function(c){return c.id===profile.chassis&&profile.level>=c.lv;})[0];
@@ -2041,13 +2043,21 @@ function fillQueueSlot(i){
 function cancelMatchmaking(){queueTimers.forEach(function(t){clearTimeout(t);});queueTimers=[];showScreen('lobby');renderLobby();}
 function pickBots(n){var pool=BOT_POOL.slice();var picked=[];while(picked.length<n&&pool.length){var i=Math.floor(Math.random()*pool.length);picked.push(pool.splice(i,1)[0]);}return picked;}
 
+var spawnPlaced=[];
 function spawnNearCenter(ship){
-  var spawnR = 0.3 * AU;
-  var ang = Math.random()*TAU;
-  var el = (Math.random()-0.5)*0.4;
-  ship.x = zoneCx + spawnR * Math.cos(ang) * Math.cos(el);
-  ship.y = zoneCy + spawnR * Math.sin(ang) * Math.cos(el);
-  ship.z = zoneCz + spawnR * Math.sin(el);
+  if(ship===human) spawnPlaced.length=0;
+  var best=null, bestSep=-1;
+  for(var tries=0;tries<40;tries++){
+    var R=(TUNE.spawnRmin+Math.random()*(TUNE.spawnRmax-TUNE.spawnRmin))*AU;
+    var ang=Math.random()*TAU, el=(Math.random()-0.5)*0.9;
+    var px=zoneCx+R*Math.cos(ang)*Math.cos(el), py=zoneCy+R*Math.sin(ang)*Math.cos(el), pz=zoneCz+R*Math.sin(el);
+    var sep=1e30;
+    for(var i=0;i<spawnPlaced.length;i++){ var q=spawnPlaced[i]; var d=Math.sqrt((px-q[0])*(px-q[0])+(py-q[1])*(py-q[1])+(pz-q[2])*(pz-q[2])); if(d<sep) sep=d; }
+    if(sep>bestSep){ bestSep=sep; best=[px,py,pz]; }
+    if(sep>=TUNE.spawnSep*AU) break;
+  }
+  ship.x=best[0]; ship.y=best[1]; ship.z=best[2];
+  spawnPlaced.push(best);
 }
 
 function beginMatch(){
@@ -2092,7 +2102,7 @@ function beginMatch(){
   for(var i=0;i<TOTAL_PLAYERS-1;i++){
     var s=SHIPS[i+1], b=queueBots[i];
     spawnNearCenter(s);
-    var botCh=[CHASSIS.snappy,CHASSIS.balanced,CHASSIS.tank][Math.floor(Math.random()*3)];
+    var botKeys=['snappy','balanced','tank']; var botKey=botKeys[Math.floor(Math.random()*3)]; var botCh=CHASSIS[botKey]; s.chassis=botKey;
     s.maxHp=botCh.hp; s.hp=botCh.hp; s.speedMul=botCh.speedMul; s.turnMul=botCh.turnMul; s.fireRateMul=botCh.fireRateMul;
     s.alive=true; s.flash=0; s.bank=0; s.recoil=0; s.speed=0;
     s.ammo=MAX_AMMO; s.reloadT=0; s.missileCd=0; s.missileTarget=null;
@@ -2216,7 +2226,7 @@ function updateDynamicEvents(dt){
       var d=Math.sqrt(s.x*s.x+s.y*s.y+s.z*s.z);
       if(d < SOLAR_FLARE_RADIUS_AU*AU){
         s.hp-=dmgPerSec*dt; s.flash=0.15; s.regenDelay = HP_REGEN_DELAY;
-        if(s.hp<=0){ s.hp=0; s.alive=false; spawnExplosion(s.x,s.y,s.z,8e5);
+        if(s.hp<=0){ s.hp=0; s.alive=false; logDeath(s,'flare',null); spawnExplosion(s.x,s.y,s.z,8e5);
           if(s.isHuman){playerEliminated=true; scheduleEndMatch(false);}
           else {
             var al=SHIPS.filter(function(x){return x.alive;});
@@ -2306,7 +2316,7 @@ function updateZone(dt){
     human.hp -= dmgRate * dt;
     human.regenDelay = HP_REGEN_DELAY;
     if(human.hp <= 0){
-      human.hp = 0; human.alive = false;
+      human.hp = 0; human.alive = false; logDeath(human,'zone',null);
       spawnExplosion(human.x, human.y, human.z, 8e5);
       playerEliminated = true;
       scheduleEndMatch(false);
@@ -2333,7 +2343,7 @@ function updateZone(dt){
       s.hp -= zoneCurrentDPS * dt;
       s.regenDelay = HP_REGEN_DELAY;
       if(s.hp <= 0){
-        s.hp = 0; s.alive = false;
+        s.hp = 0; s.alive = false; logDeath(s,'zone',null);
         spawnExplosion(s.x, s.y, s.z, 8e5);
         var al = SHIPS.filter(function(x){ return x.alive; });
         if(al.length === 1 && al[0] === human) scheduleEndMatch(true);
@@ -2428,7 +2438,8 @@ function getCrosshairData(ship){
           zoneNx: zoneNx, zoneNy: zoneNy, zoneWarn: zoneWarn, zoneVisible: zoneVisible};
 }
 
-window.__rsa={shots:0,hits:0,dodges:0};
+window.__rsa={TUNE:TUNE,shots:0,hits:0,dodges:0,deaths:[],series:[],headless:false,autoHuman:false,dmgCause:'bullet'};
+function logDeath(ship,cause,killer){ try{ window.__rsa.deaths.push({t:+gameTime.toFixed(2),idx:ship.index,cause:cause,killer:killer?killer.index:-1,ch:ship.chassis,pers:ship.personalityLabel}); }catch(_){} }
 function fireFrom(ship){
   var hasRapid=!!getActivePowerup(ship,'rapid');
   if(!hasRapid){ if(ship.ammo<=0) return false; if(ship.reloadT>0) return false; }
@@ -2504,6 +2515,7 @@ function damageShip(target,dmg,source){
   }
   if(target.hp<=0){
     target.hp=0; target.alive=false;
+    logDeath(target, source?window.__rsa.dmgCause:'asteroid', source);
     if(target.isHuman) human.killedBy = (source && source!==target) ? source.name : null;
     spawnExplosion(target.x, target.y, target.z, 8e5);
     if(source && source !== target){
@@ -4189,18 +4201,46 @@ function updateAI(ship,dt){
     if(ship.roleTarget && o === ship.roleTarget) score *= 3;
     if(score > bestScore){bestScore = score; best = o; bestD = d;}
   }
-  if(!best){
-    ship.speed=computeSpeed(ship)*ship.speedMul;
-    var cp=Math.cos(ship.pitch), sp=Math.sin(ship.pitch);
-    var cy=Math.cos(ship.yaw), sy=Math.sin(ship.yaw);
-    ship.x+=cp*cy*ship.speed*dt; ship.y+=cp*sy*ship.speed*dt; ship.z+=sp*ship.speed*dt;
-    applyCollisions(ship); return;
+  var dx=0, dy=0, dz=0, dist=1e30;
+  if(best){ dx=best.x-ship.x; dy=best.y-ship.y; dz=best.z-ship.z; dist=bestD; }
+  /* --- esplorazione: senza nemici vicini si va verso power-up / punti nella zona --- */
+  var zdx0=ship.x-zoneCx, zdy0=ship.y-zoneCy, zdz0=ship.z-zoneCz;
+  var zd0=Math.sqrt(zdx0*zdx0+zdy0*zdy0+zdz0*zdz0);
+  var outsideZ = zd0 > zoneRadius*TUNE.zoneMargin;
+  var detectR = (TUNE.detectBase + TUNE.detectFrac*zoneRadius) * modAggr;
+  var recentlyHit = ship.regenDelay > HP_REGEN_DELAY-3;
+  var aliveN=0; for(var an=0;an<SHIPS.length;an++) if(SHIPS[an].alive) aliveN++;
+  var hunt = (gameTime>TUNE.huntTime) || (aliveN<=TUNE.huntAlive);
+  var roam = !best || outsideZ || (!hunt && dist>detectR && !recentlyHit);
+  var wpDist=1e30;
+  if(roam){
+    ship.wpT=(ship.wpT||0)-dt;
+    var wp=ship.wp, wdx, wdy, wdz;
+    if(wp){ wdx=wp.x-ship.x; wdy=wp.y-ship.y; wdz=wp.z-ship.z; wpDist=Math.sqrt(wdx*wdx+wdy*wdy+wdz*wdz); }
+    var wpBad = !wp || ship.wpT<=0 || wpDist<4e8 || (wp.pu && !wp.pu.alive) ||
+      Math.sqrt((wp.x-zoneCx)*(wp.x-zoneCx)+(wp.y-zoneCy)*(wp.y-zoneCy)+(wp.z-zoneCz)*(wp.z-zoneCz)) > zoneRadius*TUNE.wpRadius;
+    if(outsideZ && (!wp || !ship.wpSafe)) wpBad=true;
+    if(wpBad){
+      ship.wpSafe=outsideZ; ship.wpT=12+Math.random()*10; ship.wp=null;
+      if(!outsideZ && Math.random()<TUNE.roamPU){
+        var bp=null,bpd=1e30;
+        for(var q=0;q<powerups.length;q++){ var pu0=powerups[q]; if(!pu0.alive) continue;
+          var ddx=pu0.x-ship.x, ddy=pu0.y-ship.y, ddz=pu0.z-ship.z; var dd=ddx*ddx+ddy*ddy+ddz*ddz;
+          if(dd<bpd){ bpd=dd; bp=pu0; } }
+        if(bp) ship.wp={x:bp.x,y:bp.y,z:bp.z,pu:bp};
+      }
+      if(!ship.wp){
+        var wa=Math.random()*TAU, we=(Math.random()-0.5)*0.9, wr=zoneRadius*TUNE.wpRadius*(outsideZ?0.3:Math.sqrt(Math.random()));
+        ship.wp={x:zoneCx+wr*Math.cos(wa)*Math.cos(we), y:zoneCy+wr*Math.sin(wa)*Math.cos(we), z:zoneCz+wr*Math.sin(we)};
+        var wsd=Math.sqrt(ship.wp.x*ship.wp.x+ship.wp.y*ship.wp.y+ship.wp.z*ship.wp.z);
+        if(wsd<TUNE.sunKeepout){ var kf=TUNE.sunKeepout/(wsd||1); ship.wp.x*=kf; ship.wp.y*=kf; ship.wp.z*=kf; }
+      }
+      wdx=ship.wp.x-ship.x; wdy=ship.wp.y-ship.y; wdz=ship.wp.z-ship.z; wpDist=Math.sqrt(wdx*wdx+wdy*wdy+wdz*wdz);
+    }
   }
-  var dx=best.x-ship.x, dy=best.y-ship.y, dz=best.z-ship.z;
-  var dist=bestD;
   var hpFrac=ship.hp/ship.maxHp;
   var forceRetreat = (ship.role === 'ritirata');
-  var wantEvade = forceRetreat || hpFrac < (ai.evadeThreshold * modEva);
+  var wantEvade = !!best && !roam && (forceRetreat || hpFrac < (ai.evadeThreshold * modEva));
   if(wantEvade){
     if(ship.hideTargetTimer<=0 || !ship.hideTarget){
       ship.hideTarget=findHideSpot(ship,best);
@@ -4211,7 +4251,11 @@ function updateAI(ship,dt){
     ship.hideTarget=null; ship.hideTargetTimer=0;
   }
   var desYaw, desPitch;
-  if(wantEvade && ship.hideTarget){
+  if(roam){
+    var wl=wpDist||1;
+    desYaw=Math.atan2(ship.wp.y-ship.y,ship.wp.x-ship.x);
+    desPitch=Math.asin(Math.max(-1,Math.min(1,(ship.wp.z-ship.z)/wl)));
+  } else if(wantEvade && ship.hideTarget){
     var hdx=ship.hideTarget.x-ship.x, hdy=ship.hideTarget.y-ship.y, hdz=ship.hideTarget.z-ship.z;
     var hd=Math.sqrt(hdx*hdx+hdy*hdy+hdz*hdz)||1;
     desYaw=Math.atan2(hdy,hdx);
@@ -4302,13 +4346,14 @@ function updateAI(ship,dt){
   if(targetBank>0.6)targetBank=0.6; if(targetBank<-0.6)targetBank=-0.6;
   ship.bank+=(targetBank-ship.bank)*Math.min(1,dt*6);
   ship.speed=computeSpeed(ship)*ship.speedMul;
+  if(roam && wpDist<1e29) ship.speed=Math.min(ship.speed, Math.max(3e6, wpDist*0.9));
   var cp2=Math.cos(ship.pitch), sp2=Math.sin(ship.pitch);
   var cy2=Math.cos(ship.yaw), sy2=Math.sin(ship.yaw);
   var fx2=cp2*cy2, fy2=cp2*sy2, fz2=sp2;
   ship.x+=fx2*ship.speed*dt; ship.y+=fy2*ship.speed*dt; ship.z+=fz2*ship.speed*dt;
 
   var engageRange = ENGAGE_RANGE * modAggr;
-  if(!wantEvade && dist<engageRange && dist>MIN_ENGAGE_RANGE){
+  if(best && !wantEvade && dist<engageRange && dist>MIN_ENGAGE_RANGE){
     var hasRapid=!!getActivePowerup(ship,'rapid');
     var cross = getCrosshairData(ship);
     if(cross.locked && (hasRapid || ship.fireCd<=0)){
@@ -4493,7 +4538,7 @@ function updateBullets(dt){
       // FIX: hitbox reale - colpisce anche senza lockedTarget
       if(tHit>=0){
         if(b.owner&&!b.owner.isHuman) window.__rsa.hits++;
-        damageShip(s,BULLET_DMG,b.owner);
+        window.__rsa.dmgCause='bullet'; damageShip(s,BULLET_DMG,b.owner);
         hit=true; break;
       }
     }
@@ -4570,7 +4615,7 @@ function updateMissiles(dt){
       if(s===m.owner||!s.alive)continue;
       var dx=s.x-m.x, dy=s.y-m.y, dz=s.z-m.z;
       var d2=dx*dx+dy*dy+dz*dz;
-      if(d2<8e5*8e5){ damageShip(s, MISSILE_DMG, m.owner); spawnExplosion(m.x,m.y,m.z,5e5); hit=true; break; }
+      if(d2<8e5*8e5){ window.__rsa.dmgCause='missile'; damageShip(s, MISSILE_DMG, m.owner); spawnExplosion(m.x,m.y,m.z,5e5); hit=true; break; }
     }
     if(hit){missiles.splice(i,1);continue;}
     for(var ai2=0;ai2<asteroids.length;ai2++){
@@ -5188,6 +5233,17 @@ function pruneArrays(){
   if(swarmAsteroids.length > 60)         swarmAsteroids.splice(0, swarmAsteroids.length - 60);
 }
 
+var serAcc=0;
+function sampleSeries(dt){
+  serAcc+=dt; if(serAcc<5) return; serAcc=0;
+  var al=SHIPS.filter(function(x){return x.alive;}); var sum=0,c=0;
+  for(var i=0;i<al.length;i++){ var m=1e30; for(var j=0;j<al.length;j++){ if(i===j) continue; var dx=al[i].x-al[j].x,dy=al[i].y-al[j].y,dz=al[i].z-al[j].z; var d=Math.sqrt(dx*dx+dy*dy+dz*dz); if(d<m) m=d; } if(m<1e29){ sum+=m; c++; } }
+  var out=0; for(var k=0;k<al.length;k++){ var a=al[k]; var d2=Math.sqrt((a.x-zoneCx)*(a.x-zoneCx)+(a.y-zoneCy)*(a.y-zoneCy)+(a.z-zoneCz)*(a.z-zoneCz)); if(d2>zoneRadius) out++; }
+  window.__rsa.series.push({t:+gameTime.toFixed(0),alive:al.length,nn:c?sum/c:0,zoneAU:+(zoneRadius/AU).toFixed(2),out:out});
+}
+window.__rsa.state=function(){ return {alive:SHIPS.filter(function(x){return x.alive;}).length, active:matchActive, t:gameTime, ships:SHIPS.map(function(x){return {i:x.index,alive:x.alive,hp:x.hp,kills:x.kills||0,ch:x.chassis,pers:x.personalityLabel,spd:x.speed,r:Math.sqrt(x.x*x.x+x.y*x.y+x.z*x.z)/AU,zr:Math.sqrt((x.x-zoneCx)*(x.x-zoneCx)+(x.y-zoneCy)*(x.y-zoneCy)+(x.z-zoneCz)*(x.z-zoneCz))/AU};}),zoneAU:zoneRadius/AU}; };
+window.__rsa.apply=function(g){ if(!g) return; if(g.bulletDmg!=null) BULLET_DMG=g.bulletDmg; if(g.missileDmg!=null) MISSILE_DMG=g.missileDmg; if(g.ch){ for(var k in g.ch) Object.assign(CHASSIS[k],g.ch[k]); } if(g.fireCd!=null) FIRE_CD=g.fireCd; if(g.regenDelay!=null) HP_REGEN_DELAY=g.regenDelay; if(g.regenRate!=null) HP_REGEN_RATE=g.regenRate; };
+window.__rsa.start=function(){ queueBots=pickBots(TOTAL_PLAYERS-1); beginMatch(); };
 var perfAccum = 0, perfFrames = 0, perfCooldown = 0;
 function adaptiveQuality(dt){
   perfAccum += dt; perfFrames++;
@@ -5227,7 +5283,7 @@ function loop(now){
       if(shakeMag>0){shakeMag-=dt*4; if(shakeMag<0)shakeMag=0;}
       if(matchActive && !paused){
         readKeyboard();
-        updatePlayer(dt);
+        if(window.__rsa.autoHuman){ human.ai=PERSONALITIES.hunter; if(human.strafeDir===undefined){human.strafeDir=1;human.evadeT=0;human.hideTarget=null;human.hideTargetTimer=0;human.dodgeT=0;} updateAI(human,dt); updateShipRegen(human,dt); } else updatePlayer(dt);
         for(var i=1;i<SHIPS.length;i++)updateAI(SHIPS[i],dt);
         for(var i2=0;i2<SHIPS.length;i2++)updateShipRegen(SHIPS[i2],dt);
         updateBullets(dt);
@@ -5256,9 +5312,8 @@ function loop(now){
       updateTrails(dt);
       updateShootingStars(dt); }
       updateMapScale(dt);
-      render();
-      updateHUD();
-      adaptiveQuality(dt);
+      if(!window.__rsa.headless){ render(); updateHUD(); adaptiveQuality(dt); }
+      if(matchActive && !paused){ sampleSeries(dt); }
     } else if(currentScreen==='results'){
       updateSatellites(dt); updatePois(dt); render();
     }
