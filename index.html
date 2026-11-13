@@ -1050,7 +1050,7 @@ var PLAYER_SCREEN_Y = 0.78;
 var STATS_RING_CIRC = 2 * PI * 42;
 
 var CHASSIS = {
-  snappy:   { hp:100, speedMul:1.15, turnMul:1.35, fireRateMul:1.20 },
+  snappy:   { hp:88,  speedMul:1.15, turnMul:1.35, fireRateMul:1.20 },
   balanced: { hp:100, speedMul:1.00, turnMul:1.00, fireRateMul:1.00 },
   tank:     { hp:115, speedMul:0.90, turnMul:0.80, fireRateMul:0.95 }
 };
@@ -1975,8 +1975,8 @@ function renderLobby(){
 
 var CH_INFO=[
   {id:'balanced',n:'BILANCIATA',lv:1,d:'HP 100 \u00B7 standard'},
-  {id:'snappy',n:'AGILE',lv:3,d:'HP 80 \u00B7 veloce'},
-  {id:'tank',n:'CORAZZATA',lv:5,d:'HP 140 \u00B7 lenta'}];
+  {id:'snappy',n:'AGILE',lv:3,d:'HP 88 \u00B7 veloce'},
+  {id:'tank',n:'CORAZZATA',lv:5,d:'HP 115 \u00B7 lenta'}];
 function renderHangar(){
   var h=document.getElementById('hangar'); if(!h) return;
   var cur=CH_INFO.filter(function(c){return c.id===profile.chassis&&profile.level>=c.lv;})[0];
