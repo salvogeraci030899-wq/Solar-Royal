@@ -1654,7 +1654,7 @@ function xpToNextLevel(lv){return 100+lv*60;}
 /* ============ IMPOSTAZIONI ============ */
 var SETTINGS_KEY='royal_solar_arena_settings_v1';
 var settings={sens:1.0, aimAssist:true, killFeed:true, minimap:true, audio:true, difficulty:1};
-var DIFFS=[{n:'FACILE',dmg:0.7,fire:0.8},{n:'NORMALE',dmg:1,fire:1},{n:'VETERANO',dmg:1.3,fire:1.25}];
+var DIFFS=[{n:'FACILE',dmg:0.7,fire:0.8,lead:0.35,err:0.05,dodge:0.15},{n:'NORMALE',dmg:1,fire:1,lead:0.8,err:0.02,dodge:0.5},{n:'VETERANO',dmg:1.3,fire:1.25,lead:1.0,err:0.006,dodge:0.85}];
 try{
   var savedS=localStorage.getItem(SETTINGS_KEY);
   if(savedS) settings=Object.assign(settings, JSON.parse(savedS));
@@ -2428,6 +2428,7 @@ function getCrosshairData(ship){
           zoneNx: zoneNx, zoneNy: zoneNy, zoneWarn: zoneWarn, zoneVisible: zoneVisible};
 }
 
+window.__rsa={shots:0,hits:0,dodges:0};
 function fireFrom(ship){
   var hasRapid=!!getActivePowerup(ship,'rapid');
   if(!hasRapid){ if(ship.ammo<=0) return false; if(ship.reloadT>0) return false; }
@@ -2447,7 +2448,7 @@ function fireFrom(ship){
       vx:fx*1e8+(Math.random()-0.5)*3e7, vy:fy*1e8+(Math.random()-0.5)*3e7, vz:fz*1e8+(Math.random()-0.5)*3e7,
       life:0.2, maxLife:0.2, r:255, g:230, b:150, size:2});
   }
-  if(ship.isHuman) AUDIO.shoot(); else AUDIO.shootBot();
+  if(ship.isHuman) AUDIO.shoot(); else { AUDIO.shootBot(); window.__rsa.shots++; }
   return true;
 }
 function fireMissile(ship){
@@ -4229,8 +4230,22 @@ function updateAI(ship,dt){
     var baseOff = dist < prefD*0.6 ? ship.strafeDir*0.30 : dist > prefD*1.4 ? 0 : ship.strafeDir*0.15;
     var flankOff = 0;
     if(ship.role === 'flank'){ flankOff = (ship.index % 2 === 0 ? 1 : -1) * Math.PI * 0.35; }
-    desYaw=Math.atan2(dy,dx)+baseOff+flankOff;
-    desPitch=Math.asin(Math.max(-1,Math.min(1,dz/dist)));
+    /* intercetto: dove sarà il bersaglio quando arriva il proiettile */
+    var Dd=DIFFS[settings.difficulty];
+    var bsp=ship.speed+1.5e8;
+    var bcp=Math.cos(best.pitch), bsp2=Math.sin(best.pitch), bcy=Math.cos(best.yaw), bsy=Math.sin(best.yaw);
+    var tvx=bcp*bcy*best.speed, tvy=bcp*bsy*best.speed, tvz=bsp2*best.speed;
+    var tI=dist/bsp;
+    for(var it=0;it<2;it++){
+      var ax=dx+tvx*tI, ay=dy+tvy*tI, az=dz+tvz*tI;
+      tI=Math.sqrt(ax*ax+ay*ay+az*az)/bsp;
+    }
+    ship.aimErrT=(ship.aimErrT||0)-dt;
+    if(ship.aimErrT<=0){ ship.aimErrT=0.5; ship.aimErrY=(Math.random()-0.5)*2*Dd.err; ship.aimErrP=(Math.random()-0.5)*2*Dd.err; }
+    var lx=dx+tvx*tI*Dd.lead, ly=dy+tvy*tI*Dd.lead, lz=dz+tvz*tI*Dd.lead;
+    var ld=Math.sqrt(lx*lx+ly*ly+lz*lz)||1;
+    desYaw=Math.atan2(ly,lx)+baseOff*(wantEvade?1:0.4)+flankOff+ship.aimErrY;
+    desPitch=Math.asin(Math.max(-1,Math.min(1,lz/ld)))+ship.aimErrP;
     var nearestPU=null, nearestPUD=1e24;
     for(var pi2=0;pi2<powerups.length;pi2++){
       var pu=powerups[pi2]; if(!pu.alive)continue;
@@ -4248,6 +4263,32 @@ function updateAI(ship,dt){
       desPitch+=(puPitch-desPitch)*w;
     }
   }
+  var D=DIFFS[settings.difficulty];
+  /* --- schivata: proiettili/missili nemici in rotta di collisione --- */
+  ship.dodgeT=(ship.dodgeT||0)-dt; ship.dodgeCheck=(ship.dodgeCheck||0)-dt;
+  if(ship.dodgeCheck<=0){
+    ship.dodgeCheck=0.08;
+    var threat=false;
+    for(var bi=0;bi<bullets.length&&!threat;bi++){
+      var bb=bullets[bi]; if(bb.owner===ship) continue;
+      var rx=ship.x-bb.x, ry=ship.y-bb.y, rz=ship.z-bb.z;
+      var vv=bb.vx*bb.vx+bb.vy*bb.vy+bb.vz*bb.vz; if(vv<1) continue;
+      var tc=(rx*bb.vx+ry*bb.vy+rz*bb.vz)/vv;
+      if(tc<0.02||tc>0.5) continue;
+      var mx=rx-bb.vx*tc, my=ry-bb.vy*tc, mz=rz-bb.vz*tc;
+      if(mx*mx+my*my+mz*mz<1.5e6*1.5e6) threat=true;
+    }
+    for(var mi=0;mi<missiles.length&&!threat;mi++){
+      var mm=missiles[mi]; if(mm.owner===ship||mm.target!==ship) continue;
+      var mdx=ship.x-mm.x, mdy=ship.y-mm.y, mdz=ship.z-mm.z;
+      if(mdx*mdx+mdy*mdy+mdz*mdz<6e7*6e7) threat=true;
+    }
+    if(threat && ship.dodgeT<=0 && Math.random()<D.dodge){
+      ship.dodgeT=0.45+Math.random()*0.3; ship.dodgeYaw=(Math.random()<0.5?-1:1)*(0.9+Math.random()*0.6); ship.dodgePitch=(Math.random()-0.5)*1.0;
+      window.__rsa.dodges++;
+    }
+  }
+  if(ship.dodgeT>0){ desYaw+=ship.dodgeYaw; desPitch+=ship.dodgePitch; }
   var maxDP=ai.turnRate*ship.turnMul*dt;
   var dYaw=desYaw-ship.yaw;
   while(dYaw>PI)dYaw-=TAU; while(dYaw<-PI)dYaw+=TAU;
@@ -4451,6 +4492,7 @@ function updateBullets(dt){
       }
       // FIX: hitbox reale - colpisce anche senza lockedTarget
       if(tHit>=0){
+        if(b.owner&&!b.owner.isHuman) window.__rsa.hits++;
         damageShip(s,BULLET_DMG,b.owner);
         hit=true; break;
       }
