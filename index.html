@@ -697,6 +697,10 @@ body.in-lobby #gearBtn{display:block}
       <button class="settings-toggle" id="setHap" data-on="1">ON</button>
     </div>
     <div class="settings-row">
+      <span class="settings-label">GRAFICA</span>
+      <button class="settings-toggle" id="setGfx" data-on="1">AUTO</button>
+    </div>
+    <div class="settings-row">
       <span class="settings-label">DIFFICOLT&Agrave;</span>
       <button class="settings-toggle" id="setDiff" data-on="1">NORMALE</button>
     </div>
@@ -713,7 +717,7 @@ window.addEventListener('error', function(ev){
 (function(){
 'use strict';
 
-var VERSION='1.10';
+var VERSION='1.20';
 var AU=1.496e11, TAN_V=Math.tan(30*Math.PI/180), PI=Math.PI, TAU=PI*2;
 var MAX_HP=100, BULLET_DMG=9;
 var FIRE_CD=0.55;
@@ -1772,6 +1776,7 @@ function syncSettingsUI(){
   var kfEl=document.getElementById('killFeed');
   if(kfEl) kfEl.style.visibility = settings.killFeed ? '' : 'hidden';
   minimapEl.style.display = settings.minimap ? '' : 'none';
+  var gB=document.getElementById('setGfx'); if(gB){ gB.textContent=(settings.gfx==='cpu')?'CLASSICA':(GLX.on?'WEBGL':'AUTO'); gB.dataset.on=(settings.gfx==='cpu')?'0':'1'; }
   var hB=document.getElementById('setHap');
   if(hB){ var on=settings.haptics!==false; hB.dataset.on=on?'1':'0'; hB.textContent=on?'ON':'OFF'; }
   var dB=document.getElementById('setDiff');
@@ -1808,6 +1813,7 @@ function syncSettingsUI(){
   if(mmB) mmB.addEventListener('click', function(){
     settings.minimap=!settings.minimap; saveSettings(); syncSettingsUI();
   });
+  var gB2=document.getElementById('setGfx'); if(gB2) gB2.addEventListener('click',function(){ settings.gfx=(settings.gfx==='cpu')?'auto':'cpu'; saveSettings(); applyGfx(); syncSettingsUI(); });
   var hB2=document.getElementById('setHap'); if(hB2) hB2.addEventListener('click',function(){ settings.haptics=(settings.haptics===false); saveSettings(); syncSettingsUI(); buzz(40); });
   function cycleDiff(){ settings.difficulty=(settings.difficulty+1)%DIFFS.length; saveSettings(); syncSettingsUI(); }
   var dB=document.getElementById('setDiff'); if(dB) dB.addEventListener('click', cycleDiff);
@@ -2621,6 +2627,7 @@ function doResize(force){
   depthBuf=new Float32Array(W*H);
   bgBuf=new Uint8Array(W*H);
   ctx.imageSmoothingEnabled=false;
+  if(GLX.gl){ try{ glResize(); }catch(e){ glFail(e); } }
   if(minimapFullscreen){
     var fsSize=Math.min(window.innerWidth, window.innerHeight)*0.72;
     setMinimapSize(fsSize, 1.5);
@@ -3852,6 +3859,11 @@ function blendPx(x,y,r,g,b,alpha){
   var xi=x|0, yi=y|0;
   if(xi<0||yi<0||xi>=W||yi>=H)return;
   if(alpha<=0.005)return;
+  if(GLX.inOvl){
+    var pp=yi*W+xi, cu=buf32[pp], ca=(cu>>>24)&255, a=alpha>1?1:alpha, wd=(ca/255)*(1-a), na=a+wd;
+    var cr=(r*a+(cu&255)*wd)/na, cg=(g*a+((cu>>8)&255)*wd)/na, cb=(b*a+((cu>>16)&255)*wd)/na;
+    buf32[pp]=(((na*255)|0)<<24)|((cb|0)<<16)|((cg|0)<<8)|(cr|0); return;
+  }
   var cur=buf32[yi*W+xi];
   var curR=cur&0xFF, curG=(cur>>8)&0xFF, curB=(cur>>16)&0xFF;
   var nR=curR+(r-curR)*alpha, nG=curG+(g-curG)*alpha, nB=curB+(b-curB)*alpha;
@@ -4625,6 +4637,7 @@ function distanceScale(zd){
 }
 
 function render(){
+  if(GLX.on){ try{ renderGL(); }catch(err){ glFail(err); render(); return; } if(currentScreen==='match') drawMinimap(); return; }
   renderScene();
   drawStars();
   drawSunFlare();
@@ -4786,6 +4799,639 @@ function render(){
   ctx.putImageData(imgData,0,0);
   if(currentScreen==='match') drawMinimap();
 }
+
+/* ===================== SHADER WEBGL2 ===================== */
+var GLS_COMMON=`#version 300 es
+precision highp float; precision highp int;
+uniform vec3 uRamps[112]; uniform int uLen[14];
+uniform vec3 uD,uRt,uUp; uniform float uTanH,uTanV,uTime,uPA; uniform vec2 uRes; uniform float uFar;
+vec3 ramp(int ri,int idx){ int mx=uLen[ri]-1; idx=clamp(idx,0,mx); return uRamps[ri*8+idx]; }
+float bayer4(){ ivec2 p=ivec2(gl_FragCoord.xy)&3; int m[16]=int[16](0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5); return (float(m[p.y*4+p.x])+0.5)/16.0; }
+float hash3i(ivec3 p){ uint h=(uint(p.x)*0x27d4eb2du)^(uint(p.y)*0x165667b1u)^(uint(p.z)*0x9e3779b1u); h=(h^(h>>15))*0x85ebca6bu; h=(h^(h>>13))*0xc2b2ae35u; h^=h>>16; return float(h)*2.3283064365386963e-10; }
+float noise3(vec3 q){ vec3 fl=floor(q); ivec3 i=ivec3(fl); vec3 f=q-fl; vec3 u=f*f*(3.0-2.0*f);
+  float c000=hash3i(i),c100=hash3i(i+ivec3(1,0,0)),c010=hash3i(i+ivec3(0,1,0)),c110=hash3i(i+ivec3(1,1,0));
+  float c001=hash3i(i+ivec3(0,0,1)),c101=hash3i(i+ivec3(1,0,1)),c011=hash3i(i+ivec3(0,1,1)),c111=hash3i(i+ivec3(1,1,1));
+  float x00=mix(c000,c100,u.x),x10=mix(c010,c110,u.x),x01=mix(c001,c101,u.x),x11=mix(c011,c111,u.x);
+  return mix(mix(x00,x10,u.y),mix(x01,x11,u.y),u.z)-0.5; }
+int lightLevel(float ndl){ float t=(ndl+0.08)*4.2+(bayer4()-0.5)*0.55; return int(clamp(floor(t),0.0,4.0)); }
+float logDepth(float w){ return clamp(log2(1.0+max(w,0.0))/log2(1.0+uFar),0.0,1.0); }
+`;
+var GLS_VS_QUAD=`#version 300 es
+uniform vec4 uQuad; // cx,cy,rx,ry in NDC
+void main(){ vec2 c=vec2(float(gl_VertexID&1),float((gl_VertexID>>1)&1))*2.0-1.0; gl_Position=vec4(uQuad.xy+c*uQuad.zw,0.0,1.0); }`;
+var GLS_VS_FULL=`#version 300 es
+void main(){ vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2)); gl_Position=vec4(p*2.0-1.0,0.0,1.0); }`;
+
+/* ---- cielo: nebulosa + corona e raggi del Sole ---- */
+var GLS_FS_SKY=GLS_COMMON+`
+uniform sampler2D uNeb; uniform vec3 uSunDir; uniform float uSunAng,uSunOn,uFlare;
+layout(location=0) out vec4 oCol;
+void main(){
+  vec2 uv=(gl_FragCoord.xy/uRes)*2.0-1.0; vec3 dir=normalize(uD+uv.x*uTanH*uRt+uv.y*uTanV*uUp);
+  vec2 tc=vec2(atan(dir.y,dir.x)/6.28318530718+0.5, asin(clamp(dir.z,-1.0,1.0))/3.14159265359+0.5);
+  vec4 nb=texture(uNeb,tc); vec3 c=nb.rgb*nb.a;
+  if(uSunOn>0.5){
+    float ang=acos(clamp(dot(dir,uSunDir),-1.0,1.0)); float Rr=uSunAng;
+    float coronaAng=min(Rr*8.0*uFlare+0.12,1.2);
+    if(ang<coronaAng){ float u=max(0.0,1.0-ang/coronaAng); float it=pow(u,2.8)*uFlare; c+=vec3(255.0*0.55,200.0*0.45,120.0*0.32)*it/255.0;
+      float inner=coronaAng*0.28; if(ang<inner){ float uI=1.0-ang/inner; float iI=pow(uI,1.7)*uFlare; c+=vec3(255.0*0.95,240.0*0.75,180.0*0.5)*iI/255.0; } }
+    // alone a gradini + raggi (come nel rendering classico)
+    float span=max(Rr*1.25,0.012);
+    if(ang>Rr*0.9){ float u=clamp((ang-Rr)/span,0.0,1.0); float it=(1.0-u); it=it*it*it*0.80*uFlare; c+=vec3(1.0,0.667,0.235)*it*vec3(0.85,0.7,0.5); }
+    vec3 dv=dir-uSunDir*dot(dir,uSunDir); float dx=dot(dv,uRt), dy=dot(dv,uUp);
+    float rayH=exp(-abs(dy)/(Rr*0.045))*exp(-abs(dx)/(Rr*2.4)), rayV=exp(-abs(dx)/(Rr*0.045))*exp(-abs(dy)/(Rr*2.4));
+    c+=vec3(1.0,0.78,0.43)*max(rayH,rayV)*0.7*step(Rr*1.02,ang);
+  }
+  oCol=vec4(c,1.0);
+}`;
+
+/* ---- stelle (sprite da 1/3/5 px, come nel rendering classico) ---- */
+var GLS_VS_STAR=`#version 300 es
+layout(location=0) in vec3 aDir; layout(location=1) in vec4 aCol; layout(location=2) in vec2 aPh; // aCol.rgb colore, aCol.a classe ; aPh.x fase, aPh.y indice
+uniform vec3 uD,uRt,uUp; uniform float uTanH,uTanV,uTime; out vec3 vCol; out float vCls;
+void main(){ vec3 v=vec3(dot(aDir,uRt),dot(aDir,uUp),dot(aDir,uD)); float cls=aCol.a; vCls=cls;
+  float f=1.0; if(cls>=1.0 && mod(aPh.y,3.0)<0.5){ float tw=sin(uTime*1.6+aPh.x); if(tw>0.92) f=0.55; else if(tw>0.80) f=0.78; }
+  vCol=aCol.rgb*f;
+  if(v.z<0.05){ gl_Position=vec4(2.0,2.0,2.0,1.0); gl_PointSize=1.0; return; }
+  gl_Position=vec4(v.x/uTanH/v.z, v.y/uTanV/v.z, 0.0, 1.0);
+  gl_PointSize=(cls>=2.5)?5.0:((cls>=1.5)?3.0:1.0); }`;
+var GLS_FS_STAR=`#version 300 es
+precision highp float; in vec3 vCol; in float vCls; layout(location=0) out vec4 oCol;
+void main(){ vec2 d=abs(gl_PointCoord-0.5)*((vCls>=2.5)?5.0:3.0); vec3 c=vCol;
+  if(vCls>=1.5){ float ax=d.x, ay=d.y; if(ax<0.4&&ay<0.4){ } else if(ax<0.4||ay<0.4){ float arm=max(ax,ay); if(vCls>=2.5){ c*=(arm<1.4)?0.5:0.32; } else { c*=0.5; } } else discard; }
+  oCol=vec4(c,1.0); }`;
+
+/* ---- corpi celesti (impostor sferico): pianeti, luna, Sole ---- */
+var GLS_FS_BODY=GLS_COMMON+`
+uniform vec3 uCen; uniform float uR,uRm; uniform vec3 uSunRel; uniform int uName; uniform float uScale,uBands; uniform int uOct,uStorm,uRings,uFlareOn;
+uniform vec3 uOcc; uniform float uOccR; uniform vec4 uAtmo;
+layout(location=0) out vec4 oCol; layout(location=1) out vec4 oInfo; uniform float uId;
+int rI(int a){ return a; }
+void main(){
+  vec2 uv=(gl_FragCoord.xy/uRes)*2.0-1.0; vec3 d=normalize(uD+uv.x*uTanH*uRt+uv.y*uTanV*uUp);
+  vec3 c=uCen; float b=dot(d,c); vec3 pc=cross(d,c); float perp2=dot(pc,pc); float disc=uR*uR-perp2; if(disc<0.0||b<=0.0) discard;
+  float t=b-sqrt(disc); vec3 hit=d*t; vec3 n=normalize(hit-c);
+  gl_FragDepth=logDepth(t*dot(d,uD));
+  vec3 l=n*uRm; float nX=n.x,nY=n.y,nZ=n.z;
+  vec3 sd=normalize(uSunRel-hit);
+  vec3 V=-d; float ndv=dot(n,V);
+  vec3 col=vec3(0.0);
+  float pixSize=t*1e5*uPA;
+  if(uName==9){
+    // ---- Sole ----
+    float cosL=max(0.0,ndv); float tt=uTime*0.10; float cell=0.0,sc=8e5,amp=1.0;
+    for(int k=0;k<6;k++){ if(sc<pixSize*3.0) break; cell+=amp*noise3(vec3((l.x+tt*sc*0.5)/sc,(l.y+tt*sc*0.3)/sc,(l.z+tt*sc*0.4)/sc)); sc*=0.44; amp*=0.74; }
+    float spot1=noise3(l/1.2e7+vec3(100.0,50.0,25.0)), spot2=noise3(l/5e6+vec3(200.0,80.0,40.0)); float sm=spot1*0.7+spot2*0.3;
+    float spot=sm>0.30?min(1.0,(sm-0.30)*3.0):0.0; float facula=(sm>0.05&&sm<0.30)?(sm-0.05)*3.0:0.0;
+    int lvl=cosL>0.80?0:(cosL>0.58?1:(cosL>0.36?2:(cosL>0.18?3:4)));
+    int gr=cell>0.18?1:(cell<-0.18?-1:0); int idx=6-lvl+gr;
+    if(spot>0.02) idx-=(spot>0.55?3:2); else if(facula>0.35) idx+=1;
+    if(uFlareOn==1) idx+=1;
+    col=ramp(7,idx);
+  } else {
+    float ndl=dot(n,sd);
+    if(uOccR>0.0){ vec3 oc=uOcc-hit; float t2=dot(oc,sd); if(t2>0.0){ vec3 pp=cross(sd,oc); if(dot(pp,pp)<uOccR*uOccR) ndl=-1.0; } }
+    int lv=lightLevel(ndl);
+    // ombra degli anelli di Saturno sul pianeta
+    if(uRings==1 && lv>0){ float tilt=0.471,cT=cos(tilt),sT=sin(tilt); float sly=sd.y*cT-sd.z*sT;
+      if(abs(sly)>0.05){ float tI=-(nZ*uRm)/ (sly*1.0); /* in metri */ 
+        if(tI>0.0){ vec3 rr=l+sd*tI; float rD=sqrt(rr.x*rr.x+(rr.y*sT+rr.z*cT)*(rr.y*sT+rr.z*cT)); if(rD>uRm*1.24 && rD<uRm*2.36) lv=max(0,lv-2); } } }
+    // rumore del terreno
+    float e=0.0; { float sc=uScale,amp=1.0; for(int k=0;k<10;k++){ if(k>=uOct) break; if(sc<pixSize*3.0) break; e+=amp*noise3(l/sc); sc*=0.5; amp*=0.58; } }
+    int rim=-1; int rimIdx=0; int a=0;
+    if(uName==0||uName==3||uName==8){
+      float crater=noise3(l/(uScale*0.30)); a=e>0.10?1:(e<-0.10?-1:0); if(crater>0.26) a-=1;
+      int rp=12,bs=1; if(uName==8){rp=11;bs=2;} else if(uName==3){ rp=6; bs=1; if(e>0.18){rp=5;bs=0;} }
+      col=ramp(rp,bs+lv+a);
+      if(uName==3 && abs(nZ)>0.88 && lv>0) col=ramp(13,lv);
+      if(uName==3 && ndv<0.12 && lv>=2){ rim=6; rimIdx=4; }
+    } else if(uName==1){
+      float tw=uTime*0.03; float sw=noise3(l/(uScale*0.5)+vec3(tw,-tw*0.5,tw*0.3)), sw2=noise3(l/(uScale*0.25)+vec3(tw*1.6,tw*0.8,0.0));
+      float vv=sw*0.6+sw2*0.4+e*0.3; a=vv>0.10?1:(vv<-0.10?-1:0); if(abs(nZ)>0.7) a-=1;
+      col=ramp(5,1+lv+a); if(ndv<0.14&&lv>=2){ rim=7; rimIdx=5; }
+    } else if(uName==2){
+      float hgt=e,aLat=abs(nZ); bool isLand=hgt>=0.02; float tw2=uTime*0.02;
+      float c1=noise3(l/(uScale*0.24)+vec3(tw2,0.0,0.0)), c2=noise3(l/(uScale*0.10)+vec3(tw2*2.5+50.0,0.0,0.0)); float cl=c1*0.65+c2*0.35; bool cloud=cl>0.13;
+      if(cloud){ col=ramp(13,lv); if(cl>0.30) col=ramp(13,min(4,lv+1)); }
+      else if(!isLand){ int dep=((0.02-hgt)>0.30)?0:1; col=ramp(1,1+lv+dep); vec3 H=normalize(sd+V); float spec=dot(H,n); if(spec>0.985&&lv>=3) col=ramp(13,4); else if(spec>0.96&&lv>=3) col=ramp(1,6); }
+      else { float dry=noise3(l/(uScale*0.3)+vec3(200.0,100.0,0.0));
+        if(hgt<0.05) col=ramp(4,1+lv); else if(hgt<0.40) col=ramp((dry>0.12)?4:3,1+lv); else if(hgt<0.70) col=ramp(12,1+lv); else col=ramp(13,min(4,lv+1)); }
+      if(aLat>0.80&&!cloud&&lv>0) col=ramp(13,lv);
+      if(lv==0&&isLand&&!cloud&&hgt<0.4){ float cn=noise3(l/6e4), cn2=noise3(l/2e4); if(cn>0.33&&cn2>0.15) col=ramp(7,cn2>0.3?5:4); }
+      if(aLat>0.74&&lv<=1){ float an=noise3(l/3e5+vec3(uTime*0.7,0.0,uTime*0.3))+sin(atan(nY,nX)*3.0+uTime*0.6)*0.3; if(an>0.18) col=ramp(2,an>0.4?5:4); }
+      if(ndv<0.11&&lv>=1){ rim=1; rimIdx=(lv>=3)?6:5; }
+    } else {
+      float lat=asin(clamp(nZ,-1.0,1.0)); float tw3=uTime*0.02;
+      float t1=noise3(l/(uScale*0.5)+vec3(tw3,0.0,0.0)), t2=noise3(l/(uScale*0.2)+vec3(tw3*2.0+30.0,0.0,0.0));
+      float latEff=lat+t1*0.10+t2*0.04; float bandVal=sin(latEff*uBands)*0.5+0.5;
+      int cls=bandVal<0.28?0:(bandVal<0.55?1:(bandVal<0.80?2:3)); int rp=5; int ab=0;
+      if(uName==4){ int rr4[4]=int[4](6,5,5,5); int aa[4]=int[4](2,0,1,2); rp=rr4[cls]; ab=aa[cls]; }
+      else if(uName==5){ int rr5[4]=int[4](12,5,5,5); int aa[4]=int[4](2,0,1,2); rp=rr5[cls]; ab=aa[cls]; }
+      else if(uName==6){ int rr6[4]=int[4](2,2,2,13); int aa[4]=int[4](0,1,2,0); rp=rr6[cls]; ab=aa[cls]; }
+      else { rp=1; int aa[4]=int[4](0,1,2,3); ab=aa[cls]; }
+      col=ramp(rp,ab+lv);
+      if(uStorm==1){ float curLon=atan(nY,nX); float sLat=(uName==4)?-0.34:-0.26, sLon=(uName==4)?2.1:1.3, sSize=(uName==4)?0.40:0.32;
+        float dLat=lat-sLat, dLon=curLon-sLon; if(dLon>3.14159265) dLon-=6.28318531; if(dLon<-3.14159265) dLon+=6.28318531;
+        float sdd=sqrt(dLat*dLat*2.5+dLon*dLon);
+        if(sdd<sSize){ float sr=1.0-sdd/sSize; if(uName==4) col=ramp(sr>0.55?8:6,1+lv+(sr>0.55?1:0)); else col=ramp(1,max(0,lv-1+(sr>0.5?0:1))); } }
+      if(uName==7){ float ch=noise3(l/(uScale*0.14)+vec3(tw3*3.0,0.0,0.0)); if(ch>0.32&&lv>0) col=ramp(13,min(4,lv)); }
+      if(uName==5 && lat>1.30 && abs(cos(atan(nY,nX)*3.0))>0.72) col=ramp(12,2+lv);
+      if(ndv<0.10&&lv>=2){ rim=(uName==6)?2:((uName==7)?1:5); rimIdx=(rim==1)?5:4; }
+    }
+    if(rim>=0) col=ramp(rim,rimIdx);
+  }
+  oCol=vec4(col,1.0); oInfo=vec4(uId/255.0,n.x*0.5+0.5,n.y*0.5+0.5,clamp(t*1e5/6e11,0.0,1.0));
+}`;
+
+/* ---- anelli (Saturno, Urano): piano z=centro, con ombra del pianeta ---- */
+var GLS_FS_RING=GLS_COMMON+`
+uniform vec3 uCen; uniform float uR,uRin,uRout; uniform vec3 uSunRel; uniform int uName;
+layout(location=0) out vec4 oCol;
+void main(){
+  vec2 uv=(gl_FragCoord.xy/uRes)*2.0-1.0; vec3 d=normalize(uD+uv.x*uTanH*uRt+uv.y*uTanV*uUp);
+  if(abs(d.z)<1e-6) discard; float t=uCen.z/d.z; if(t<0.0001) discard;
+  vec3 p=d*t; vec2 rv=p.xy-uCen.xy; float rr=length(rv); if(rr<uRin||rr>uRout) discard;
+  gl_FragDepth=logDepth(t*dot(d,uD));
+  float rt=(rr-uRin)/(uRout-uRin); float rrm=rr*1e5;
+  vec3 sd=normalize(uSunRel-p); vec3 pd=uCen-p; float projT=dot(pd,sd); float shadow=1.0;
+  if(projT>0.0){ vec3 q=cross(sd,pd); float d2=dot(q,q); if(d2<uR*uR){ float dd=sqrt(d2); shadow=1.0-(1.0-dd/uR)*0.75; } }
+  float op=0.4; vec3 base=vec3(200.0,190.0,170.0);
+  if(uName==5){
+    if(rt<0.10){op=0.18+rt*1.4;base=vec3(160.0,148.0,120.0);}
+    else if(rt<0.15){op=0.06;base=vec3(95.0,85.0,72.0);}
+    else if(rt<0.45){op=0.88+sin(rt*52.0)*0.06;base=vec3(228.0,208.0,168.0);}
+    else if(rt<0.53){op=0.06;base=vec3(110.0,100.0,82.0);}
+    else if(rt<0.86){op=0.76+sin(rt*68.0)*0.07;base=vec3(214.0,194.0,155.0);}
+    else if(rt<0.89){op=0.10;base=vec3(135.0,120.0,98.0);}
+    else if(rt<0.94){op=0.52;base=vec3(208.0,188.0,152.0);}
+    else{op=0.16;base=vec3(175.0,158.0,128.0);}
+    float fine=noise3(vec3(rrm*1e-7,rt*52.0,0.0)), fine2=noise3(vec3(rrm*2e-7,rt*130.0,7.0));
+    op*=0.85+fine*0.28+fine2*0.14; base*=(0.88+fine*0.16+fine2*0.08);
+  } else if(uName==6){
+    op=0.20+0.12*sin(rt*38.0); if(rt>0.88&&rt<0.97) op=0.55; if(rt>0.40&&rt<0.46) op*=0.35; if(rt>0.60&&rt<0.65) op*=0.45; base=vec3(150.0,205.0,225.0);
+  }
+  oCol=vec4(base*shadow/255.0,clamp(op,0.0,1.0));
+}`;
+
+/* ---- alone atmosferico (additivo, fuori dal disco) ---- */
+var GLS_FS_ATMO=GLS_COMMON+`
+uniform vec3 uCen; uniform float uR; uniform vec4 uAtmo;
+layout(location=0) out vec4 oCol;
+void main(){
+  vec2 uv=(gl_FragCoord.xy/uRes)*2.0-1.0; vec3 d=normalize(uD+uv.x*uTanH*uRt+uv.y*uTanV*uUp);
+  float b=dot(d,uCen); if(b<=0.0) discard; vec3 pc=cross(d,uCen); float mD=length(pc); float ao=uR*1.10;
+  if(mD<=uR||mD>=ao) discard;
+  float stg=1.0-(mD-uR)/(ao-uR); stg=max(0.0,stg); stg=stg*stg*stg;
+  gl_FragDepth=logDepth(b*dot(d,uD));
+  oCol=vec4(uAtmo.rgb*uAtmo.a*0.6*stg,1.0);
+}`;
+
+/* ---- mesh (navi, asteroidi, satelliti, bonus) ---- */
+var GLS_VS_MESH=`#version 300 es
+layout(location=0) in vec3 aPos; layout(location=1) in vec3 aNrm; layout(location=2) in float aMat;
+uniform vec3 uD,uRt,uUp; uniform float uTanH,uTanV; uniform vec3 uPos; uniform mat3 uBasis; uniform float uSc;
+out vec3 vNrm; out vec3 vRel; out float vW; out float vMat; out vec3 vObj;
+void main(){ vec3 wp=uPos+uBasis*(aPos*uSc); vec3 v=vec3(dot(wp,uRt),dot(wp,uUp),dot(wp,uD));
+  gl_Position=vec4(v.x/uTanH, v.y/uTanV, 0.0, v.z); vW=v.z; vRel=wp; vNrm=uBasis*aNrm; vMat=aMat; vObj=aPos; }`;
+var GLS_FS_MESH=GLS_COMMON+`
+in vec3 vNrm; in vec3 vRel; in float vW; in float vMat; in vec3 vObj;
+layout(location=0) out vec4 oCol; layout(location=1) out vec4 oInfo;
+uniform vec3 uSunRel; uniform vec3 uPos; uniform int uKind; uniform vec3 uAcc; uniform float uId,uTurbo,uAlpha;
+uniform vec4 uOcc0,uOcc1; // xyz centro (rel), w raggio
+bool shadowedBy(vec4 o,vec3 p,vec3 L){ if(o.w<=0.0) return false; vec3 oc=o.xyz-p; float t=dot(oc,L); if(t<=0.0) return false; vec3 q=cross(L,oc); return dot(q,q)<o.w*o.w*0.995; }
+vec3 shade3(vec3 c,float f){ return min(c*f,vec3(1.0)); }
+void main(){
+  gl_FragDepth=logDepth(vW);
+  vec3 N=normalize(vNrm); vec3 V=normalize(-vRel); vec3 L=normalize(uSunRel-uPos);
+  if(dot(N,V)<0.0) N=-N;
+  float ndl=dot(N,L); bool sh=shadowedBy(uOcc0,vRel,L)||shadowedBy(uOcc1,vRel,L);
+  float sunNdl=ndl; float fill=dot(N,V)*0.85+0.30;   // luce di riempimento debole dalla camera: la nave resta leggibile
+  ndl = sh ? (fill*0.35-0.12) : max(ndl,fill);
+  int lv=lightLevel(ndl); int m=int(vMat+0.5); vec3 col=vec3(0.0);
+  if(!sh) lv=max(lv,(uKind==0)?2:1);          // fuori dall'ombra dei pianeti le navi restano sempre leggibili
+  if(uKind==0){
+    vec3 gD=mix(vec3(0.0),uAcc,0.42), gM=mix(uAcc,vec3(1.0),0.12), gH=mix(uAcc,vec3(1.0),0.62);
+    if(m==0) col=ramp(11,2+lv);
+    else if(m==1){ int ii[5]=int[5](1,1,2,2,3); col=ramp(11,ii[lv]); }
+    else if(m==2){ vec3 gg[5]=vec3[5](gD,gD,gM,gH,vec3(0.92,0.96,1.0)); col=gg[lv]; }
+    else if(m==3){ float ff[5]=float[5](0.5,0.7,1.0,1.2,1.4); col=shade3(uAcc,ff[lv]); }
+    else if(m==4){ int ee[5]=int[5](0,1,1,2,3); col=ramp(11,ee[lv]); }
+    else if(m==5){ col=(uTurbo>0.02)?mix(ramp(2,5),ramp(7,5),clamp(uTurbo,0.0,1.0)):ramp(2,5); }
+    else col=ramp(7,6);
+    if(!sh && m<=3 && sunNdl>0.12 && dot(N,V)<0.30 && dot(L,-V)>0.2) col=ramp(7,3);   // bordo illuminato in controluce
+  } else if(uKind==1){
+    float h=noise3(vObj*3.1+vec3(7.0))+0.5; int a=h>0.8?-1:0; if(vMat>0.5) a-=1;
+    col=ramp(12,1+lv+a);
+  } else if(uKind==2){
+    float ff[5]=float[5](0.42,0.62,0.85,1.1,1.45); col=shade3(uAcc,ff[lv]); if(lv==4) col=mix(col,vec3(1.0),0.35);
+  } else {
+    if(m==0) col=ramp(11,3+lv/2);       // corpo
+    else if(m==1){ float chk=mod(floor(vObj.x*3.0)+floor(vObj.z*3.0),2.0); col=(chk<0.5)?vec3(0.157,0.314,0.627):vec3(0.353,0.549,0.863); col=shade3(col,0.55+0.2*float(lv)); }
+    else col=vec3(0.94,0.31,0.31);
+  }
+  oCol=vec4(col,1.0); oInfo=vec4(uId/255.0,N.x*0.5+0.5,N.y*0.5+0.5,clamp(vW*1e5/6e11,0.0,1.0));
+}`;
+
+/* ---- composizione finale: overlay 2D + contorni + palette + dither ---- */
+var GLS_FS_POST=`#version 300 es
+precision highp float; precision highp int;
+uniform sampler2D uCol,uInfo,uLut,uOvl; uniform vec2 uRes; out vec4 o;
+float bayer(ivec2 p){ p&=3; int m[16]=int[16](0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5); return (float(m[p.y*4+p.x])+0.5)/16.0; }
+void main(){
+  ivec2 p=ivec2(gl_FragCoord.xy); ivec2 R=ivec2(uRes); vec3 c=texelFetch(uCol,p,0).rgb; vec4 inf=texelFetch(uInfo,p,0);
+  vec4 ov=texelFetch(uOvl,ivec2(p.x,R.y-1-p.y),0);
+  bool me=inf.r*255.0>=9.5, outl=false, crease=false; ivec2 d[4]=ivec2[4](ivec2(1,0),ivec2(-1,0),ivec2(0,1),ivec2(0,-1));
+  for(int i=0;i<4;i++){ ivec2 q=clamp(p+d[i],ivec2(0),R-1); vec4 n=texelFetch(uInfo,q,0); bool nm=n.r*255.0>=9.5;
+    if(abs(n.r-inf.r)>0.002){ if(nm && inf.a>n.a+0.0004) outl=true; }
+    else if(me && length(n.gb-inf.gb)>0.32) crease=true; }
+  if(ov.a<0.004){
+    if(outl) c=vec3(11.0,12.0,18.0)/255.0; else if(crease) c*=0.80;
+    if(inf.r==0.0 && !outl) c+=(bayer(p)-0.5)*(6.0/255.0);
+  } else c=mix(c,ov.rgb,ov.a);
+  vec3 q=clamp(c*255.0/8.0,0.0,31.0); ivec3 qi=ivec3(q);
+  o=vec4(texelFetch(uLut,ivec2(qi.b*32+qi.r,qi.g),0).rgb,1.0);
+}`;
+
+/* ===================== RENDERER WEBGL2 (scena 3D su GPU) ===================== */
+var GLX={on:false,ok:false,err:'',gl:null,cv:null,P:{},U:{},ovl32:null,ovlBg:null,depth:null,inOvl:false,frames:0};
+var GL_UNIT=1e5, GL_FAR=1e9;
+function glU(pn,name){ var k=pn+'|'+name; var m=GLX.U; if(!(k in m)) m[k]=GLX.gl.getUniformLocation(GLX.P[pn],name); return m[k]; }
+function glCompile(t,s){ var gl=GLX.gl,sh=gl.createShader(t); gl.shaderSource(sh,s); gl.compileShader(sh); if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)) throw new Error('shader: '+gl.getShaderInfoLog(sh)); return sh; }
+function glProg(name,vs,fs){ var gl=GLX.gl,p=gl.createProgram(); gl.attachShader(p,glCompile(gl.VERTEX_SHADER,vs)); gl.attachShader(p,glCompile(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(p); if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error('link '+name+': '+gl.getProgramInfoLog(p)); GLX.P[name]=p; }
+function glBuf(data,type){ var gl=GLX.gl,b=gl.createBuffer(); gl.bindBuffer(type||gl.ARRAY_BUFFER,b); gl.bufferData(type||gl.ARRAY_BUFFER,data,gl.STATIC_DRAW); return b; }
+function gv3(a,b){return [a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
+function gdot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+function gcross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
+function gnorm(a){var l=Math.hypot(a[0],a[1],a[2])||1;return [a[0]/l,a[1]/l,a[2]/l];}
+
+/* ---- geometrie ---- */
+function glShipVerts(){
+  var T=[];
+  function tri(a,b,c,m){T.push({v:[a,b,c],m:m});}
+  function quad(a,b,c,d,m){tri(a,b,c,m);tri(a,c,d,m);}
+  function lathe(prof,N,sy,m,ox,oy,oz,mf){
+    for(var i=0;i<prof.length-1;i++)for(var j=0;j<N;j++){
+      var a0=j/N*TAU,a1=(j+1)/N*TAU,p=prof[i],q=prof[i+1];
+      var V=function(pr,a){return [ox+pr[0]*Math.cos(a),oy+pr[0]*Math.sin(a)*sy,oz+pr[1]];};
+      var mm=mf?mf(i,j):m;
+      if(p[0]<0.001) tri(V(p,a0),V(q,a1),V(q,a0),mm); else if(q[0]<0.001) tri(V(p,a0),V(p,a1),V(q,a0),mm); else quad(V(p,a0),V(p,a1),V(q,a1),V(q,a0),mm);
+    }
+  }
+  lathe([[0,3.1],[3.4,2.8],[7,1.9],[10.2,0.6],[10.8,0],[10.2,-0.7]],22,0.84,0,0,0,0,function(i,j){return (i===3&&(j%3===0))?7:(i===3?3:0);});
+  lathe([[10.2,-0.7],[8,-1.8],[4.5,-2.7],[0,-3.1]],22,0.84,1,0,0,0);
+  lathe([[0,3.9],[2.2,3.5],[3.9,2.2],[4.7,0.6],[4.9,0]],14,0.82,2,1.2,0,1.9);
+  var nz=[[8.5,-2.2,0.6],[13.5,0,0],[8.5,2.2,0.6],[8.5,0,2],[8.5,0,-1.2]];
+  tri(nz[0],nz[1],nz[3],0);tri(nz[1],nz[2],nz[3],0);tri(nz[2],nz[0],nz[3],0);tri(nz[0],nz[4],nz[1],1);tri(nz[1],nz[4],nz[2],1);
+  var f=[[-5,0,2.6],[-11,0,2.6],[-11,0,7],[-8,0,2.6]];
+  for(var s=-1;s<=1;s+=2){var o=s*0.7;tri([f[0][0],o,f[0][2]],[f[2][0],o,f[2][2]],[f[1][0],o,f[1][2]],0);}
+  tri([-5,-0.7,2.6],[-8,0.7,2.6],[-11,-0.7,2.6],0);
+  for(var sd=-1;sd<=1;sd+=2){
+    for(var i=0;i<8;i++){var a=i/8*TAU,b=(i+1)/8*TAU,r=2;
+      var A=[-6,sd*4.2+Math.cos(a)*r,Math.sin(a)*r],B=[-6,sd*4.2+Math.cos(b)*r,Math.sin(b)*r],C=[-15,sd*4.2+Math.cos(b)*r*0.85,Math.sin(b)*r*0.85],D=[-15,sd*4.2+Math.cos(a)*r*0.85,Math.sin(a)*r*0.85];
+      quad(A,B,C,D,4);
+      tri([-15,sd*4.2,0],D,C,5);
+    }
+  }
+  var out=[];
+  T.forEach(function(t){var a=t.v[0],b=t.v[1],c=t.v[2];
+    var n=gnorm(gcross(gv3(b,a),gv3(c,a)));
+    [a,b,c].forEach(function(p){var y=p[1],z=p[2];if(t.m===5){var cy=(y>0?1:-1)*4.2;y=cy+(y-cy)*0.62;z=z*0.62;}out.push(p[0],y,z,n[0],n[1],n[2],t.m);});});
+  return new Float32Array(out);
+}
+function glFlatMesh(tris){ // tris: [[a,b,c,mat],...] -> vertici piatti
+  var out=[];tris.forEach(function(t){var n=gnorm(gcross(gv3(t[1],t[0]),gv3(t[2],t[0])));[t[0],t[1],t[2]].forEach(function(p){out.push(p[0],p[1],p[2],n[0],n[1],n[2],t[3]);});});
+  return new Float32Array(out);
+}
+function glRockVerts(variant){
+  var t=(1+Math.sqrt(5))/2, V=[[-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],[0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],[t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]].map(gnorm);
+  var F=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+  var tris=[];
+  function mid(a,b){return gnorm([(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2]);}
+  F.forEach(function(f){var a=V[f[0]],b=V[f[1]],c=V[f[2]],ab=mid(a,b),bc=mid(b,c),ca=mid(c,a);[[a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]].forEach(function(q){tris.push(q);});});
+  var seed=variant*7919;
+  function disp(p){var n=noise3(seed+p[0]*2.2,seed+p[1]*2.2,seed+p[2]*2.2)*0.55+noise3(seed+p[0]*5,seed+p[1]*5,seed+p[2]*5)*0.25; var k=1+n*0.9; return [p[0]*k,p[1]*k*0.92,p[2]*k*0.85];}
+  return glFlatMesh(tris.map(function(q){return [disp(q[0]),disp(q[1]),disp(q[2]),0];}));
+}
+function glGemVerts(){
+  var P=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1.35],[0,0,-1.35]], F=[[0,2,4],[2,1,4],[1,3,4],[3,0,4],[2,0,5],[1,2,5],[3,1,5],[0,3,5]];
+  return glFlatMesh(F.map(function(f){return [P[f[0]],P[f[1]],P[f[2]],0];}));
+}
+function glBoxTris(cx,cy,cz,hx,hy,hz,m,out){
+  var c=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]].map(function(p){return [cx+p[0]*hx,cy+p[1]*hy,cz+p[2]*hz];});
+  [[0,1,2,3],[4,7,6,5],[0,4,5,1],[2,6,7,3],[1,5,6,2],[0,3,7,4]].forEach(function(q){out.push([c[q[0]],c[q[1]],c[q[2]],m],[c[q[0]],c[q[2]],c[q[3]],m]);});
+}
+function glSatVerts(){var t=[];glBoxTris(0,0,0,0.5,0.5,0.5,0,t);glBoxTris(-2.1,0,0,1.4,0.5,0.04,1,t);glBoxTris(2.1,0,0,1.4,0.5,0.04,1,t);glBoxTris(0,0,0.75,0.08,0.08,0.3,2,t);return glFlatMesh(t);}
+
+function glMesh(verts){ var gl=GLX.gl,vao=gl.createVertexArray(); gl.bindVertexArray(vao); var b=glBuf(verts); gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,28,0);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,3,gl.FLOAT,false,28,12);gl.enableVertexAttribArray(2);gl.vertexAttribPointer(2,1,gl.FLOAT,false,28,24); return {vao:vao,n:verts.length/7}; }
+
+/* ---- inizializzazione ---- */
+function glInit(){
+  var cv=document.getElementById('glc');
+  if(!cv){ cv=document.createElement('canvas'); cv.id='glc'; cv.style.cssText='position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;z-index:1;pointer-events:none;display:none;image-rendering:pixelated;image-rendering:crisp-edges'; document.body.insertBefore(cv,canvas.nextSibling); }
+  GLX.cv=cv; cv.width=W; cv.height=H;
+  var gl=cv.getContext('webgl2',{antialias:false,alpha:false,depth:false,stencil:false,preserveDrawingBuffer:false,powerPreference:'high-performance'});
+  if(!gl) throw new Error('WebGL2 non disponibile');
+  GLX.gl=gl;
+  // se il "GPU" e' in realta' un rasterizzatore software, il rendering classico su CPU e' piu' veloce: lo uso
+  try{ var dbg=gl.getExtension('WEBGL_debug_renderer_info'); var rn=dbg?String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)):''; GLX.renderer=rn;
+    if(!window.__rsa_forcegl && /swiftshader|llvmpipe|softpipe|software|basic render/i.test(rn)) throw new Error('rasterizzatore software ('+rn+'): uso il classico'); }catch(e){ if(/rasterizzatore/.test(e.message)) throw e; }
+  glProg('sky',GLS_VS_FULL,GLS_FS_SKY); glProg('star',GLS_VS_STAR,GLS_FS_STAR);
+  glProg('body',GLS_VS_QUAD,GLS_FS_BODY); glProg('ring',GLS_VS_QUAD,GLS_FS_RING); glProg('atmo',GLS_VS_QUAD,GLS_FS_ATMO);
+  glProg('mesh',GLS_VS_MESH,GLS_FS_MESH); glProg('post',GLS_VS_FULL,GLS_FS_POST);
+  GLX.vaoEmpty=gl.createVertexArray();
+  // rampe
+  var ra=new Float32Array(14*8*3),rl=new Int32Array(14);
+  RAMPS.forEach(function(r,i){rl[i]=r.length;for(var j=0;j<8;j++){var c=r[Math.min(j,r.length-1)];ra[(i*8+j)*3]=c[0]/255;ra[(i*8+j)*3+1]=c[1]/255;ra[(i*8+j)*3+2]=c[2]/255;}});
+  GLX.rampArr=ra; GLX.rampLen=rl;
+  // stelle
+  var sd=new Float32Array(STAR_N*9);
+  for(var i=0;i<STAR_N;i++){var c=starCol[i];sd[i*9]=starDir[i*3];sd[i*9+1]=starDir[i*3+1];sd[i*9+2]=starDir[i*3+2];sd[i*9+3]=(c&255)/255;sd[i*9+4]=((c>>8)&255)/255;sd[i*9+5]=((c>>16)&255)/255;sd[i*9+6]=starCls[i];sd[i*9+7]=starPh[i];sd[i*9+8]=i;}
+  GLX.vaoStar=gl.createVertexArray();gl.bindVertexArray(GLX.vaoStar);glBuf(sd);
+  gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,36,0);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,4,gl.FLOAT,false,36,12);gl.enableVertexAttribArray(2);gl.vertexAttribPointer(2,2,gl.FLOAT,false,36,28);
+  // nebulosa
+  GLX.nebTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,GLX.nebTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,STAR_W,STAR_H,0,gl.RGBA,gl.UNSIGNED_BYTE,nebulaTex);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  // LUT della palette
+  var lut=new Uint8Array(1024*32*4);
+  for(var b=0;b<32;b++)for(var g=0;g<32;g++)for(var r=0;r<32;r++){var v=PAL_LUT[(r<<10)|(g<<5)|b],o=(g*1024+b*32+r)*4;lut[o]=v&255;lut[o+1]=(v>>8)&255;lut[o+2]=(v>>16)&255;lut[o+3]=255;}
+  GLX.lutTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,GLX.lutTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,1024,32,0,gl.RGBA,gl.UNSIGNED_BYTE,lut);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+  // mesh
+  GLX.mShip=glMesh(glShipVerts()); GLX.mRock=[0,1,2].map(function(v){return glMesh(glRockVerts(v));}); GLX.mGem=glMesh(glGemVerts()); GLX.mSat=glMesh(glSatVerts());
+  GLX.colTex=gl.createTexture(); GLX.infoTex=gl.createTexture(); GLX.ovlTex=gl.createTexture(); GLX.depthRB=gl.createRenderbuffer(); GLX.fbo=gl.createFramebuffer();
+  glResize();
+  // test: render e lettura di un pixel (verifica che il percorso funzioni davvero)
+  GLX.ok=true;
+  if(!GLX.listeners){ GLX.listeners=true;
+    // il contesto si puo' perdere (app in background): si passa al classico e si ripristina al ritorno, senza blocchi permanenti
+    cv.addEventListener('webglcontextlost',function(e){ e.preventDefault(); GLX.ok=false; glSetMode(false); GLX.lost=true; });
+    cv.addEventListener('webglcontextrestored',function(){ if(!GLX.lost) return; GLX.lost=false; GLX.gl=null; GLX.P={}; GLX.U={};
+      try{ if(settings.gfx!=='cpu'){ glInit(); glSetMode(true); } }catch(err){ glFail(err); } });
+  }
+}
+function glResize(){
+  var gl=GLX.gl; if(!gl) return;
+  GLX.cv.width=W; GLX.cv.height=H;
+  [GLX.colTex,GLX.infoTex,GLX.ovlTex].forEach(function(t){gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);});
+  gl.bindRenderbuffer(gl.RENDERBUFFER,GLX.depthRB);gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT24,W,H);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,GLX.fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,GLX.colTex,0);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT1,gl.TEXTURE_2D,GLX.infoTex,0);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,GLX.depthRB);
+  if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE) throw new Error('framebuffer incompleto');
+  GLX.ovl32=new Uint32Array(W*H); GLX.ovlBg=new Uint8Array(W*H); GLX.depth=new Float32Array(W*H);
+}
+function glSetMode(on){
+  GLX.on=!!on;
+  if(GLX.cv) GLX.cv.style.display=on?'block':'none';
+  canvas.style.opacity=on?'0':'';
+}
+function glFail(e){
+  try{ console.warn('[WebGL]',e&&e.message||e); }catch(_){}
+  GLX.ok=false; GLX.err=String(e&&e.message||e); glSetMode(false);
+  try{ localStorage.setItem('rsa_gl_fail',VERSION); }catch(_){}
+}
+
+/* ---- frame ---- */
+var GL_NAMES={'Mercurio':0,'Venere':1,'Terra':2,'Marte':3,'Giove':4,'Saturno':5,'Urano':6,'Nettuno':7,'Luna':8,'Sole':9};
+function glCommon(pn){
+  var gl=GLX.gl;
+  gl.uniform3fv(glU(pn,'uRamps[0]'),GLX.rampArr); gl.uniform1iv(glU(pn,'uLen[0]'),GLX.rampLen);
+  gl.uniform3f(glU(pn,'uD'),camDx,camDy,camDz); gl.uniform3f(glU(pn,'uRt'),camRx,camRy,camRz); gl.uniform3f(glU(pn,'uUp'),camUx,camUy,camUz);
+  gl.uniform1f(glU(pn,'uTanH'),camTanH); gl.uniform1f(glU(pn,'uTanV'),camTanV); gl.uniform1f(glU(pn,'uTime'),gameTime);
+  gl.uniform1f(glU(pn,'uPA'),2*camTanV/H); gl.uniform2f(glU(pn,'uRes'),W,H); gl.uniform1f(glU(pn,'uFar'),GL_FAR);
+}
+function glBounds(rel,R){
+  var D=[camDx,camDy,camDz], w=gdot(rel,D), dist=Math.hypot(rel[0],rel[1],rel[2]);
+  if(dist<=R*1.02) return [0,0,1,1];
+  var ang=Math.acos(Math.max(-1,Math.min(1,w/dist))), alpha=Math.asin(Math.min(1,R/dist)), halfDiag=Math.atan(Math.hypot(camTanH,camTanV));
+  if(ang-alpha>halfDiag) return null;
+  if(w<=R*0.5) return [0,0,1,1];
+  var cx=gdot(rel,[camRx,camRy,camRz])/(w*camTanH), cy=gdot(rel,[camUx,camUy,camUz])/(w*camTanV);
+  var k=R/Math.sqrt(dist*dist-R*R)*Math.pow(dist/w,2);
+  var rx=k/camTanH*1.15+0.03, ry=k/camTanV*1.15+0.03;
+  if(rx>2||ry>2) return [0,0,1,1];
+  if(Math.abs(cx)-rx>1||Math.abs(cy)-ry>1) return null;
+  return [cx,cy,rx,ry];
+}
+function glDrawBody(b,idx,pass){
+  var gl=GLX.gl, U=GL_UNIT;
+  var rel=[(b.x-camX)/U,(b.y-camY)/U,(b.z-camZ)/U], R=b.r/U;
+  var bR=(pass==='ring')?R*b.rings.outer:((pass==='atmo')?R*1.12:R);
+  var bd=glBounds(rel,bR); if(!bd) return;
+  gl.useProgram(GLX.P[pass]); glCommon(pass);
+  gl.uniform4f(glU(pass,'uQuad'),bd[0],bd[1],bd[2],bd[3]);
+  gl.uniform3f(glU(pass,'uCen'),rel[0],rel[1],rel[2]); gl.uniform1f(glU(pass,'uR'),R);
+  var sunRel=[-camX/U,-camY/U,-camZ/U]; gl.uniform3f(glU(pass,'uSunRel'),sunRel[0],sunRel[1],sunRel[2]);
+  var nm=(b===SUN)?9:GL_NAMES[b.name]; gl.uniform1i(glU(pass,'uName'),nm);
+  if(pass==='body'){
+    gl.uniform1f(glU(pass,'uRm'),b.r); gl.uniform1f(glU(pass,'uId'),1+idx);
+    gl.uniform1f(glU(pass,'uScale'),b.noise?b.noise.scale:0); gl.uniform1i(glU(pass,'uOct'),b.noise?b.noise.octaves:0);
+    gl.uniform1f(glU(pass,'uBands'),b.bands||0); gl.uniform1i(glU(pass,'uStorm'),b.storm?1:0); gl.uniform1i(glU(pass,'uRings'),(b.name==='Saturno')?1:0);
+    gl.uniform1i(glU(pass,'uFlareOn'),solarFlareActive?1:0);
+    var occ=null; if(b.name==='Terra') occ=MOON; else if(b===MOON) occ=earth;
+    if(occ){ gl.uniform3f(glU(pass,'uOcc'),(occ.x-camX)/U,(occ.y-camY)/U,(occ.z-camZ)/U); gl.uniform1f(glU(pass,'uOccR'),occ.r/U); } else gl.uniform1f(glU(pass,'uOccR'),0);
+  } else if(pass==='ring'){
+    gl.uniform1f(glU(pass,'uRin'),R*b.rings.inner); gl.uniform1f(glU(pass,'uRout'),R*b.rings.outer);
+  } else if(pass==='atmo'){
+    gl.uniform4f(glU(pass,'uAtmo'),b.atmo[0]/255,b.atmo[1]/255,b.atmo[2]/255,b.atmo[3]);
+  }
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+}
+function glBasis(f,s,u){ return new Float32Array([f[0],f[1],f[2],s[0],s[1],s[2],u[0],u[1],u[2]]); }
+function glShipBasis(yaw,pitch,roll){
+  var cp=Math.cos(pitch),sp=Math.sin(pitch),cy=Math.cos(yaw),sy=Math.sin(yaw);
+  var f=[cp*cy,cp*sy,sp], s=gnorm(gcross([0,0,1],f)), u=gcross(f,s);
+  var c=Math.cos(roll),n=Math.sin(roll);
+  var s2=[s[0]*c+u[0]*n,s[1]*c+u[1]*n,s[2]*c+u[2]*n], u2=[-s[0]*n+u[0]*c,-s[1]*n+u[1]*c,-s[2]*n+u[2]*c];
+  return glBasis(f,s2,u2);
+}
+function glSpinBasis(a,tilt){
+  var ca=Math.cos(a),sa=Math.sin(a),ct=Math.cos(tilt),st=Math.sin(tilt);
+  var f=[ca,sa,0], s=[-sa*ct,ca*ct,st], u=[sa*st,-ca*st,ct];
+  return glBasis(f,s,u);
+}
+function glDrawMesh(mesh,pos,basis,sc,kind,acc,id,turbo,occ0,occ1){
+  var gl=GLX.gl, pn='mesh', U=GL_UNIT;
+  gl.bindVertexArray(mesh.vao);
+  gl.uniform3f(glU(pn,'uPos'),pos[0],pos[1],pos[2]); gl.uniformMatrix3fv(glU(pn,'uBasis'),false,basis); gl.uniform1f(glU(pn,'uSc'),sc);
+  gl.uniform1i(glU(pn,'uKind'),kind); gl.uniform3f(glU(pn,'uAcc'),acc[0],acc[1],acc[2]); gl.uniform1f(glU(pn,'uId'),id); gl.uniform1f(glU(pn,'uTurbo'),turbo||0);
+  var o0=occ0||[0,0,0,0], o1=occ1||[0,0,0,0];
+  gl.uniform4f(glU(pn,'uOcc0'),o0[0],o0[1],o0[2],o0[3]); gl.uniform4f(glU(pn,'uOcc1'),o1[0],o1[1],o1[2],o1[3]);
+  gl.drawArrays(gl.TRIANGLES,0,mesh.n);
+}
+function glShipOccluders(sx,sy,sz){ // i due corpi che piu' probabilmente proiettano ombra sulla nave
+  var U=GL_UNIT, L=gnorm([-sx,-sy,-sz]), cand=[];
+  for(var i=1;i<BODIES.length;i++){ var b=BODIES[i]; var oc=[b.x-sx,b.y-sy,b.z-sz]; var t=gdot(oc,L); if(t<=0) continue;
+    var d2=gdot(oc,oc)-t*t; var q=Math.sqrt(Math.max(0,d2))/b.r; if(q<1.5) cand.push({q:q,b:b}); }
+  cand.sort(function(a,b){return a.q-b.q;});
+  return cand.slice(0,2).map(function(c){return [(c.b.x-camX)/U,(c.b.y-camY)/U,(c.b.z-camZ)/U,c.b.r/U];});
+}
+
+/* ---- profondita' dei corpi per l'occlusione dello strato 2D ---- */
+function glBodyDepth(){
+  var dp=GLX.depth; dp.fill(1e30);
+  var invW2=2/W, invH2=2/H, Sx0=-1+0.5*invW2;
+  for(var bi=0;bi<BODIES.length;bi++){
+    var b=BODIES[bi]; var rx=b.x-camX, ry=b.y-camY, rz=b.z-camZ; var dist=Math.sqrt(rx*rx+ry*ry+rz*rz);
+    var w=rx*camDx+ry*camDy+rz*camDz; var R=b.r;
+    var x0=0,x1=W-1,y0=0,y1=H-1;
+    if(dist>R*1.05){
+      if(w<=0) continue;
+      var k=R/Math.sqrt(dist*dist-R*R)*(dist/w)*(dist/w);
+      var cx=((rx*camRx+ry*camRy+rz*camRz)/(w*camTanH)+1)*0.5*W, cy=(1-((rx*camUx+ry*camUy+rz*camUz)/(w*camTanV)+1)*0.5)*H;
+      var pxr=k/camTanH*0.5*W*1.15+3, pyr=k/camTanV*0.5*H*1.15+3;
+      x0=Math.max(0,Math.floor(cx-pxr)); x1=Math.min(W-1,Math.ceil(cx+pxr)); y0=Math.max(0,Math.floor(cy-pyr)); y1=Math.min(H-1,Math.ceil(cy+pyr));
+      if(x0>x1||y0>y1) continue;
+    }
+    var r2=R*R, cc=rx*rx+ry*ry+rz*rz-r2;
+    for(var j=y0;j<=y1;j++){
+      var sy=1-(j+0.5)*invH2;
+      for(var i=x0;i<=x1;i++){
+        var sx=Sx0+i*invW2;
+        var ddx=camDx+sx*camTanH*camRx+sy*camTanV*camUx, ddy=camDy+sx*camTanH*camRy+sy*camTanV*camUy, ddz=camDz+sx*camTanH*camRz+sy*camTanV*camUz;
+        var dl=1/Math.sqrt(ddx*ddx+ddy*ddy+ddz*ddz); ddx*=dl;ddy*=dl;ddz*=dl;
+        var bb=rx*ddx+ry*ddy+rz*ddz; var disc=bb*bb-cc; if(disc<0) continue;
+        var tt=bb-Math.sqrt(disc); if(tt<1e-3) continue;
+        var p=j*W+i; if(tt<dp[p]) dp[p]=tt;
+      }
+    }
+  }
+}
+
+/* ---- strato 2D sopra la scena (marcatori, POI, effetti, mirino, barre vita) ---- */
+function glOverlayShip(s,i5,pr5,sc5){
+  if(getActivePowerup(s,'shield')||s.shieldPulse>0){
+    var shieldR=6+Math.sin(gameTime*4+i5)*0.8, alphaS=0.35+(s.shieldPulse>0?0.3:0), sr=Math.round(shieldR);
+    for(var yy2=-sr;yy2<=sr;yy2++)for(var xx2=-sr;xx2<=sr;xx2++){
+      var d6=Math.sqrt(xx2*xx2+yy2*yy2); if(d6>sr||d6<sr-2)continue;
+      var px3=(pr5.scrX|0)+xx2, py3=(pr5.scrY|0)+yy2; if(px3<0||py3<0||px3>=W||py3>=H)continue;
+      if(depthBuf[py3*W+px3]<pr5.dist)continue; blendPx(px3,py3,100,180,255,alphaS);
+    }
+  }
+  if(sc5>0.30){
+    var barW=Math.max(10,26*sc5), barH=Math.max(1,Math.round(2*sc5)), barX=(pr5.scrX-barW/2)|0, barY=(pr5.scrY-UFO_H*sc5*0.5-5)|0;
+    if(barY>0&&barY+barH<H){
+      var frac=s.hp/s.maxHp;
+      for(var yy3=0;yy3<barH;yy3++)for(var xx3=0;xx3<barW;xx3++){
+        var pxx=barX+xx3, pyy=barY+yy3; if(pxx<0||pxx>=W)continue;
+        if(xx3<barW*frac){ var cr,cg,cb; if(frac>0.5){cr=80;cg=255;cb=100;} else if(frac>0.25){cr=255;cg=200;cb=60;} else{cr=255;cg=70;cb=70;}
+          buf32[pyy*W+pxx]=0xFF000000|(cb<<16)|(cg<<8)|cr; } else buf32[pyy*W+pxx]=0xFF201008;
+      }
+    }
+  }
+}
+function glProminences(){
+  var pr=projectToScreen(SUN.x,SUN.y,SUN.z); if(!pr) return;
+  var spx=pr.scrX|0, spy=pr.scrY|0; if(spx>=0&&spy>=0&&spx<W&&spy<H&&depthBuf[spy*W+spx]<pr.dist-SUN.r) return;
+  var Rpx=SUN.r/(pr.zd*camTanV)*(H*0.5); if(Rpx<=10) return;
+  var cx=pr.scrX, cy=pr.scrY;
+  for(var i=0;i<3;i++){
+    var a0=i*2.2+gameTime*0.03+1.0, hgt=Rpx*(0.10+0.07*Math.sin(gameTime*0.45+i*1.7));
+    for(var t=0;t<=1.0001;t+=0.04){
+      var rr=Rpx*0.98+hgt*Math.sin(t*PI), an=a0+(t-0.5)*0.42;
+      var cc=RAMPS[R_SUN][t<0.2||t>0.8?4:5];
+      pxo(Math.round(cx+Math.cos(an)*rr),Math.round(cy+Math.sin(an)*rr),cc[0],cc[1],cc[2]);
+      if(Rpx>22) pxo(Math.round(cx+Math.cos(an)*(rr-1)),Math.round(cy+Math.sin(an)*(rr-1)),cc[0],cc[1],cc[2]);
+    }
+  }
+}
+function glOverlay(){
+  var saveBuf=buf32, saveBg=bgBuf, saveDepth=depthBuf;
+  GLX.ovl32.fill(0); buf32=GLX.ovl32; bgBuf=GLX.ovlBg; depthBuf=GLX.depth; GLX.inOvl=true;
+  try{
+    glBodyDepth();
+    glProminences();
+    drawBodyMarkers(); drawPois();
+    for(var i5=1;i5<SHIPS.length;i5++){ var s=SHIPS[i5]; if(!s.alive) continue; var pr5=projectToScreen(s.x,s.y,s.z); if(!pr5) continue;
+      if(Math.abs(pr5.sxn)>1.3||Math.abs(pr5.syn)>1.3) continue; glOverlayShip(s,i5,pr5,distanceScale(pr5.zd)); }
+    if(currentScreen==='match'&&human.alive){
+      var cy2=H*PLAYER_SCREEN_Y+Math.sin(gameTime*4)*1.2, turboIntensity=0;
+      if(human.turboActive){ var el=TURBO_DURATION-human.turboTimer; turboIntensity=Math.min(Math.min(1,el/0.15),Math.min(1,human.turboTimer/0.4)); }
+      if(getActivePowerup(human,'shield')||human.shieldPulse>0){
+        var shieldR2=26+Math.sin(gameTime*5)*1.5, alphaS2=0.30+(human.shieldPulse>0?0.3:0), sr2=Math.round(shieldR2);
+        for(var yy4=-sr2;yy4<=sr2;yy4++)for(var xx4=-sr2;xx4<=sr2;xx4++){ var d7=Math.sqrt(xx4*xx4+yy4*yy4); if(d7>sr2||d7<sr2-2.5)continue;
+          var px4=(W*0.5|0)+xx4, py4=(cy2|0)+yy4; if(px4<0||py4<0||px4>=W||py4>=H)continue; blendPx(px4,py4,100,180,255,alphaS2); }
+      }
+      if(turboIntensity>0.02) drawTurboSpeedLines(turboIntensity);
+    }
+    drawMissiles(); drawBeams(); drawExplosions(); drawDebris(); drawTrails(); drawShootingStars();
+    if(currentScreen==='match') drawCrosshair();
+  } finally { buf32=saveBuf; bgBuf=saveBg; depthBuf=saveDepth; GLX.inOvl=false; }
+  var gl=GLX.gl; gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,GLX.ovlTex);
+  gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(GLX.ovl32.buffer));
+}
+
+function renderGL(){
+  var gl=GLX.gl, U=GL_UNIT;
+  computeCamera();
+  glOverlay();
+  var sunRel=[-camX/U,-camY/U,-camZ/U], sunDist=Math.hypot(sunRel[0],sunRel[1],sunRel[2]), sunDir=gnorm(sunRel);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,GLX.fbo); gl.viewport(0,0,W,H);
+  gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.COLOR_ATTACHMENT1]); gl.clearColor(0,0,0,1); gl.clearDepth(1.0); gl.depthMask(true); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.NONE]); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
+  // cielo
+  gl.useProgram(GLX.P.sky); glCommon('sky'); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,GLX.nebTex); gl.uniform1i(glU('sky','uNeb'),0);
+  gl.uniform3f(glU('sky','uSunDir'),sunDir[0],sunDir[1],sunDir[2]); gl.uniform1f(glU('sky','uSunAng'),Math.asin(Math.min(1,SUN.r/GL_UNIT/sunDist)));
+  gl.uniform1f(glU('sky','uSunOn'),1); gl.uniform1f(glU('sky','uFlare'),solarFlareActive?1.6:1.0);
+  gl.bindVertexArray(GLX.vaoEmpty); gl.drawArrays(gl.TRIANGLES,0,3);
+  // stelle
+  gl.useProgram(GLX.P.star); gl.uniform3f(glU('star','uD'),camDx,camDy,camDz); gl.uniform3f(glU('star','uRt'),camRx,camRy,camRz); gl.uniform3f(glU('star','uUp'),camUx,camUy,camUz);
+  gl.uniform1f(glU('star','uTanH'),camTanH); gl.uniform1f(glU('star','uTanV'),camTanV); gl.uniform1f(glU('star','uTime'),gameTime);
+  gl.bindVertexArray(GLX.vaoStar); gl.drawArrays(gl.POINTS,0,STAR_N);
+  // oggetti opachi
+  gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.COLOR_ATTACHMENT1]); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.depthMask(true);
+  gl.bindVertexArray(GLX.vaoEmpty);
+  for(var bi=0;bi<BODIES.length;bi++) glDrawBody(BODIES[bi],bi,'body');
+  // mesh
+  gl.useProgram(GLX.P.mesh); glCommon('mesh'); gl.uniform3f(glU('mesh','uSunRel'),sunRel[0],sunRel[1],sunRel[2]);
+  var pxA=2*camTanV/H;
+  function sizeOf(wm,zd){ return wm/U; }
+  var idc=40, i;
+  for(i=0;i<asteroids.length;i++){ var a=asteroids[i]; var pr=projectToScreen(a.x,a.y,a.z); if(!pr||Math.abs(pr.sxn)>1.3||Math.abs(pr.syn)>1.3) continue;
+    var Rpx=Math.max(1.3,Math.min(20,a.r/(pr.zd*camTanV)*H*0.5)); var Rw=Rpx*pr.zd*pxA/U;
+    glDrawMesh(GLX.mRock[a.variant%3],[(a.x-camX)/U,(a.y-camY)/U,(a.z-camZ)/U],glSpinBasis(a.phase+gameTime*0.15,a.phase*0.3),Rw,1,[0,0,0],(idc++)%200,0); }
+  for(i=0;i<swarmAsteroids.length;i++){ var a2=swarmAsteroids[i]; var pr2=projectToScreen(a2.x,a2.y,a2.z); if(!pr2||Math.abs(pr2.sxn)>1.3||Math.abs(pr2.syn)>1.3) continue;
+    var Rpx2=Math.max(1.6,Math.min(20,a2.r/(pr2.zd*camTanV)*H*0.5)); var Rw2=Rpx2*pr2.zd*pxA/U;
+    glDrawMesh(GLX.mRock[a2.variant%3],[(a2.x-camX)/U,(a2.y-camY)/U,(a2.z-camZ)/U],glSpinBasis(gameTime*0.6+i,i*0.7),Rw2,1,[0,0,0],(idc++)%200,0); }
+  for(i=0;i<satellites.length;i++){ var sat=satellites[i]; var pr3=projectToScreen(sat.x,sat.y,sat.z); if(!pr3||Math.abs(pr3.sxn)>1.3||Math.abs(pr3.syn)>1.3) continue;
+    var Rpx3=Math.max(2.2,Math.min(13,1e6/(pr3.zd*camTanV)*H*0.5)); var Rw3=Rpx3*pr3.zd*pxA/U/2.9;
+    glDrawMesh(GLX.mSat,[(sat.x-camX)/U,(sat.y-camY)/U,(sat.z-camZ)/U],glSpinBasis(sat.ang*2,0.3),Rw3,3,[0,0,0],(idc++)%200,0); }
+  for(i=0;i<powerups.length;i++){ var pu=powerups[i]; if(!pu.alive) continue; var pr4=projectToScreen(pu.x,pu.y,pu.z); if(!pr4||Math.abs(pr4.sxn)>1.3||Math.abs(pr4.syn)>1.3) continue;
+    var def=POWERUP_DEFS[pu.type]; var want=3.2e6/(pr4.zd*camTanV)*H*2.8; var Rpx4=Math.max(3.6,Math.min(30,want*0.28)); var Rw4=Rpx4*pr4.zd*pxA/U;
+    var bob=Math.sin(pu.pulse)*0.25*Rw4; glDrawMesh(GLX.mGem,[(pu.x-camX)/U,(pu.y-camY)/U,(pu.z-camZ)/U+bob],glSpinBasis(pu.pulse*0.9,0.25),Rw4,2,[def.color[0]/255,def.color[1]/255,def.color[2]/255],(idc++)%200,0); }
+  // navi
+  var shipId=10;
+  function drawShip(sx,sy,sz,yaw,pitch,roll,widthPx,zd,pal,turbo){
+    var wm=widthPx*zd*pxA/28.5; var occ=glShipOccluders(sx,sy,sz);
+    var pos=[(sx-camX)/U,(sy-camY)/U,(sz-camZ)/U];
+    glDrawMesh(GLX.mShip,pos,glShipBasis(yaw,pitch,roll),wm/U,0,[pal.AC[0]/255,pal.AC[1]/255,pal.AC[2]/255],shipId++,turbo,occ[0],occ[1]);
+  }
+  for(i=1;i<SHIPS.length;i++){ var s=SHIPS[i]; if(!s.alive) continue; var pr5=projectToScreen(s.x,s.y,s.z); if(!pr5||Math.abs(pr5.sxn)>1.3||Math.abs(pr5.syn)>1.3) continue;
+    drawShip(s.x,s.y,s.z,s.yaw,s.pitch,-s.bank,34*distanceScale(pr5.zd),pr5.zd,s.palette,0); }
+  if(currentScreen==='match'&&human.alive){
+    var cy2=H*PLAYER_SCREEN_Y+Math.sin(gameTime*4)*1.2, ndcy=1-2*cy2/H, dd=54.4;
+    var dir=[camDx+ndcy*camTanV*camUx, camDy+ndcy*camTanV*camUy, camDz+ndcy*camTanV*camUz]; var dl=Math.hypot(dir[0],dir[1],dir[2]);
+    var px=camX+dir[0]/dl*dd, py=camY+dir[1]/dl*dd, pz=camZ+dir[2]/dl*dd;
+    var turbo=0; if(human.turboActive){ var el=TURBO_DURATION-human.turboTimer; turbo=Math.min(Math.min(1,el/0.15),Math.min(1,human.turboTimer/0.4)); }
+    drawShip(px,py,pz,human.yaw,human.pitch,-human.bank*0.65,34*SHIP_MAX_SCALE,dd,PAL_PLAYER,turbo);
+  }
+  // trasparenti: anelli e atmosfere
+  gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.NONE]); gl.depthMask(false); gl.enable(gl.BLEND); gl.bindVertexArray(GLX.vaoEmpty);
+  gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  for(bi=0;bi<BODIES.length;bi++){ if(BODIES[bi].rings) glDrawBody(BODIES[bi],bi,'ring'); }
+  gl.blendFunc(gl.ONE,gl.ONE);
+  for(bi=0;bi<BODIES.length;bi++){ if(BODIES[bi].atmo) glDrawBody(BODIES[bi],bi,'atmo'); }
+  gl.disable(gl.BLEND); gl.depthMask(true); gl.disable(gl.DEPTH_TEST);
+  // composizione finale
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,W,H);
+  gl.useProgram(GLX.P.post);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,GLX.colTex); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,GLX.infoTex);
+  gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D,GLX.lutTex); gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,GLX.ovlTex);
+  gl.uniform1i(glU('post','uCol'),0); gl.uniform1i(glU('post','uInfo'),1); gl.uniform1i(glU('post','uLut'),2); gl.uniform1i(glU('post','uOvl'),3); gl.uniform2f(glU('post','uRes'),W,H);
+  gl.bindVertexArray(GLX.vaoEmpty); gl.drawArrays(gl.TRIANGLES,0,3);
+  GLX.frames++;
+}
+
 
 var stickEl=document.getElementById('stick');
 var knobEl=document.getElementById('knob');
@@ -5271,6 +5917,18 @@ function loop(now){
 // Avvio
 syncSettingsUI();
 doResize(false);
+function applyGfx(){
+  if(settings.gfx==='cpu'){ glSetMode(false); return; }
+  try{
+    if(!GLX.gl){ try{ localStorage.removeItem('rsa_gl_fail'); }catch(_){} glInit(); }
+    if(GLX.ok) glSetMode(true);
+  }catch(e){ glFail(e); }
+}
+try{
+  var glFailed=false; try{ glFailed=(localStorage.getItem('rsa_gl_fail')===VERSION); }catch(_){}
+  if(settings.gfx!=='cpu' && !glFailed && !window.__rsa_nogl){ glInit(); glSetMode(true); }
+}catch(e){ glFail(e); }
+syncSettingsUI();
 
 try{
   if(localStorage.getItem('rsa_in_match') === '1'){
