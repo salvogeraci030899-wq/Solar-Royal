@@ -480,6 +480,36 @@ body.in-lobby #gearBtn{display:block}
 .spTitle{text-shadow:2px 2px 0 #05060f}
 #stick,#stick2{border-radius:0!important;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%)}
 #stick .knob,#stick2 .knob{border-radius:0!important;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%)}
+
+/* ===== HUD COMPATTO (landscape): meno ingombro, stessi comandi ===== */
+@media (orientation:landscape){
+  .hudRow{height:21px;padding:0 9px;gap:7px;background:rgba(7,8,24,0.72);
+    box-shadow:inset 0 0 0 1px #05060f,inset 2px 2px 0 0 #2a3480;
+    clip-path:polygon(0 2px,2px 2px,2px 0,calc(100% - 2px) 0,calc(100% - 2px) 2px,100% 2px,100% calc(100% - 2px),calc(100% - 2px) calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,2px calc(100% - 2px),0 calc(100% - 2px))}
+  .hudItem{font-size:9px;letter-spacing:.05em;gap:4px}
+  #hudTime{font-size:10px} #hudAliveCount{font-size:11px} .hudAliveLbl{font-size:7px}
+  .hudNav .arrowWrap{width:12px;height:12px} .hudNav .arrow{font-size:8px} .hudNav .hudDist{font-size:8px}
+  .hudSep{height:8px} .hudExpand{display:none}
+  #statsWrap{width:62px;height:62px;top:calc(env(safe-area-inset-top,0px) + 4px);left:calc(env(safe-area-inset-left,0px) + 4px)}
+  #statsWrap .hpNum{font-size:14px;text-shadow:1px 1px 0 #05060f}
+  #statsWrap .ammoBullets{gap:1px;margin-top:0} #statsWrap .ammoBullets .b{width:2px;height:6px}
+  #statsWrap .reloadState{display:none}
+  #minimap{width:72px;height:72px;top:calc(env(safe-area-inset-top,0px) + 4px);right:calc(env(safe-area-inset-right,0px) + 4px)}
+  #fireBtn{width:72px;height:72px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 14px)}
+  #missileBtn{width:50px;height:50px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);right:calc(env(safe-area-inset-right,0px) + 94px)}
+  #turboBtn{width:54px;height:54px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);left:calc(env(safe-area-inset-left,0px) + 118px)}
+  #brakeBtn{width:46px;height:46px;bottom:calc(env(safe-area-inset-bottom,0px) + 118px);left:calc(env(safe-area-inset-left,0px) + 14px)}
+  .fireTxt{font-size:9px} .turboTxt{font-size:8px} .brakeTxt{font-size:7px} .missileTxt{font-size:7.5px}
+  #stick{width:100px;height:100px;left:calc(env(safe-area-inset-left,0px) + 14px);bottom:calc(env(safe-area-inset-bottom,0px) + 14px);opacity:0.16}
+  #stick2{width:100px;height:100px;right:calc(env(safe-area-inset-right,0px) + 14px);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);opacity:0.16}
+  #stick.active,#stick2.active{opacity:0.5}
+  #stick .knob,#stick2 .knob{width:38px;height:38px;margin-left:-19px;margin-top:-19px}
+  #killFeed{top:calc(env(safe-area-inset-top,0px) + 82px);right:calc(env(safe-area-inset-right,0px) + 4px)}
+  .kf{font-size:8.5px;padding:2px 6px}
+  #roster{top:calc(env(safe-area-inset-top,0px) + 70px);left:calc(env(safe-area-inset-left,0px) + 4px);font-size:7.5px}
+  .slot{box-shadow:inset 0 0 0 1px #05060f,inset 2px 2px 0 0 #2a3480;clip-path:none;min-width:58px;padding:1px 4px}
+  #powerups{bottom:calc(env(safe-area-inset-bottom,0px) + 8px)} .pu{width:24px;height:24px;font-size:10px}
+}
 </style>
 </head>
 <body class="splash-on">
@@ -717,7 +747,7 @@ window.addEventListener('error', function(ev){
 (function(){
 'use strict';
 
-var VERSION='1.21';
+var VERSION='1.22';
 var AU=1.496e11, TAN_V=Math.tan(30*Math.PI/180), PI=Math.PI, TAU=PI*2;
 var MAX_HP=100, BULLET_DMG=9;
 var FIRE_CD=0.55;
@@ -1140,14 +1170,14 @@ function ringShim(ring,circ,colors,fixedCol){
 }
 function initPixelUI(){
   var hpHost=document.getElementById('statsWrap');
-  var hpR=makePixRing(hpHost,52,4);
+  var hpR=makePixRing(hpHost,31,3);
   hpRingEl=ringShim(hpR,STATS_RING_CIRC,{blue:['#b4e4ff','#3a98e6','#164a96'],yellow:['#fff08a','#ffd04a','#c4480a'],red:['#ffb09c','#d84a4a','#6e1428'],mid:['#b4e4ff','#3a98e6','#164a96']},'blue');
-  var tR=makePixRing(document.getElementById('turboBtn'),44,4);
+  var tR=makePixRing(document.getElementById('turboBtn'),27,3);
   turboRing=ringShim(tR,263.89,{mid:['#fff08a','#ffa828','#c4480a']});
-  var mR=makePixRing(document.getElementById('missileBtn'),31,3);
+  var mR=makePixRing(document.getElementById('missileBtn'),25,3);
   missileRing=ringShim(mR,263.89,{mid:['#dcc4ff','#8a60d8','#3a2072']});
-  var fR=makePixRing(document.getElementById('fireBtn'),44,5); drawPixRing(fR,1,'#ffb09c','#d84a4a','#6e1428','#3a0a1c','#6e1428');
-  var bR=makePixRing(document.getElementById('brakeBtn'),32,3); drawPixRing(bR,1,'#b4e4ff','#3a98e6','#164a96','#0e2a63','#164a96');
+  var fR=makePixRing(document.getElementById('fireBtn'),36,4); drawPixRing(fR,1,'#ffb09c','#d84a4a','#6e1428','#3a0a1c','#6e1428');
+  var bR=makePixRing(document.getElementById('brakeBtn'),23,3); drawPixRing(bR,1,'#b4e4ff','#3a98e6','#164a96','#0e2a63','#164a96');
   ringShim(hpR,STATS_RING_CIRC,{},'blue'); // stato iniziale
   hpRingEl.style.strokeDashoffset='0';
 }
@@ -2397,11 +2427,11 @@ function updateZone(dt){
     if(outside){
       var outAU = (hDist - zoneRadius) / AU;
       hudZoneEl.className = 'hudItem outside';
-      hudZoneEl.textContent = 'FUORI ZONA \u00B7 ' + outAU.toFixed(3) + ' UA';
+      hudZoneEl.textContent = 'FUORI ' + outAU.toFixed(2) + 'UA';
     } else {
       var inAU = (zoneRadius - hDist) / AU;
       hudZoneEl.className = 'hudItem';
-      hudZoneEl.textContent = 'ZONA \u00B7 ' + inAU.toFixed(3) + ' UA';
+      hudZoneEl.textContent = 'ZONA ' + inAU.toFixed(2) + 'UA';
     }
   }
 }
